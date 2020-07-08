@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import Iterable
 from pygraphblas import Matrix
 
@@ -17,11 +18,30 @@ class SingleSourceIndex:
             self.sources[l] = self.graph[r].dup()
 
 
-class SingleSourceAlgo:
+class SingleSourceSolver(ABC):
     def __init__(self, graph: LabelGraph, grammar: CnfGrammar):
         self.graph = graph
         self.grammar = grammar
+
+    @abstractmethod
+    def solve(self, sources_vertices: Iterable) -> Matrix:
+        pass
+
+
+class SingleSourceAlgoSmart(SingleSourceSolver):
+    def __init__(self, graph: LabelGraph, grammar: CnfGrammar):
+        super().__init__(graph, grammar)
         self.index = SingleSourceIndex(graph, grammar)
 
     def solve(self, sources_vertices: Iterable) -> Matrix:
+        # Use self.index
         pass
+
+
+class SingleSourceAlgoBrute(SingleSourceSolver):
+    def __init__(self, graph: LabelGraph, grammar: CnfGrammar):
+        super().__init__(graph, grammar)
+
+    def solve(self, sources_vertices: Iterable) -> Matrix:
+        # Creating new index per solve call
+        index = SingleSourceIndex(self.graph, self.grammar)
