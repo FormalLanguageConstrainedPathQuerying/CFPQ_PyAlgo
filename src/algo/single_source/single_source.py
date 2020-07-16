@@ -19,6 +19,7 @@ class SingleSourceIndex:
             self.nonterms[l] = self.graph[r].dup()
 
 
+
 class SingleSourceSolver(ABC):
     def __init__(self, graph: LabelGraph, grammar: CnfGrammar):
         self.graph = graph
@@ -75,6 +76,7 @@ class SingleSourceAlgoSmart(SingleSourceSolver):
                 changed |= not old_nnz == new_nnz
 
         return self.index.nonterms[self.index.grammar.start_nonterm]
+
 
 
 class SingleSourceAlgoBrute(SingleSourceSolver):
