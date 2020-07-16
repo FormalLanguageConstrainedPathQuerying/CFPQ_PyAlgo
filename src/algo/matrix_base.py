@@ -10,9 +10,10 @@ def matrix_base_algo(g: LabelGraph, grammar: CnfGrammar):
         m[l] += g[r]
     changed = True
     while changed:
+        changed = False
         for l, r1, r2 in grammar.complex_rules:
             old_nnz = m[l].nvals
             m[l] += m[r1] @ m[r2]
             new_nnz = m[l].nvals
-            changed = not old_nnz == new_nnz
+            changed |= not old_nnz == new_nnz
     return m
