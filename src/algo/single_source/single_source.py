@@ -16,8 +16,7 @@ class SingleSourceIndex:
 
     def init_simple_rules(self):
         for l, r in self.grammar.simple_rules:
-            self.nonterms[l] = self.graph[r].dup()
-
+            self.nonterms[l] += self.graph[r]
 
 
 class SingleSourceSolver(ABC):
@@ -40,6 +39,8 @@ class SingleSourceAlgoSmart(SingleSourceSolver):
         # Initialize source matrices masks
         for v in sources_vertices:
             self.index.sources[self.index.grammar.start_nonterm][v, v] = True
+        # Create temporary matrix
+        tmp = Matrix.sparse(BOOL, self.index.graph.matrices_size, self.index.graph.matrices_size)
         # Algo's body
         changed = True
         while changed:
@@ -53,21 +54,19 @@ class SingleSourceAlgoSmart(SingleSourceSolver):
                 # l -> r1 r2 ==> l += (l_src * r1) * r2 =>
 
                 # 1) r1_src += {(j, j) : (i, j) \in l_src}
-                i_l, j_l, vs_l = self.index.sources[l].to_lists()
-                for i, j in list(zip(i_l, j_l)):
-                    self.index.sources[r1][j, j] = True
+                SingleSourceAlgoSmart.__update_sources(self.index.sources[l], self.index.sources[r1])
 
                 # 2) tmp = l_src * r1
-                tmp = Matrix.sparse(BOOL, self.index.graph.matrices_size, self.index.graph.matrices_size)
                 tmp = self.index.sources[l] @ self.index.nonterms[r1]
 
                 # 3) r2_src += {(j, j) : (i, j) \in tmp}
-                i_tmp, j_tmp, vs_tmp = tmp.to_lists()
-                for i, j in list(zip(i_tmp, j_tmp)):
-                    self.index.sources[r2][j, j] = True
+                SingleSourceAlgoSmart.__update_sources(tmp, self.index.sources[r2])
 
                 # 4) l += tmp * r2
                 self.index.nonterms[l] += tmp @ self.index.nonterms[r2]
+
+                # Clear temporary matrix
+                tmp.clear()
 
                 # Number of instances after operation
                 new_nnz = self.index.nonterms[l].nvals
@@ -77,6 +76,10 @@ class SingleSourceAlgoSmart(SingleSourceSolver):
 
         return self.index.nonterms[self.index.grammar.start_nonterm]
 
+    @staticmethod
+    def __update_sources(src: Matrix, dst: Matrix):
+        for j in src.to_lists()[1]:
+            dst[j, j] = True
 
 
 class SingleSourceAlgoBrute(SingleSourceSolver):
@@ -91,6 +94,8 @@ class SingleSourceAlgoBrute(SingleSourceSolver):
         # Initialize source matrices masks
         for v in sources_vertices:
             index.sources[index.grammar.start_nonterm][v, v] = True
+        # Create temporary matrix
+        tmp = Matrix.sparse(BOOL, index.graph.matrices_size, index.graph.matrices_size)
         # Algo's body
         changed = True
         while changed:
@@ -104,21 +109,19 @@ class SingleSourceAlgoBrute(SingleSourceSolver):
                 # l -> r1 r2 ==> l += (l_src * r1) * r2 =>
 
                 # 1) r1_src += {(j, j) : (i, j) \in l_src}
-                i_l, j_l, vs_l = index.sources[l].to_lists()
-                for i, j in list(zip(i_l, j_l)):
-                    index.sources[r1][j, j] = True
+                SingleSourceAlgoBrute.__update_sources(index.sources[l], index.sources[r1])
 
                 # 2) tmp = l_src * r1
-                tmp = Matrix.sparse(BOOL, index.graph.matrices_size,  index.graph.matrices_size)
                 tmp = index.sources[l] @ index.nonterms[r1]
 
                 # 3) r2_src += {(j, j) : (i, j) \in tmp}
-                i_tmp, j_tmp, vs_tmp = tmp.to_lists()
-                for i, j in list(zip(i_tmp, j_tmp)):
-                    index.sources[r2][j, j] = True
+                SingleSourceAlgoBrute.__update_sources(tmp, index.sources[r2])
 
                 # 4) l += tmp * r2
                 index.nonterms[l] += tmp @ index.nonterms[r2]
+
+                # Clear temporary matrix
+                tmp.clear()
 
                 # Number of instances after operation
                 new_nnz = index.nonterms[l].nvals
@@ -127,3 +130,8 @@ class SingleSourceAlgoBrute(SingleSourceSolver):
                 changed |= not old_nnz == new_nnz
 
         return index.nonterms[index.grammar.start_nonterm]
+
+    @staticmethod
+    def __update_sources(src: Matrix, dst: Matrix):
+        for j in src.to_lists()[1]:
+            dst[j, j] = True

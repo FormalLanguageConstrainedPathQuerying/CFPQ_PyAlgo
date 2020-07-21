@@ -19,3 +19,4 @@ class SimpleTimer:
     def toc(self):
         self.end_time = time()
         self.duration = self.end_time - self.start_time
+        return self.duration
