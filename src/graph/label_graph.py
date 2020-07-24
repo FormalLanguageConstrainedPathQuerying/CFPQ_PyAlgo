@@ -33,6 +33,11 @@ class LabelGraph:
 
 
 def get_graph_size(path):
-    r = sp.run(f'wc -l {path}', capture_output=True, shell=True)
-    return int(r.stdout.split()[0].decode('utf-8'))
+    res = -1
+    with open(path, 'r') as f:
+        for line in f.readlines():
+            v, label, to = line.split()
+            v, to = int(v), int(to)
+            res = max(res, v, to)
+    return res + 1
 
