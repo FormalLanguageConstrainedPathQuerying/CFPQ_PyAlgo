@@ -1,3 +1,4 @@
+import subprocess as sp
 from pygraphblas.matrix import Matrix
 from pygraphblas.types import BOOL
 
@@ -22,10 +23,16 @@ class LabelGraph:
 
     @classmethod
     def from_txt(cls, path):
-        g = LabelGraph()
+        g = LabelGraph(get_graph_size(path))
         with open(path, 'r') as f:
             for line in f.readlines():
                 v, label, to = line.split()
                 v, to = int(v), int(to)
                 g[label][v, to] = True
         return g
+
+
+def get_graph_size(path):
+    r = sp.run(f'wc -l {path}', capture_output=True, shell=True)
+    return int(r.stdout.split()[0].decode('utf-8'))
+

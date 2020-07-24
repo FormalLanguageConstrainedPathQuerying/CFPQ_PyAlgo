@@ -5,7 +5,7 @@ from src.graph.label_graph import LabelGraph
 
 
 def matrix_base_algo(g: LabelGraph, grammar: CnfGrammar):
-    m = LabelGraph()
+    m = LabelGraph(g.matrices_size)
     for l, r in grammar.simple_rules:
         m[l] += g[r]
     changed = True
