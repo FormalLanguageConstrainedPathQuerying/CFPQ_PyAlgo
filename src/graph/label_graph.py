@@ -1,4 +1,4 @@
-import subprocess as sp
+import numpy as np
 from pygraphblas.matrix import Matrix
 from pygraphblas.types import BOOL
 
@@ -30,6 +30,9 @@ class LabelGraph:
                 v, to = int(v), int(to)
                 g[label][v, to] = True
         return g
+
+    def chunkify(self, chunk_len):
+        return list(map(list, np.array_split(np.arange(self.matrices_size), chunk_len)))
 
 
 def get_graph_size(path):
