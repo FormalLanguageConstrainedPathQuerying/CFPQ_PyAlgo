@@ -1,3 +1,4 @@
+import numpy as np
 from pygraphblas.matrix import Matrix
 from pygraphblas.types import BOOL
 
@@ -22,10 +23,24 @@ class LabelGraph:
 
     @classmethod
     def from_txt(cls, path):
-        g = LabelGraph()
+        g = LabelGraph(get_graph_size(path))
         with open(path, 'r') as f:
             for line in f.readlines():
                 v, label, to = line.split()
                 v, to = int(v), int(to)
                 g[label][v, to] = True
         return g
+
+    def chunkify(self, chunk_len):
+        return list(map(list, np.array_split(np.arange(self.matrices_size), chunk_len)))
+
+
+def get_graph_size(path):
+    res = -1
+    with open(path, 'r') as f:
+        for line in f.readlines():
+            v, label, to = line.split()
+            v, to = int(v), int(to)
+            res = max(res, v, to)
+    return res + 1
+
