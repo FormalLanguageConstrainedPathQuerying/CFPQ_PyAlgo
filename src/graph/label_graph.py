@@ -31,8 +31,11 @@ class LabelGraph:
                 g[label][v, to] = True
         return g
 
-    def chunkify(self, chunk_len):
-        return list(map(list, np.array_split(np.arange(self.matrices_size), chunk_len)))
+    def chunkify(self, chunk_len) -> list:
+        return list(map(
+            lambda x: list(map(int, x)),
+            np.array_split(np.arange(self.matrices_size), chunk_len)
+        ))
 
 
 def get_graph_size(path):
