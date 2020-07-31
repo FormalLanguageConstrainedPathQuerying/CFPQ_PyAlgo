@@ -1,4 +1,5 @@
 import pytest
+from tqdm import tqdm
 
 from src.utils.file_helpers import get_file_name
 from src.grammar.cnf_grammar import CnfGrammar
@@ -7,7 +8,12 @@ from src.utils.time_profiler import SimpleTimer
 from src.algo.matrix_base import matrix_base_algo
 from src.algo.single_source.single_source import SingleSourceAlgoBrute, SingleSourceAlgoSmart
 
-from suites import graph_grammar_decorator
+from tests.suites import graph_grammar_decorator
+
+
+def print_vec(xs):
+    for x in xs:
+        print(x, end=' ')
 
 
 @pytest.fixture(params=[SingleSourceAlgoBrute, SingleSourceAlgoSmart])
@@ -17,16 +23,17 @@ def algo(request):
 
 @graph_grammar_decorator
 def test_correctness_per_vertex(graph, grammar, algo):
+    CHUNK_COUNT = 20
+
     g = LabelGraph.from_txt(graph)
     gr = CnfGrammar.from_cnf(grammar)
     a = algo(g, gr)
 
     m = matrix_base_algo(g, gr)
 
-    for i in range(g.matrices_size):
-        m1 = a.solve([i])
-
-        assert m1[i] in m[gr.start_nonterm][i]
+    for chunk in tqdm(g.chunkify(max(g.matrices_size // CHUNK_COUNT, 1)), desc=graph):
+        m1 = a.solve(chunk)
+        assert m1.extract_matrix(chunk).iseq(m.extract_matrix(chunk))
 
 
 @graph_grammar_decorator
@@ -38,7 +45,7 @@ def test_correctness(graph, grammar, algo):
     m = matrix_base_algo(g, gr)
     m1 = a.solve(range(g.matrices_size))
 
-    assert m[gr.start_nonterm].iseq(m1)
+    assert m.iseq(m1)
 
 
 @graph_grammar_decorator

@@ -59,11 +59,13 @@ class SingleSourceAlgoSmart(SingleSourceSolver):
         changed = True
         while changed:
             changed = False
+
+            # Number of instances before operation
+            old_nnz_nonterms = {nonterm: self.index.nonterms[nonterm].nvals for nonterm in self.index.nonterms}
+            old_nnz_src = {nonterm: self.index.sources[nonterm].nvals for nonterm in self.index.sources}
+
             # Iterate through all complex rules
             for l, r1, r2 in self.index.grammar.complex_rules:
-                # Number of instances before operation
-                old_nnz = self.index.nonterms[l].nvals
-
                 # l -> r1 r2 ==> l += (l_src * r1) * r2 =>
 
                 # 1) r1_src += {(j, j) : (i, j) \in l_src}
@@ -78,11 +80,12 @@ class SingleSourceAlgoSmart(SingleSourceSolver):
                 # 4) l += tmp * r2
                 self.index.nonterms[l] += tmp @ self.index.nonterms[r2]
 
-                # Number of instances after operation
-                new_nnz = self.index.nonterms[l].nvals
+            # Number of instances after operation
+            new_nnz_nonterms = {nonterm: self.index.nonterms[nonterm].nvals for nonterm in self.index.nonterms}
+            new_nnz_src = {nonterm: self.index.sources[nonterm].nvals for nonterm in self.index.sources}
 
-                # Update changed flag
-                changed |= not old_nnz == new_nnz
+            # Update changed flag
+            changed |= (not (old_nnz_nonterms == new_nnz_nonterms)) or (not (old_nnz_src == new_nnz_src))
 
         return self.index.nonterms[self.index.grammar.start_nonterm]
 
@@ -109,11 +112,13 @@ class SingleSourceAlgoBrute(SingleSourceSolver):
         changed = True
         while changed:
             changed = False
+
+            # Number of instances before operation
+            old_nnz_nonterms = {nonterm: index.nonterms[nonterm].nvals for nonterm in index.nonterms}
+            old_nnz_src = {nonterm: index.sources[nonterm].nvals for nonterm in index.sources}
+
             # Iterate through all complex rules
             for l, r1, r2 in index.grammar.complex_rules:
-                # Number of instances before operation
-                old_nnz = index.nonterms[l].nvals
-
                 # l -> r1 r2 ==> l += (l_src * r1) * r2 =>
 
                 # 1) r1_src += {(j, j) : (i, j) \in l_src}
@@ -128,10 +133,10 @@ class SingleSourceAlgoBrute(SingleSourceSolver):
                 # 4) l += tmp * r2
                 index.nonterms[l] += tmp @ index.nonterms[r2]
 
-                # Number of instances after operation
-                new_nnz = index.nonterms[l].nvals
+            # Number of instances after operation
+            new_nnz_nonterms = {nonterm: index.nonterms[nonterm].nvals for nonterm in index.nonterms}
+            new_nnz_src = {nonterm: index.sources[nonterm].nvals for nonterm in index.sources}
 
-                # Update changed flag
-                changed |= not old_nnz == new_nnz
+            changed |= (not (old_nnz_nonterms == new_nnz_nonterms)) or (not (old_nnz_src == new_nnz_src))
 
         return index.nonterms[index.grammar.start_nonterm]

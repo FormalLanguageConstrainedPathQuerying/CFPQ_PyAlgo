@@ -16,4 +16,4 @@ def matrix_base_algo(g: LabelGraph, grammar: CnfGrammar):
             m[l] += m[r1] @ m[r2]
             new_nnz = m[l].nvals
             changed |= not old_nnz == new_nnz
-    return m
+    return m[grammar.start_nonterm]
