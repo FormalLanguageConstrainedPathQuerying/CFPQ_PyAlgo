@@ -19,6 +19,13 @@ def update_sources(src: Matrix, dst: Matrix):
             dst[J[k], J[k]] = True
 
 
+def update_sources_opt(src: Matrix, dst: Matrix, msk: Matrix):
+    update_sources(src, dst)
+    for j, v in zip(*msk.T.reduce_vector().to_lists()):
+        if v is True:
+            dst[j, j] = False
+
+
 class SingleSourceIndex:
     def __init__(self, graph: LabelGraph, grammar: CnfGrammar):
         self.graph = graph
@@ -140,3 +147,61 @@ class SingleSourceAlgoBrute(SingleSourceSolver):
             changed |= (not (old_nnz_nonterms == new_nnz_nonterms)) or (not (old_nnz_src == new_nnz_src))
 
         return index.nonterms[index.grammar.start_nonterm]
+
+
+class SingleSourceAlgoOpt(SingleSourceSolver):
+    def __init__(self, graph: LabelGraph, grammar: CnfGrammar):
+        super().__init__(graph, grammar)
+        self.index = SingleSourceIndex(graph, grammar)
+
+    def solve(self, sources_vertices: Iterable) -> Matrix:
+        cur_index = SingleSourceIndex(self.graph, self.grammar)
+        # Initialize simple rules
+        cur_index.init_simple_rules()
+        # Initialize source matrices masks
+        for v in sources_vertices:
+            cur_index.sources[self.index.grammar.start_nonterm][v, v] = True
+            update_sources_opt(
+                self.index.sources[self.index.grammar.start_nonterm],
+                cur_index.sources[self.index.grammar.start_nonterm],
+                self.index.sources[self.index.grammar.start_nonterm])
+        # Create temporary matrix
+        tmp = Matrix.sparse(BOOL, cur_index.graph.matrices_size,
+                            cur_index.graph.matrices_size)
+        # Algo's body
+        changed = True
+        while changed:
+            changed = False
+            # Iterate through all complex rules
+            for l, r1, r2 in self.index.grammar.complex_rules:
+                # Number of instances before operation
+                old_nnz = cur_index.nonterms[l].nvals
+
+                # l -> r1 r2 ==> l += (l_src * r1) * r2 =>
+
+                # 1) r1_src += {(j, j) : (i, j) \in l_src}
+                update_sources_opt(self.index.sources[l], cur_index.sources[r1],
+                                   self.index.sources[r1])
+
+                # 2) tmp = l_src * r1
+                tmp = cur_index.sources[l] @ cur_index.nonterms[r1]
+
+                # 3) r2_src += {(j, j) : (i, j) \in tmp}
+                update_sources_opt(tmp, cur_index.sources[r2],
+                                   self.index.sources[r2])
+
+                # 4) l += tmp * r2
+                cur_index.nonterms[l] += tmp @ cur_index.nonterms[r2]
+
+                # Clear temporary matrix
+                tmp.clear()
+
+                # Number of instances after operation
+                new_nnz = cur_index.nonterms[l].nvals
+
+                # Update changed flag
+                changed |= not old_nnz == new_nnz
+
+        self.index.nonterms[self.index.grammar.start_nonterm] \
+            += cur_index.nonterms[self.index.grammar.start_nonterm]
+        return self.index.nonterms[self.index.grammar.start_nonterm]
