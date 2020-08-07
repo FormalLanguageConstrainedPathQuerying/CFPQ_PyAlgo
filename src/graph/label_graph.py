@@ -1,11 +1,9 @@
 from pygraphblas.matrix import Matrix
 from pygraphblas.types import BOOL
 
-MAX_MATRIX_SIZE = 1000000
-
 
 class LabelGraph:
-    def __init__(self, matrices_size=MAX_MATRIX_SIZE):
+    def __init__(self, matrices_size: int):
         self.matrices = {}
         self.matrices_size = matrices_size
 
@@ -22,10 +20,24 @@ class LabelGraph:
 
     @classmethod
     def from_txt(cls, path):
-        g = LabelGraph()
+        triplets = list()
+        size_matrices = 0
         with open(path, 'r') as f:
             for line in f.readlines():
                 v, label, to = line.split()
                 v, to = int(v), int(to)
-                g[label][v, to] = True
+
+                if v > size_matrices:
+                    size_matrices = v
+
+                if to > size_matrices:
+                    size_matrices = to
+
+                triplets.append((v, label, to))
+
+        g = LabelGraph(size_matrices + 1)
+
+        for triplet in triplets:
+            g[triplet[1]][triplet[0], triplet[2]] = True
+
         return g
