@@ -15,11 +15,11 @@ class MyTestCase(unittest.TestCase):
 
         paths_1 = TensorPaths(rsa, graph_res, tc, 1)
         result_1 = paths_1.GetPaths(0, 2, "S")
-        self.assertEqual({(0, "a", 1, "b", 2)}, result_1)
+        self.assertEqual([[[0, 1], [1, 2]]], result_1.paths)
 
         paths_2 = TensorPaths(rsa, graph_res, tc, 1)
         result_2 = paths_2.GetPaths(2, 4, "S")
-        self.assertEqual({(2, "a", 3, "b", 4)}, result_2)
+        self.assertEqual([[[2, 3], [3, 4]]], result_2.paths)
 
     def test_cycle(self):
         graph = LabelGraph.from_txt("graph_cycle")
@@ -29,7 +29,7 @@ class MyTestCase(unittest.TestCase):
 
         paths = TensorPaths(rsa, graph_res, tc, 1)
         result = paths.GetPaths(0, 0, "S")
-        self.assertEqual({(0, "A", 1, "A", 2, "A", 0)}, result)
+        self.assertEqual([[[0, 1], [1, 2], [2, 0]]], result.paths)
 
     def test_rpq(self):
         graph = LabelGraph.from_txt("graph_rpq")
@@ -39,11 +39,11 @@ class MyTestCase(unittest.TestCase):
 
         paths_1 = TensorPaths(rsa, graph_res, tc, 1)
         result = paths_1.GetPaths(0, 5, "S")
-        self.assertEqual({(0, "a", 1, "b", 4, "b", 5)}, result)
+        self.assertEqual([[[0, 1], [1, 4], [4, 5]]], result.paths)
 
         paths_2 = TensorPaths(rsa, graph_res, tc, 1)
         result = paths_2.GetPaths(1, 3, "S")
-        self.assertEqual({(1, "a", 2, "b", 3)}, result)
+        self.assertEqual([[[1, 2], [2, 3]]], result.paths)
 
     def test_one_edge(self):
         graph = LabelGraph.from_txt("graph_rpq")
@@ -53,7 +53,7 @@ class MyTestCase(unittest.TestCase):
 
         paths = TensorPaths(rsa, graph_res, tc, 1)
         result = paths.GetPaths(0, 1, "S")
-        self.assertEqual({(0, "a", 1)}, result)
+        self.assertEqual([[[0, 1]]], result.paths)
 
     def test_loop(self):
         graph = LabelGraph.from_txt("graph_loop")
@@ -63,7 +63,7 @@ class MyTestCase(unittest.TestCase):
 
         paths = TensorPaths(rsa, graph_res, tc, 1)
         result = paths.GetPaths(0, 0, "S")
-        self.assertEqual({(0, "a", 0)}, result)
+        self.assertEqual([[[0, 0]]], result.paths)
 
     def test_count_paths(self):
         graph = LabelGraph.from_txt("graph_paths")
@@ -73,25 +73,25 @@ class MyTestCase(unittest.TestCase):
 
         paths_3 = TensorPaths(rsa, graph_res, tc, 3)
         result = paths_3.GetPaths(0, 2, "S")
-        self.assertEqual({(0, "a", 1, "b", 2), (0, "a", 3, "b", 2), (0, "a", 4, "b", 2)}, result)
+        self.assertEqual([[[0, 3], [3, 2]], [[0, 4], [4, 2]], [[0, 1], [1, 2]]], result.paths)
 
         paths_2 = TensorPaths(rsa, graph_res, tc, 2)
         result = paths_2.GetPaths(0, 2, "S")
-        if (0, "a", 1, "b", 2) in result and (0, "a", 3, "b", 2) in result:
-            self.assertEqual({(0, "a", 1, "b", 2), (0, "a", 3, "b", 2)}, result)
-        if (0, "a", 1, "b", 2) in result and (0, "a", 4, "b", 2) in result:
-            self.assertEqual({(0, "a", 1, "b", 2), (0, "a", 4, "b", 2)}, result)
-        if (0, "a", 3, "b", 2) in result and (0, "a", 4, "b", 2) in result:
-            self.assertEqual({(0, "a", 3, "b", 2), (0, "a", 4, "b", 2)} ,result)
+        if [[0, 1], [1, 2]] in result.paths and [[0, 3], [3, 2]] in result.paths:
+            self.assertEqual([[[0, 1], [1, 2]], [[0, 3], [3, 2]]], result.paths)
+        if [[0, 1], [1, 2]] in result.paths and [[0, 4], [4, 2]] in result.paths:
+            self.assertEqual([[[0, 1], [1, 2]], [[0, 4], [4, 2]]], result.paths)
+        if [[0, 3], [3, 2]] in result.paths and [[0, 4], [4, 2]] in result.paths:
+            self.assertEqual([[[0, 3], [3, 2]], [[0, 4], [4, 2]]], result.paths)
 
         paths_1 = TensorPaths(rsa, graph_res, tc, 1)
         result = paths_1.GetPaths(0, 2, "S")
-        if (0, "a", 1, "b", 2) in result:
-            self.assertEqual({(0, "a", 1, "b", 2)}, result)
-        if (0, "a", 3, "b", 2) in result:
-            self.assertEqual({(0, "a", 3, "b", 2)}, result)
-        if (0, "a", 4, "b", 2) in result:
-            self.assertEqual({(0, "a", 4, "b", 2)}, result)
+        if [[0, 1], [1, 2]] in result.paths:
+            self.assertEqual([[[0, 1], [1, 2]]], result.paths)
+        if [[0, 3], [3, 2]] in result.paths:
+            self.assertEqual([[[0, 3], [3, 2]]], result.paths)
+        if [[0, 4], [4, 2]] in result.paths:
+            self.assertEqual([[[0, 4], [4, 2]]], result.paths)
 
 
 if __name__ == '__main__':
