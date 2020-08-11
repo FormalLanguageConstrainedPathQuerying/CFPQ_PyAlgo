@@ -46,7 +46,6 @@ class Paths:
 
             if start in self.path_start:
                 self.path_start[start].extend(second.path_start[start])
-                #self.path_start.update({start: self.path_start[start].append(second.path_start[start])})
             else:
                 self.path_start.update({start: second.path_start[start]})
 
@@ -82,7 +81,8 @@ class TensorPaths:
         self.rsa = rsa
         self.size_graph = graph.matrices_size
 
-        self.exist = set()
+        self.exist_paths = set()
+        self.exist_inner = set()
 
         self.count_paths = count_paths
         self.last_count = 1
@@ -105,12 +105,12 @@ class TensorPaths:
 
     def GetPaths(self, v_s, v_f, N):
 
-        if (v_s, v_f) in self.exist:
-            return set()
+        if (v_s, v_f) in self.exist_paths:
+            return Paths()
 
         #print("Get paths (" + str(v_s) + ", " + str(v_f) + ")")
 
-        self.exist.add((v_s, v_f))
+        self.exist_paths.add((v_s, v_f))
 
         q_N = self.rsa.start_state()[N]
         f_N = self.rsa.finish_states()[N]
@@ -127,12 +127,12 @@ class TensorPaths:
             if check:
                 result.union_paths(self.GetPathsInner(q_N * self.size_graph + v_s, f * self.size_graph + v_f))
 
-        self.exist.remove((v_s, v_f))
+        self.exist_paths.remove((v_s, v_f))
 
         #print("Get paths (" + str(v_s) + ", " + str(v_f) + ")")
         #print("result = " + str(result))
 
-        if not self.exist:
+        if not self.exist_paths:
             result.doSet()
 
         return result
@@ -141,10 +141,10 @@ class TensorPaths:
 
         #print("Get paths inner (" + str(i) + ", " + str(j) + ")")
 
-        if (i, j) == self.last_inner:
-            return set()
-        else:
-            self.last_inner = (i, j)
+        if (i, j) in self.exist_inner:
+            return Paths()
+
+        self.exist_inner.add((i, j))
 
         parts = set()
 
@@ -162,6 +162,8 @@ class TensorPaths:
         result = Paths()
         for part in parts:
             result.union_paths(self.GetSubPaths(i, j, part))
+
+        self.exist_inner.remove((i, j))
 
         #print("Get paths inner (" + str(i) + ", " + str(j) + ")")
         #print("result = " + str(result))
