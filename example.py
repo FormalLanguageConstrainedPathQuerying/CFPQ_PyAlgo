@@ -7,11 +7,15 @@ from src.algo.single_source.single_source import SingleSourceAlgoBrute, SingleSo
 g = LabelGraph.from_txt('deps/CFPQ_Data/data/WorstCase/Matrices/worstcase_128.txt')
 gr = CnfGrammar.from_cnf('deps/CFPQ_Data/data/WorstCase/Grammars/Brackets.cnf')
 
+print('matrix_base_algo:')
+
 with SimpleTimer():
     m = matrix_base_algo(g, gr)
 
 ss_ab = SingleSourceAlgoBrute(g, gr)
 sources_vertices = range(128)
+
+print('SingleSourceAlgoBrute:')
 
 with SimpleTimer():
     m1 = ss_ab.solve(sources_vertices)
@@ -26,7 +30,20 @@ for i in sources_vertices:
     st.toc()
     sum += st.duration
 
-print(sum)
+print(f'SingleSourceAlgoSmart: {sum}')
+
+ss_ao = SingleSourceAlgoOpt(g, gr)
+
+sum = 0
+for i in sources_vertices:
+    st = SimpleTimer()
+    st.tic()
+    m3 = ss_ao.solve([i])
+    st.toc()
+    sum += st.duration
+
+print(f'SingleSourceAlgoOpt: {sum}')
 
 assert m.to_lists() == m1.to_lists(), 'Not equal!'
 assert m.to_lists() == m2.to_lists(), 'Not equal!'
+assert m.to_lists() == m3.to_lists(), 'Not equal!'
