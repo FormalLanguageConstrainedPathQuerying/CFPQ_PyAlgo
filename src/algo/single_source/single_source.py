@@ -35,7 +35,7 @@ class SingleSourceIndex:
 
     def init_simple_rules(self):
         for l, r in self.grammar.simple_rules:
-            self.nonterms[l] += self.graph.matrices[r]
+            self.nonterms[l] += self.graph[r]
 
 
 class SingleSourceSolver(ABC):

@@ -36,6 +36,21 @@ def test_correctness_per_vertex(graph, grammar, algo):
         assert m1.extract_matrix(chunk).iseq(m.extract_matrix(chunk))
 
 
+def run_suite(algo, chunks):
+    for chunk in chunks:
+        m = algo.solve(chunk)
+
+@graph_grammar_decorator
+@pytest.mark.parametrize('chunk_size', [None, *[2 ** i for i in range(7)]])
+def test_benchmark(graph, grammar, algo, chunk_size, benchmark):
+    g = LabelGraph.from_txt(graph)
+    gr = CnfGrammar.from_cnf(grammar)
+    a = algo(g, gr)
+    chunks = g.chunkify(g.matrices_size if chunk_size is None else chunk_size)
+
+    benchmark.pedantic(run_suite, args=(a, chunks), rounds=5, iterations=1, warmup_rounds=0)
+
+
 @graph_grammar_decorator
 def test_correctness(graph, grammar, algo):
     g = LabelGraph.from_txt(graph)
