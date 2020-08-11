@@ -179,18 +179,18 @@ class SingleSourceAlgoOpt(SingleSourceSolver):
         while changed:
             changed = False
 
+            # Number of instances before operation
+            old_nnz_nonterms = {nonterm: cur_index.nonterms[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
+            old_nnz_sources = {nonterm: cur_index.sources[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
+
             # Iterate through all complex rules
             for l, r1, r2 in self.index.grammar.complex_rules:
-
-                # Number of instances before operation
-                old_nnz_nonterms = {nonterm: cur_index.nonterms[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
-                old_nnz_sources = {nonterm: cur_index.sources[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
 
                 # l -> r1 r2 ==> l += (l_src * r1) * r2 =>
 
                 # 1) r1_src += {(j, j) : (i, j) \in l_src}
                 update_sources_opt(
-                    self.index.sources[l],
+                    cur_index.sources[l],
                     cur_index.sources[r1],
                     self.index.sources[r1]
                 )
@@ -208,12 +208,12 @@ class SingleSourceAlgoOpt(SingleSourceSolver):
                 # 4) l += tmp * r2
                 cur_index.nonterms[l] += tmp @ cur_index.nonterms[r2]
 
-                # Number of instances after operation
-                new_nnz_nonterms = {nonterm: cur_index.nonterms[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
-                new_nnz_sources = {nonterm: cur_index.sources[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
+            # Number of instances after operation
+            new_nnz_nonterms = {nonterm: cur_index.nonterms[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
+            new_nnz_sources = {nonterm: cur_index.sources[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
 
-                # Update changed flag
-                changed |= (not (old_nnz_nonterms == new_nnz_nonterms)) or (not (old_nnz_sources == new_nnz_sources))
+            # Update changed flag
+            changed |= (not (old_nnz_nonterms == new_nnz_nonterms)) or (not (old_nnz_sources == new_nnz_sources))
 
         for nonterm in cur_index.grammar.nonterms:
             self.index.nonterms[nonterm] += cur_index.nonterms[nonterm]

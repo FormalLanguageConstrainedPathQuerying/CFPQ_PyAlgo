@@ -4,7 +4,7 @@ from src.utils.time_profiler import SimpleTimer
 from src.algo.matrix_base import matrix_base_algo
 from src.algo.single_source.single_source import SingleSourceAlgoBrute, SingleSourceAlgoSmart, SingleSourceAlgoOpt
 
-g = LabelGraph.from_txt('deps/CFPQ_Data/data/WorstCase/Matrices/worstcase_128.txt')
+g = LabelGraph.from_txt('deps/CFPQ_Data/data/WorstCase/Matrices/worstcase_8.txt')
 gr = CnfGrammar.from_cnf('deps/CFPQ_Data/data/WorstCase/Grammars/Brackets.cnf')
 
 print('matrix_base_algo:')
@@ -13,7 +13,7 @@ with SimpleTimer():
     m = matrix_base_algo(g, gr)
 
 ss_ab = SingleSourceAlgoBrute(g, gr)
-sources_vertices = range(128)
+sources_vertices = range(8)
 
 print('SingleSourceAlgoBrute:')
 
@@ -29,6 +29,7 @@ for i in sources_vertices:
     m2 = ss_as.solve([i])
     st.toc()
     sum += st.duration
+    print(f'Smart i = {i}, time = {st.duration}')
 
 print(f'SingleSourceAlgoSmart:\n{sum}')
 
@@ -41,7 +42,7 @@ for i in sources_vertices:
     m3 = ss_ao.solve([i])
     st.toc()
     sum += st.duration
-    print(f'i = {i}, time = {st.duration}')
+    print(f'Opt i = {i}, time = {st.duration}')
 
 print(f'SingleSourceAlgoOpt:\n{sum}')
 
