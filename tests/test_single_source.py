@@ -6,7 +6,7 @@ from src.grammar.cnf_grammar import CnfGrammar
 from src.graph.label_graph import LabelGraph
 from src.utils.time_profiler import SimpleTimer
 from src.algo.matrix_base import matrix_base_algo
-from src.algo.single_source.single_source import SingleSourceAlgoBrute, SingleSourceAlgoSmart
+from src.algo.single_source.single_source import SingleSourceAlgoBrute, SingleSourceAlgoSmart, SingleSourceAlgoOpt
 
 from tests.suites import graph_grammar_decorator
 
@@ -16,7 +16,7 @@ def print_vec(xs):
         print(x, end=' ')
 
 
-@pytest.fixture(params=[SingleSourceAlgoBrute, SingleSourceAlgoSmart])
+@pytest.fixture(params=[SingleSourceAlgoBrute, SingleSourceAlgoSmart, SingleSourceAlgoOpt])
 def algo(request):
     return request.param
 
@@ -49,6 +49,7 @@ def test_correctness(graph, grammar, algo):
 
 
 @graph_grammar_decorator
+@pytest.mark.parametrize('chunk_size', [None, *[2 ** i for i in range(7)]])
 def test_algo(graph, grammar, algo, chunk_size=None, rounds=10, warmup_rounds=2):
     g = LabelGraph.from_txt(graph)
     gr = CnfGrammar.from_cnf(grammar)
