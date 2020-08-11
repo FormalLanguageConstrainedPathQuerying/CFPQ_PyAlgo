@@ -28,5 +28,5 @@ for i in sources_vertices:
 
 print(sum)
 
-assert m[gr.start_nonterm].to_lists() == m1.to_lists(), 'Not equal!'
-assert m[gr.start_nonterm].to_lists() == m2.to_lists(), 'Not equal!'
+assert m.to_lists() == m1.to_lists(), 'Not equal!'
+assert m.to_lists() == m2.to_lists(), 'Not equal!'
