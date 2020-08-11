@@ -41,6 +41,7 @@ for i in sources_vertices:
     m3 = ss_ao.solve([i])
     st.toc()
     sum += st.duration
+    print(f'i = {i}, time = {st.duration}')
 
 print(f'SingleSourceAlgoOpt:\n{sum}')
 

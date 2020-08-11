@@ -68,8 +68,8 @@ class SingleSourceAlgoSmart(SingleSourceSolver):
             changed = False
 
             # Number of instances before operation
-            old_nnz_nonterms = {nonterm: self.index.nonterms[nonterm].nvals for nonterm in self.index.nonterms}
-            old_nnz_src = {nonterm: self.index.sources[nonterm].nvals for nonterm in self.index.sources}
+            old_nnz_nonterms = {nonterm: self.index.nonterms[nonterm].nvals for nonterm in self.index.grammar.nonterms}
+            old_nnz_sources = {nonterm: self.index.sources[nonterm].nvals for nonterm in self.index.grammar.nonterms}
 
             # Iterate through all complex rules
             for l, r1, r2 in self.index.grammar.complex_rules:
@@ -88,11 +88,11 @@ class SingleSourceAlgoSmart(SingleSourceSolver):
                 self.index.nonterms[l] += tmp @ self.index.nonterms[r2]
 
             # Number of instances after operation
-            new_nnz_nonterms = {nonterm: self.index.nonterms[nonterm].nvals for nonterm in self.index.nonterms}
-            new_nnz_src = {nonterm: self.index.sources[nonterm].nvals for nonterm in self.index.sources}
+            new_nnz_nonterms = {nonterm: self.index.nonterms[nonterm].nvals for nonterm in self.index.grammar.nonterms}
+            new_nnz_sources = {nonterm: self.index.sources[nonterm].nvals for nonterm in self.index.grammar.nonterms}
 
             # Update changed flag
-            changed |= (not (old_nnz_nonterms == new_nnz_nonterms)) or (not (old_nnz_src == new_nnz_src))
+            changed |= (not (old_nnz_nonterms == new_nnz_nonterms)) or (not (old_nnz_sources == new_nnz_sources))
 
         return self.index.nonterms[self.index.grammar.start_nonterm]
 
@@ -121,8 +121,8 @@ class SingleSourceAlgoBrute(SingleSourceSolver):
             changed = False
 
             # Number of instances before operation
-            old_nnz_nonterms = {nonterm: index.nonterms[nonterm].nvals for nonterm in index.nonterms}
-            old_nnz_src = {nonterm: index.sources[nonterm].nvals for nonterm in index.sources}
+            old_nnz_nonterms = {nonterm: index.nonterms[nonterm].nvals for nonterm in index.grammar.nonterms}
+            old_nnz_sources = {nonterm: index.sources[nonterm].nvals for nonterm in index.grammar.nonterms}
 
             # Iterate through all complex rules
             for l, r1, r2 in index.grammar.complex_rules:
@@ -141,10 +141,11 @@ class SingleSourceAlgoBrute(SingleSourceSolver):
                 index.nonterms[l] += tmp @ index.nonterms[r2]
 
             # Number of instances after operation
-            new_nnz_nonterms = {nonterm: index.nonterms[nonterm].nvals for nonterm in index.nonterms}
-            new_nnz_src = {nonterm: index.sources[nonterm].nvals for nonterm in index.sources}
+            new_nnz_nonterms = {nonterm: index.nonterms[nonterm].nvals for nonterm in index.grammar.nonterms}
+            new_nnz_sources = {nonterm: index.sources[nonterm].nvals for nonterm in index.grammar.nonterms}
 
-            changed |= (not (old_nnz_nonterms == new_nnz_nonterms)) or (not (old_nnz_src == new_nnz_src))
+            # Update changed flag
+            changed |= (not (old_nnz_nonterms == new_nnz_nonterms)) or (not (old_nnz_sources == new_nnz_sources))
 
         return index.nonterms[index.grammar.start_nonterm]
 
@@ -156,52 +157,66 @@ class SingleSourceAlgoOpt(SingleSourceSolver):
 
     def solve(self, sources_vertices: Iterable) -> Matrix:
         cur_index = SingleSourceIndex(self.graph, self.grammar)
+
         # Initialize simple rules
         cur_index.init_simple_rules()
+
         # Initialize source matrices masks
         for v in sources_vertices:
             cur_index.sources[self.index.grammar.start_nonterm][v, v] = True
-            update_sources_opt(
-                self.index.sources[self.index.grammar.start_nonterm],
-                cur_index.sources[self.index.grammar.start_nonterm],
-                self.index.sources[self.index.grammar.start_nonterm])
+
+        update_sources_opt(
+            self.index.sources[self.index.grammar.start_nonterm],
+            cur_index.sources[self.index.grammar.start_nonterm],
+            self.index.sources[self.index.grammar.start_nonterm]
+        )
+
         # Create temporary matrix
-        tmp = Matrix.sparse(BOOL, cur_index.graph.matrices_size,
-                            cur_index.graph.matrices_size)
+        tmp = Matrix.sparse(BOOL, cur_index.graph.matrices_size, cur_index.graph.matrices_size)
+
         # Algo's body
         changed = True
         while changed:
             changed = False
+
             # Iterate through all complex rules
             for l, r1, r2 in self.index.grammar.complex_rules:
+
                 # Number of instances before operation
-                old_nnz = cur_index.nonterms[l].nvals
+                old_nnz_nonterms = {nonterm: cur_index.nonterms[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
+                old_nnz_sources = {nonterm: cur_index.sources[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
 
                 # l -> r1 r2 ==> l += (l_src * r1) * r2 =>
 
                 # 1) r1_src += {(j, j) : (i, j) \in l_src}
-                update_sources_opt(self.index.sources[l], cur_index.sources[r1],
-                                   self.index.sources[r1])
+                update_sources_opt(
+                    self.index.sources[l],
+                    cur_index.sources[r1],
+                    self.index.sources[r1]
+                )
 
                 # 2) tmp = l_src * r1
                 tmp = cur_index.sources[l] @ cur_index.nonterms[r1]
 
                 # 3) r2_src += {(j, j) : (i, j) \in tmp}
-                update_sources_opt(tmp, cur_index.sources[r2],
-                                   self.index.sources[r2])
+                update_sources_opt(
+                    tmp,
+                    cur_index.sources[r2],
+                    self.index.sources[r2]
+                )
 
                 # 4) l += tmp * r2
                 cur_index.nonterms[l] += tmp @ cur_index.nonterms[r2]
 
-                # Clear temporary matrix
-                tmp.clear()
-
                 # Number of instances after operation
-                new_nnz = cur_index.nonterms[l].nvals
+                new_nnz_nonterms = {nonterm: cur_index.nonterms[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
+                new_nnz_sources = {nonterm: cur_index.sources[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
 
                 # Update changed flag
-                changed |= not old_nnz == new_nnz
+                changed |= (not (old_nnz_nonterms == new_nnz_nonterms)) or (not (old_nnz_sources == new_nnz_sources))
 
-        self.index.nonterms[self.index.grammar.start_nonterm] \
-            += cur_index.nonterms[self.index.grammar.start_nonterm]
+        for nonterm in cur_index.grammar.nonterms:
+            self.index.nonterms[nonterm] += cur_index.nonterms[nonterm]
+            self.index.sources[nonterm] += cur_index.sources[nonterm]
+
         return self.index.nonterms[self.index.grammar.start_nonterm]
