@@ -50,7 +50,7 @@ def test_correctness(graph, grammar, algo):
 
 @graph_grammar_decorator
 @pytest.mark.parametrize('chunk_size', [None, *[2 ** i for i in range(7)]])
-def test_algo(graph, grammar, algo, chunk_size=None, rounds=10, warmup_rounds=2):
+def test_algo(graph, grammar, algo, chunk_size, rounds=10, warmup_rounds=2):
     g = LabelGraph.from_txt(graph)
     gr = CnfGrammar.from_cnf(grammar)
     a = algo(g, gr)
