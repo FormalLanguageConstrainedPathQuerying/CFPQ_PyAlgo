@@ -7,6 +7,10 @@ CFPQ_DATA_PATH = Path(__file__).parent.parent.joinpath(Path('deps/CFPQ_Data/data
 CFPQ_DATA = DataWrapper(CFPQ_DATA_PATH)
 
 
+def get_markers(suite, graph, grammar):
+    return [suite, get_file_name(graph), get_file_name(grammar)]
+
+
 ALL_TEST_CASES = [
     (suite, graph, grammar)
     for suite in CFPQ_DATA.get_suites()
@@ -16,18 +20,13 @@ ALL_TEST_CASES = [
 
 ALL_TEST_CASES_PARAMS = [
     pytest.param(graph, grammar,
-                 marks=[
-                     getattr(pytest.mark, suite),
-                     getattr(pytest.mark, get_file_name(graph)),
-                     getattr(pytest.mark, get_file_name(grammar)),
-                     getattr(pytest.mark, 'small' if get_file_size(graph) <= 1000 else 'big')
-                 ],
+                 marks=[getattr(pytest.mark, mark) for mark in get_markers(suite, graph, grammar)],
                  id=f'{get_file_name(graph)}-{get_file_name(grammar)}')
     for suite, graph, grammar in ALL_TEST_CASES
 ]
 
 
-def graph_grammar_decorator(f):
+def all_cfpq_data_test_cases(f):
     return pytest.mark.parametrize(
         'graph,grammar',
         ALL_TEST_CASES_PARAMS

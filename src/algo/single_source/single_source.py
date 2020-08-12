@@ -8,7 +8,7 @@ from src.graph.label_graph import LabelGraph
 
 
 def update_sources(src: Matrix, dst: Matrix):
-    """ dst += {(j, j) : (i, j) \in src} by GrB_reduce src to a vector """
+    """ dst += {(j, j) : (i, j) in src} by GrB_reduce src to a vector """
 
     # Transpose src and reduce to a vector
     J, V = src.T.reduce_vector().to_lists()
@@ -185,7 +185,6 @@ class SingleSourceAlgoOpt(SingleSourceSolver):
 
             # Iterate through all complex rules
             for l, r1, r2 in self.index.grammar.complex_rules:
-
                 # l -> r1 r2 ==> l += (l_src * r1) * r2 =>
 
                 # 1) r1_src += {(j, j) : (i, j) \in l_src}
