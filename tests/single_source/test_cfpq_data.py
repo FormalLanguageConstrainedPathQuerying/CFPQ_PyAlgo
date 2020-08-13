@@ -1,3 +1,4 @@
+import csv
 import pytest
 from tqdm import tqdm
 
@@ -45,54 +46,30 @@ def test_correctness(graph, grammar, algo):
 
 @all_cfpq_data_test_cases
 @pytest.mark.parametrize('chunk_size', [None, *[2 ** i for i in range(7)]])
-def test_algo(graph, grammar, algo, chunk_size, rounds=10, warmup_rounds=2):
+def test_algo(graph, grammar, algo, chunk_size):
     g = LabelGraph.from_txt(graph)
+    g_name = get_file_name(graph)
+
     gr = CnfGrammar.from_cnf(grammar)
+    gr_name = get_file_name(grammar)
+
     a = algo(g, gr)
+    a_name = {type(a).__name__}
 
     chunks = g.chunkify(g.matrices_size if chunk_size is None else chunk_size)
 
-    min_time, min_chunk = None, None
-    max_time, max_chunk = None, None
-    mean_time = None
-
     timer = SimpleTimer()
 
-    # Used for prettier print
-    print()
+    csv_file = open('test_algo_results.csv', mode='w+', newline='\n')
+    csv_writer = csv.writer(csv_file, delimeter=' ', quoting=csv.QUOTE_NONE)
+
+    times_of_chunks = []
 
     for chunk in chunks:
-        for i in range(warmup_rounds):
-            a.solve(chunk)
+        timer.tic()
+        a.solve(chunk)
+        chunk_time = timer.toc()
 
-        sum_time = 0
+        times_of_chunks.append(chunk_time)
 
-        for i in range(rounds):
-            timer.tic()
-            a.solve(chunk)
-            sum_time += timer.toc()
-
-        cur_mean = sum_time / rounds
-
-        print(f'{get_file_name(graph)}-{get_file_name(grammar)}-{type(a).__name__}-{chunk} TIME: {round(cur_mean, 6)}s')
-
-        if min_time is None or cur_mean < min_time:
-            min_time = cur_mean
-            min_chunk = chunk
-
-        if max_time is None or cur_mean > max_time:
-            max_time = cur_mean
-            max_chunk = chunk
-
-        if mean_time is None:
-            mean_time = cur_mean
-        else:
-            mean_time += cur_mean
-
-    mean_time /= len(chunks)
-
-    print(f'{get_file_name(graph)}-{get_file_name(grammar)}-{type(a).__name__} MEAN TIME: {round(mean_time, 6)}s')
-    print(f'{get_file_name(graph)}-{get_file_name(grammar)}-{type(a).__name__} MIN TIME: {round(min_time, 6)}s')
-    print(f'{get_file_name(graph)}-{get_file_name(grammar)}-{type(a).__name__} MIN CHUNK: {min_chunk}')
-    print(f'{get_file_name(graph)}-{get_file_name(grammar)}-{type(a).__name__} MAX TIME: {round(max_time, 6)}s')
-    print(f'{get_file_name(graph)}-{get_file_name(grammar)}-{type(a).__name__} MAX CHUNK: {max_chunk}')
+    csv_writer.writerow(f'{g_name} {gr_name} {a_name} {times_of_chunks}')
