@@ -72,4 +72,4 @@ def test_algo(graph, grammar, algo, chunk_size):
 
         times_of_chunks.append(chunk_time)
 
-    csv_writer.writerow(f'{g_name} {gr_name} {a_name} {times_of_chunks}')
+    csv_writer.writerow([g_name, gr_name, a_name, times_of_chunks])
