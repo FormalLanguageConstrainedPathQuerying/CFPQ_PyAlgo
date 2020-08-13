@@ -60,16 +60,16 @@ def test_algo(graph, grammar, algo, chunk_size):
 
     timer = SimpleTimer()
 
-    csv_file = open('test_algo_results.csv', mode='a+', newline='\n')
-    csv_writer = csv.writer(csv_file, delimiter=' ', quoting=csv.QUOTE_NONE, escapechar=' ')
+    with open('test_algo_results.csv', mode='a', newline='\n') as csv_file:
+        csv_writer = csv.writer(csv_file, delimiter=' ', quoting=csv.QUOTE_NONE, escapechar=' ')
 
-    times_of_chunks = []
+        times_of_chunks = []
 
-    for chunk in chunks:
-        timer.tic()
-        a.solve(chunk)
-        chunk_time = timer.toc()
+        for chunk in chunks:
+            timer.tic()
+            a.solve(chunk)
+            chunk_time = timer.toc()
 
-        times_of_chunks.append(chunk_time)
+            times_of_chunks.append(chunk_time)
 
-    csv_writer.writerow([g_name, gr_name, a_name, chunk_size, times_of_chunks])
+        csv_writer.writerow([g_name, gr_name, a_name, chunk_size, times_of_chunks])
