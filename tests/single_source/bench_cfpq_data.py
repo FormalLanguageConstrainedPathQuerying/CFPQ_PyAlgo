@@ -5,7 +5,7 @@ from src.graph.label_graph import LabelGraph
 from tests.suites import all_cfpq_data_test_cases
 
 
-@pytest.mark.parametrize('chunk_size', [None, *[2 ** i for i in range(14)]])
+@pytest.mark.parametrize('chunk_size', [1, 2, 4, 8, 16, 32, 50, 100, 500, 1000, 5000, 10000, 100000])
 @all_cfpq_data_test_cases
 def test_single_source_benchmark_total(graph, grammar, algo, chunk_size, benchmark):
     g = LabelGraph.from_txt(graph)

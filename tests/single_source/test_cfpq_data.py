@@ -45,7 +45,7 @@ def test_correctness(graph, grammar, algo):
 
 
 @all_cfpq_data_test_cases
-@pytest.mark.parametrize('chunk_size', [None, *[2 ** i for i in range(7)]])
+@pytest.mark.parametrize('chunk_size', [1, 2, 4, 8, 16, 32, 50, 100, 500, 1000, 5000, 10000, 100000])
 def test_algo(graph, grammar, algo, chunk_size):
     g = LabelGraph.from_txt(graph)
     g_name = get_file_name(graph)
@@ -56,7 +56,7 @@ def test_algo(graph, grammar, algo, chunk_size):
     a = algo(g, gr)
     a_name = type(a).__name__
 
-    chunks = g.chunkify(g.matrices_size if chunk_size is None else chunk_size)
+    chunks = g.chunkify(chunk_size)
 
     timer = SimpleTimer()
 
