@@ -70,6 +70,6 @@ def test_algo(graph, grammar, algo, chunk_size):
             a.solve(chunk)
             chunk_time = timer.toc()
 
-            times_of_chunks.append(chunk_time)
+            times_of_chunks.append(round(chunk_time, 6))
 
         csv_writer.writerow([g_name, gr_name, a_name, chunk_size, times_of_chunks])
