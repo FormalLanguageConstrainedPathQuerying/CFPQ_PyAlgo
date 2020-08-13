@@ -61,7 +61,7 @@ def test_algo(graph, grammar, algo, chunk_size):
     timer = SimpleTimer()
 
     csv_file = open('test_algo_results.csv', mode='w+', newline='\n')
-    csv_writer = csv.writer(csv_file, delimeter=' ', quoting=csv.QUOTE_NONE)
+    csv_writer = csv.writer(csv_file, delimiter=' ', quoting=csv.QUOTE_NONE)
 
     times_of_chunks = []
 
