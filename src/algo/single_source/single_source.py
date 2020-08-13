@@ -1,17 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import Iterable
-from pygraphblas import Matrix
+from typing import Iterable, Tuple
+from pygraphblas import Matrix, TransposeA
 from pygraphblas.types import BOOL
 
 from src.grammar.cnf_grammar import CnfGrammar
 from src.graph.label_graph import LabelGraph
 
 
-def update_sources(src: Matrix, dst: Matrix):
-    """ dst += {(j, j) : (i, j) in src} by GrB_reduce src to a vector """
+def update_sources(m: Matrix, dst: Matrix):
+    """ dst += {(j, j) : (i, j) in m} by GrB_reduce src to a vector """
 
     # Transpose src and reduce to a vector
-    J, V = src.T.reduce_vector().to_lists()
+    J, V = m.T.reduce_vector().to_lists()
 
     # If j-th column of src contains True then add (j, j) to dst
     for k in range(len(J)):
@@ -19,11 +19,12 @@ def update_sources(src: Matrix, dst: Matrix):
             dst[J[k], J[k]] = True
 
 
-def update_sources_opt(src: Matrix, dst: Matrix, msk: Matrix):
-    update_sources(src, dst)
-    for j, v in zip(*msk.T.reduce_vector().to_lists()):
-        if v is True:
-            dst[j, j] = False
+def update_sources_opt(m: Matrix, mask: Matrix, res: Matrix):
+    """ res += {(j, j): (i, j) in m and (j, j) not in mask}"""
+    src_vec = m.reduce_vector(desc=TransposeA)
+    for i, _ in src_vec:
+        if (i, i) not in mask:
+            res[i, i] = 1
 
 
 class SingleSourceIndex:
@@ -154,25 +155,18 @@ class SingleSourceAlgoOpt(SingleSourceSolver):
     def __init__(self, graph: LabelGraph, grammar: CnfGrammar):
         super().__init__(graph, grammar)
         self.index = SingleSourceIndex(graph, grammar)
+        self.index.init_simple_rules()
 
     def solve(self, sources_vertices: Iterable) -> Matrix:
-        cur_index = SingleSourceIndex(self.graph, self.grammar)
-
-        # Initialize simple rules
-        cur_index.init_simple_rules()
+        new_sources = LabelGraph(self.graph.matrices_size)
 
         # Initialize source matrices masks
-        for v in sources_vertices:
-            cur_index.sources[self.index.grammar.start_nonterm][v, v] = True
-
-        update_sources_opt(
-            self.index.sources[self.index.grammar.start_nonterm],
-            cur_index.sources[self.index.grammar.start_nonterm],
-            self.index.sources[self.index.grammar.start_nonterm]
-        )
+        for i in sources_vertices:
+            if (i, i) not in self.index.sources[self.grammar.start_nonterm]:
+                new_sources[self.grammar.start_nonterm][i, i] = True
 
         # Create temporary matrix
-        tmp = Matrix.sparse(BOOL, cur_index.graph.matrices_size, cur_index.graph.matrices_size)
+        tmp = Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)
 
         # Algo's body
         changed = True
@@ -180,42 +174,32 @@ class SingleSourceAlgoOpt(SingleSourceSolver):
             changed = False
 
             # Number of instances before operation
-            old_nnz_nonterms = {nonterm: cur_index.nonterms[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
-            old_nnz_sources = {nonterm: cur_index.sources[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
+            old_nnz_nonterms = {nonterm: self.index.nonterms[nonterm].nvals for nonterm in self.grammar.nonterms}
+            old_nnz_sources = {nonterm: new_sources[nonterm].nvals for nonterm in self.grammar.nonterms}
 
             # Iterate through all complex rules
             for l, r1, r2 in self.index.grammar.complex_rules:
-                # l -> r1 r2 ==> l += (l_src * r1) * r2 =>
+                # l -> r1 r2 ==> index[l] += (new[l_src] * index[r1]) * index[r2] =>
 
-                # 1) r1_src += {(j, j) : (i, j) \in l_src}
-                update_sources_opt(
-                    cur_index.sources[l],
-                    cur_index.sources[r1],
-                    self.index.sources[r1]
-                )
+                # 1) new[r1_src] += {(j, j) : (j, j) in new[l_src] and not in index[r1_src]}
+                for i, _, _ in new_sources[l]:
+                    if (i, i) not in self.index.sources[r1]:
+                        new_sources[r1][i, i] = True
 
-                # 2) tmp = l_src * r1
-                tmp = cur_index.sources[l] @ cur_index.nonterms[r1]
+                # 2) tmp = new[l_src] * index[r1]
+                tmp = new_sources[l] @ self.index.nonterms[r1]
 
-                # 3) r2_src += {(j, j) : (i, j) \in tmp}
-                update_sources_opt(
-                    tmp,
-                    cur_index.sources[r2],
-                    self.index.sources[r2]
-                )
+                # 3) new[r2_src] += {(j, j) : (i, j) in tmp and not in index[r2_src]}
+                update_sources_opt(tmp, self.index.sources[r2], new_sources[r2])
 
-                # 4) l += tmp * r2
-                cur_index.nonterms[l] += tmp @ cur_index.nonterms[r2]
+                # 4) index[l] += tmp * index[r2]
+                self.index.nonterms[l] += tmp @ self.index.nonterms[r2]
 
             # Number of instances after operation
-            new_nnz_nonterms = {nonterm: cur_index.nonterms[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
-            new_nnz_sources = {nonterm: cur_index.sources[nonterm].nvals for nonterm in cur_index.grammar.nonterms}
+            new_nnz_nonterms = {nonterm: self.index.nonterms[nonterm].nvals for nonterm in self.grammar.nonterms}
+            new_nnz_sources = {nonterm: new_sources[nonterm].nvals for nonterm in self.grammar.nonterms}
 
             # Update changed flag
             changed |= (not (old_nnz_nonterms == new_nnz_nonterms)) or (not (old_nnz_sources == new_nnz_sources))
-
-        for nonterm in cur_index.grammar.nonterms:
-            self.index.nonterms[nonterm] += cur_index.nonterms[nonterm]
-            self.index.sources[nonterm] += cur_index.sources[nonterm]
 
         return self.index.nonterms[self.index.grammar.start_nonterm]

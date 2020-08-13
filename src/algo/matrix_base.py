@@ -1,5 +1,3 @@
-from pygraphblas import binaryop, Matrix
-
 from src.grammar.cnf_grammar import CnfGrammar
 from src.graph.label_graph import LabelGraph
 
