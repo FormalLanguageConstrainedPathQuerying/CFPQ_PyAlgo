@@ -54,14 +54,14 @@ def test_algo(graph, grammar, algo, chunk_size):
     gr_name = get_file_name(grammar)
 
     a = algo(g, gr)
-    a_name = {type(a).__name__}
+    a_name = type(a).__name__
 
     chunks = g.chunkify(g.matrices_size if chunk_size is None else chunk_size)
 
     timer = SimpleTimer()
 
-    csv_file = open('test_algo_results.csv', mode='w+', newline='\n')
-    csv_writer = csv.writer(csv_file, delimiter=' ', quoting=csv.QUOTE_NONE)
+    csv_file = open('test_algo_results.csv', mode='a+', newline='\n')
+    csv_writer = csv.writer(csv_file, delimiter=' ', quoting=csv.QUOTE_NONE, escapechar=' ')
 
     times_of_chunks = []
 
@@ -72,4 +72,4 @@ def test_algo(graph, grammar, algo, chunk_size):
 
         times_of_chunks.append(chunk_time)
 
-    csv_writer.writerow([g_name, gr_name, a_name, times_of_chunks])
+    csv_writer.writerow([g_name, gr_name, a_name, chunk_size, times_of_chunks])
