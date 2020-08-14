@@ -34,7 +34,7 @@ class LabelGraph:
         return g
 
     def chunkify(self, chunk_len) -> list:
-        return chunkify(range(self.matrices_size), chunk_len)
+        return list(chunkify(list(range(self.matrices_size)), chunk_len))
 
 
 def get_graph_size(path):
