@@ -8,11 +8,12 @@ from src.grammar.cnf_grammar import CnfGrammar
 from src.graph.label_graph import LabelGraph
 from src.utils.file_helpers import get_file_name
 from src.utils.time_profiler import SimpleTimer
-from tests.suites import all_cfpq_data_test_cases
+from src.utils.useful_paths import GLOBAL_CFPQ_DATA
+from tests.suites.cfpq_data import all_cfpq_data_test_cases
 
 
 @pytest.mark.parametrize('chunk_size', [1, 2, 4, 8, 16, 32, 50, 100, 500, 1000, 5000, 10000, None])
-@all_cfpq_data_test_cases
+@all_cfpq_data_test_cases(GLOBAL_CFPQ_DATA)
 def test_single_source_benchmark_total(graph, grammar, algo, chunk_size, benchmark):
     g = LabelGraph.from_txt(graph)
     gr = CnfGrammar.from_cnf(grammar)
@@ -29,8 +30,8 @@ def test_single_source_benchmark_total(graph, grammar, algo, chunk_size, benchma
     benchmark.pedantic(run_suite, rounds=5, iterations=1, warmup_rounds=0)
 
 
-@all_cfpq_data_test_cases
 @pytest.mark.parametrize('chunk_size', [1, 2, 4, 8, 16, 32, 50, 100, 500, 1000, 5000, 10000, None])
+@all_cfpq_data_test_cases(GLOBAL_CFPQ_DATA)
 def test_single_source_benchmark_granularity(graph, grammar, algo, chunk_size, result_folder):
     g = LabelGraph.from_txt(graph)
     gr = CnfGrammar.from_cnf(grammar)
