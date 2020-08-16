@@ -18,10 +18,10 @@ The first way to start is to use Docker:
 
 ```bash
 # build docker image
-docker build --tag .
+docker build --tag <some_tag> .
 
 # run docker container
-docker run --rm -it -v ${PWD}:/CFPQ_PyAlgo bash
+docker run --rm -it -v ${PWD}:/CFPQ_PyAlgo <some_tag> bash
 ```
 After it you can develop everything locally and run tests and benchmarks inside the container. Also you can use PyCharm and [configure an interpreter using Docker]( https://www.jetbrains.com/help/pycharm/using-docker-as-a-remote-interpreter.html).
 
