@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/simpletonDL/CFPQ_PyAlgo/tree/circleci-project-setup.svg?style=svg)](https://circleci.com/gh/simpletonDL/CFPQ_PyAlgo/tree/circleci-project-setup)
+[![CircleCI](https://circleci.com/gh/JetBrains-Research/CFPQ_PyAlgo/tree/master.svg?style=svg)](https://circleci.com/gh/JetBrains-Research/CFPQ_PyAlgo/tree/master)
 
 # CFPQ_PyAlgo
 The CFPQ_PyAlgo is a repository for developing, testing and benchmarking algorithms that solve Formal-Language-Constrained Path Problems, such as Context-Free Path Queries and Regular Path Queries. All algorithms are based on the [GraphBLAS](http://graphblas.org/index.php?title=Graph_BLAS_Forum) framework that allows you to represent graphs as matrices and work with them in terms of linear algebra. For convenience, all the code is written in Python using [pygraphblas](https://github.com/michelp/pygraphblas), which is Python wrapper around GraphBLAS API.
