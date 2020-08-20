@@ -9,7 +9,7 @@ from src.graph.label_graph import LabelGraph
 from src.utils.file_helpers import get_file_name
 from src.utils.time_profiler import SimpleTimer
 from src.utils.useful_paths import GLOBAL_CFPQ_DATA
-from tests.suites.cfpq_data import all_cfpq_data_test_cases
+from test.suites.cfpq_data import all_cfpq_data_test_cases
 
 
 @pytest.mark.parametrize('chunk_size', [1, 2, 4, 8, 16, 32, 50, 100, 500, 1000, 5000, 10000, None])
