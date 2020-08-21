@@ -1,3 +1,4 @@
 tqdm
 pytest
 pytest-benchmark
+pandas
