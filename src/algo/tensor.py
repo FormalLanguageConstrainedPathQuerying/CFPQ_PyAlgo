@@ -16,6 +16,8 @@ def tensor_algo(graph: LabelGraph, grammar: RecursiveAutomaton):
 
     kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
     control_sum = 0
+    count_tc = 0
+    first_iter = True
     changed = True
     while changed:
         changed = False
@@ -28,10 +30,12 @@ def tensor_algo(graph: LabelGraph, grammar: RecursiveAutomaton):
         kron.select(lib.GxB_NONZERO)
 
         # transitive closer
-        prev = 0
+        prev = kron.nvals
         degree = kron
         transitive_changed = True
         while transitive_changed:
+            if first_iter:
+                count_tc += 1
             transitive_changed = False
             with semiring.LOR_LAND_BOOL:
                 degree = degree @ kron
@@ -42,6 +46,8 @@ def tensor_algo(graph: LabelGraph, grammar: RecursiveAutomaton):
             if prev != cur:
                 prev = cur
                 transitive_changed = True
+
+        first_iter = False
 
         kron.select(lib.GxB_NONZERO)
 
@@ -65,4 +71,4 @@ def tensor_algo(graph: LabelGraph, grammar: RecursiveAutomaton):
                     changed = True
                     control_sum = new_control_sum
 
-    return control_sum, graph, kron
+    return control_sum, graph, kron, count_tc
