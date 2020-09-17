@@ -1,21 +1,9 @@
 from pygraphblas import Matrix
 from more_itertools import unique_everseen
+from itertools import islice
 
 from src.grammar.rsa import RecursiveAutomaton
 from src.graph.label_graph import LabelGraph
-
-
-def get_elements(s: set, n):
-    count = 0
-    result = set()
-    for elem in s:
-        if count == n:
-            break
-        result.add(elem)
-        count += 1
-
-    return result
-
 
 class Paths:
 
@@ -103,7 +91,7 @@ class TensorPaths:
         self.last_count = 1
         self.last_inner = (-1, -1)
 
-    def GetPaths(self, v_s, v_f, N):
+    def get_paths(self, v_s, v_f, N):
 
         if (v_s, v_f) in self.exist_paths:
             return Paths()
@@ -115,7 +103,6 @@ class TensorPaths:
 
         result = Paths()
         for f in f_N:
-
             check = True
             for label in self.rsa.labels().difference(self.rsa.S()):
                 if (v_s, v_f) in self.graph_element[label] and (q_N, f) in self.rsa_element[label]:
@@ -123,7 +110,7 @@ class TensorPaths:
                     if self.count_paths == 1:
                         check = False
             if check:
-                result.union_paths(self.GetPathsInner(q_N * self.size_graph + v_s, f * self.size_graph + v_f))
+                result.union_paths(self.get_paths_inner(q_N * self.size_graph + v_s, f * self.size_graph + v_f))
 
         self.exist_paths.remove((v_s, v_f))
 
@@ -132,7 +119,7 @@ class TensorPaths:
 
         return result
 
-    def GetPathsInner(self, i, j):
+    def get_paths_inner(self, i, j):
 
         if (i, j) in self.exist_inner:
             return Paths()
@@ -146,18 +133,18 @@ class TensorPaths:
             if dif >= 0:
                 self.last_count += parts.nvals - 1
             else:
-                parts = get_elements(parts, parts.nvals + dif)
+                parts = islice(parts, parts.nvals + dif)
 
         result = Paths()
         for part in parts:
-            result.union_paths(self.GetSubPaths(i, j, part[0]))
+            result.union_paths(self.get_sub_paths(i, j, part[0]))
 
         self.exist_inner.remove((i, j))
 
         return result
 
-    def GetSubPaths(self, i, j, k):
-
+    def get_sub_paths(self, i, j, k):
+        
         left = Paths()
         for label in self.rsa.labels().difference(self.rsa.S()):
             if (i % self.size_graph, k % self.size_graph) in self.graph_element[label] and (
@@ -168,9 +155,9 @@ class TensorPaths:
             if N not in self.rsa_element:
                 continue
             if (i // self.size_graph, k // self.size_graph) in self.rsa_element[N]:
-                left.union_paths(self.GetPaths(i % self.size_graph, k % self.size_graph, N))
+                left.union_paths(self.get_paths(i % self.size_graph, k % self.size_graph, N))
 
-        left.union_paths(self.GetPathsInner(i, k))
+        left.union_paths(self.get_paths_inner(i, k))
 
         right = Paths()
         for label in self.rsa.labels().difference(self.rsa.S()):
@@ -182,9 +169,9 @@ class TensorPaths:
             if N not in self.rsa_element:
                 continue
             if (k // self.size_graph, j // self.size_graph) in self.rsa_element[N]:
-                right.union_paths(self.GetPaths(k % self.size_graph, j % self.size_graph, N))
+                right.union_paths(self.get_paths(k % self.size_graph, j % self.size_graph, N))
 
-        right.union_paths(self.GetPathsInner(k, j))
+        right.union_paths(self.get_paths_inner(k, j))
 
         left.product_paths(right)
 
