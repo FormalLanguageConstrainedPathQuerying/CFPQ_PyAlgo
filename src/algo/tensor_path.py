@@ -108,8 +108,6 @@ class TensorPaths:
         if (v_s, v_f) in self.exist_paths:
             return Paths()
 
-        #print("Get paths (" + str(v_s) + ", " + str(v_f) + ")")
-
         self.exist_paths.add((v_s, v_f))
 
         q_N = self.rsa.start_state()[N]
@@ -129,9 +127,6 @@ class TensorPaths:
 
         self.exist_paths.remove((v_s, v_f))
 
-        #print("Get paths (" + str(v_s) + ", " + str(v_f) + ")")
-        #print("result = " + str(result))
-
         if not self.exist_paths:
             result.doSet()
 
@@ -139,14 +134,10 @@ class TensorPaths:
 
     def GetPathsInner(self, i, j):
 
-        #print("Get paths inner (" + str(i) + ", " + str(j) + ")")
-
         if (i, j) in self.exist_inner:
             return Paths()
 
         self.exist_inner.add((i, j))
-
-        #parts = set()
 
         parts = self.tc[i] * self.tc[:, j]
 
@@ -163,13 +154,9 @@ class TensorPaths:
 
         self.exist_inner.remove((i, j))
 
-        #print("Get paths inner (" + str(i) + ", " + str(j) + ")")
-        #print("result = " + str(result))
-
         return result
 
     def GetSubPaths(self, i, j, k):
-        #print("get sub paths (" + str(i) + ", " + str(j) + ", " + str(k) + ")")
 
         left = Paths()
         for label in self.rsa.labels().difference(self.rsa.S()):
@@ -185,9 +172,6 @@ class TensorPaths:
 
         left.union_paths(self.GetPathsInner(i, k))
 
-        #print("get sub paths (" + str(i) + ", " + str(j) + ", " + str(k) + ")")
-        #print("left = " + str(left))
-
         right = Paths()
         for label in self.rsa.labels().difference(self.rsa.S()):
             if (k % self.size_graph, j % self.size_graph) in self.graph_element[label] and (
@@ -201,9 +185,6 @@ class TensorPaths:
                 right.union_paths(self.GetPaths(k % self.size_graph, j % self.size_graph, N))
 
         right.union_paths(self.GetPathsInner(k, j))
-
-        #print("get sub paths (" + str(i) + ", " + str(j) + ", " + str(k) + ")")
-        #print("right = " + str(right))
 
         left.product_paths(right)
 
