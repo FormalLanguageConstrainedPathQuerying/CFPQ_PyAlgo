@@ -3,13 +3,12 @@ from pygraphblas.types import BOOL
 from tqdm import tqdm
 
 from src.utils.common import chunkify
-
+from src.utils.graph_size import get_graph_size
 
 class LabelGraph:
     def __init__(self, matrices_size, number_edges):
         self.matrices = {}
         self.matrices_size = matrices_size
-	self.number_edges = number_edges
 
     def __getitem__(self, item: str) -> Matrix:
         if item not in self.matrices:
@@ -26,29 +25,16 @@ class LabelGraph:
 	return self.matrices_size
 
     def get_number_of_edges(self):
-	return self.number_edges
+	return sum([self.matrices[label].nvals for label in self.matrices])
 
     @classmethod
     def from_txt(cls, path, verbose=False):
-        triplets = list()
-	size_matrices = 0
-	number_edges = 0
+        g = LabelGraph(get_graph_size(path))
         with open(path, 'r') as f:
             for line in tqdm(f.readlines()) if verbose else f.readlines():
-
-		number_edges += 1
-				
                 v, label, to = line.split()
                 v, to = int(v), int(to)
-                size_matrices = max(size_matrices, v, to)
-				
-		triplets.append((v, label, to))
-
-		g = LabelGraph(size_matrices + 1, number_edges)
-		
-		for triplet in triplets:
- 		    g[triplet[1]][triplet[0], triplet[2]] = True
-
+                g[label][v, to] = True
         return g
 
     def chunkify(self, chunk_len) -> list:
