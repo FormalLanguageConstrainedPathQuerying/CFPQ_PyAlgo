@@ -3,9 +3,9 @@ from pygraphblas.types import BOOL
 from tqdm import tqdm
 
 from src.utils.common import chunkify
+from src.utils.graph_size import get_graph_size
 
 MAX_MATRIX_SIZE = 1000000
-
 
 class LabelGraph:
     def __init__(self, matrices_size=MAX_MATRIX_SIZE):
@@ -23,6 +23,12 @@ class LabelGraph:
     def __iter__(self):
         return self.matrices.__iter__()
 
+    def get_number_of_vertices(self):
+	return self.matrices_size
+
+    def get_number_of_edges(self):
+	return sum([self.matrices[label].nvals for label in self.matrices])
+
     @classmethod
     def from_txt(cls, path, verbose=False):
         g = LabelGraph(get_graph_size(path))
@@ -35,14 +41,3 @@ class LabelGraph:
 
     def chunkify(self, chunk_len) -> list:
         return list(chunkify(list(range(self.matrices_size)), chunk_len))
-
-
-def get_graph_size(path):
-    res = -1
-    with open(path, 'r') as f:
-        for line in f.readlines():
-            v, label, to = line.split()
-            v, to = int(v), int(to)
-            res = max(res, v, to)
-    return res + 1
-
