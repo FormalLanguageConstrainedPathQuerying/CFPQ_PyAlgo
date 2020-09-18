@@ -1,9 +1,14 @@
 from pygraphblas.matrix import Matrix
 from pygraphblas.types import BOOL
+from tqdm import tqdm
 
+from src.utils.common import chunkify
+from src.utils.graph_size import get_graph_size
+
+MAX_MATRIX_SIZE = 1000000
 
 class LabelGraph:
-    def __init__(self, matrices_size: int):
+    def __init__(self, matrices_size=MAX_MATRIX_SIZE):
         self.matrices = {}
         self.matrices_size = matrices_size
 
@@ -18,26 +23,21 @@ class LabelGraph:
     def __iter__(self):
         return self.matrices.__iter__()
 
+    def get_number_of_vertices(self):
+	return self.matrices_size
+
+    def get_number_of_edges(self):
+	return sum([self.matrices[label].nvals for label in self.matrices])
+
     @classmethod
-    def from_txt(cls, path):
-        triplets = list()
-        size_matrices = 0
+    def from_txt(cls, path, verbose=False):
+        g = LabelGraph(get_graph_size(path))
         with open(path, 'r') as f:
-            for line in f.readlines():
+            for line in tqdm(f.readlines()) if verbose else f.readlines():
                 v, label, to = line.split()
                 v, to = int(v), int(to)
-
-                if v > size_matrices:
-                    size_matrices = v
-
-                if to > size_matrices:
-                    size_matrices = to
-
-                triplets.append((v, label, to))
-
-        g = LabelGraph(size_matrices + 1)
-
-        for triplet in triplets:
-            g[triplet[1]][triplet[0], triplet[2]] = True
-
+                g[label][v, to] = True
         return g
+
+    def chunkify(self, chunk_len) -> list:
+        return list(chunkify(list(range(self.matrices_size)), chunk_len))
