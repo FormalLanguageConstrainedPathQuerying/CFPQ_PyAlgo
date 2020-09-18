@@ -6,6 +6,9 @@ jobs:
     steps:
       - checkout
       - run:
+      	  name: Install git into container
+      	  command: apt-get install git
+      - run:
           name: Pull submodules
           command: git submodule init && git submodule update
       - run:
