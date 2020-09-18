@@ -5,8 +5,10 @@ from tqdm import tqdm
 from src.utils.common import chunkify
 from src.utils.graph_size import get_graph_size
 
+MAX_MATRIX_SIZE = 1000000
+
 class LabelGraph:
-    def __init__(self, matrices_size, number_edges):
+    def __init__(self, matrices_size=MAX_MATRIX_SIZE):
         self.matrices = {}
         self.matrices_size = matrices_size
 
@@ -39,4 +41,3 @@ class LabelGraph:
 
     def chunkify(self, chunk_len) -> list:
         return list(chunkify(list(range(self.matrices_size)), chunk_len))
-
