@@ -8,7 +8,7 @@ from src.graph.label_graph import LabelGraph
 
 class MyTestCase(unittest.TestCase):
     def test_simple(self):
-        graph = LabelGraph.from_txt("graph_simple")
+        graph = LabelGraph.from_txt("../suites/data/tensor/test_simple/graph_simple")
         rsa = RecursiveAutomaton()
         rsa.from_file("rsa_simple")
         _, graph_res, tc = tensor_algo(graph, rsa)
@@ -22,7 +22,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual([[[2, 3], [3, 4]]], result_2.paths)
 
     def test_cycle(self):
-        graph = LabelGraph.from_txt("graph_cycle")
+        graph = LabelGraph.from_txt("../suites/data/tensor/test_cycle/graph_cycle")
         rsa = RecursiveAutomaton()
         rsa.from_file("rsa_cycle")
         _, graph_res, tc = tensor_algo(graph, rsa)
@@ -32,7 +32,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual([[[0, 1], [1, 2], [2, 0]]], result.paths)
 
     def test_rpq(self):
-        graph = LabelGraph.from_txt("graph_rpq")
+        graph = LabelGraph.from_txt("../suites/data/tensor/test_rpq/graph_rpq")
         rsa = RecursiveAutomaton()
         rsa.from_file("rsa_rpq")
         _, graph_res, tc = tensor_algo(graph, rsa)
@@ -46,7 +46,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual([[[1, 2], [2, 3]]], result.paths)
 
     def test_one_edge(self):
-        graph = LabelGraph.from_txt("graph_rpq")
+        graph = LabelGraph.from_txt("../suites/data/tensor/test_rpq/graph_rpq")
         rsa = RecursiveAutomaton()
         rsa.from_file("rsa_rpq")
         _, graph_res, tc = tensor_algo(graph, rsa)
@@ -56,7 +56,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual([[[0, 1]]], result.paths)
 
     def test_loop(self):
-        graph = LabelGraph.from_txt("graph_loop")
+        graph = LabelGraph.from_txt("../suites/data/tensor/test_loop/graph_loop")
         rsa = RecursiveAutomaton()
         rsa.from_file("rsa_loop")
         _, graph_res, tc = tensor_algo(graph, rsa)

@@ -1,71 +1,44 @@
-import unittest
+import pytest
 
-from src.algo.tensor import tensor_algo
+from src.algo.tensor.tensor import tensor_algo
 from src.grammar.rsa import RecursiveAutomaton
-from cfpq_data_devtools.data_wrapper import DataWrapper
+from src.utils.useful_paths import LOCAL_CFPQ_DATA
 from src.graph.label_graph import LabelGraph
 
 
-class Test_tensor(unittest.TestCase):
-    def test_fullgraph(self):
-        graphs = DataWrapper("/home/ilya/CFPQ_PyAlgo/deps/CFPQ_Data/data").get_graphs("FullGraph",
-                                                                                      include_extensions="txt")
-        grammar = RecursiveAutomaton()
-        grammar.from_file("/home/ilya/CFPQ_PyAlgo/src/grammar/test/RSA/ex2")
-        sums = list()
+@pytest.mark.CI
+def test_case_cycle():
+    path = LOCAL_CFPQ_DATA.joinpath('tensor/test_cycle')
+    graph = LabelGraph.from_txt(path.joinpath('graph_cycle'))
+    rsa = RecursiveAutomaton.from_file(path.joinpath('rsa_cycle'))
+    control_sum, _, _, _ = tensor_algo(graph, rsa)
+    assert control_sum == 9
 
-        print(graphs)
+@pytest.mark.CI
+def test_case_loop():
+    path = LOCAL_CFPQ_DATA.joinpath('tensor/test_loop')
+    graph = LabelGraph.from_txt(path.joinpath('graph_loop'))
+    rsa = RecursiveAutomaton.from_file(path.joinpath('rsa_loop'))
+    control_sum, _, _, _ = tensor_algo(graph, rsa)
+    assert control_sum == 3
 
-        for path_graph in graphs:
-            graph = LabelGraph.from_txt(path_graph)
-            sums.append(tensor_algo(graph, grammar))
+@pytest.mark.CI
+def test_case_rpq():
+    path = LOCAL_CFPQ_DATA.joinpath('tensor/test_rpq')
+    graph = LabelGraph.from_txt(path.joinpath('graph_rpq'))
+    rsa = RecursiveAutomaton.from_file(path.joinpath('rsa_rpq'))
+    control_sum, _, _, _ = tensor_algo(graph, rsa)
+    assert control_sum == 5
 
-        print(sums)
+@pytest.mark.CI
+def test_case_simple():
+    path = LOCAL_CFPQ_DATA.joinpath('tensor/test_simple')
+    graph = LabelGraph.from_txt(path.joinpath('graph_simple'))
+    rsa = RecursiveAutomaton.from_file(path.joinpath('rsa_simple'))
+    control_sum, _, _, _ = tensor_algo(graph, rsa)
+    assert control_sum == 2
 
-        self.assertEqual(sums[1], 10000)
-        self.assertEqual(sums[0], 40000)
-        self.assertEqual(sums[2], 1000000)
-
-    def test_worstcase(self):
-        graphs = DataWrapper("/home/ilya/CFPQ_PyAlgo/deps/CFPQ_Data/data").get_graphs("WorstCase",
-                                                                                      include_extensions="txt")
-
-        grammar = RecursiveAutomaton()
-        grammar.from_file("/home/ilya/CFPQ_PyAlgo/src/grammar/test/RSA/ex_w")
-        sums = list()
-
-        print(graphs)
-
-        for path_graph in graphs:
-            graph = LabelGraph.from_txt(path_graph)
-            sums.append(tensor_algo(graph, grammar))
-
-        print(sums)
-
-        self.assertEqual(sums[1], 272)
-        self.assertEqual(sums[0], 65792)
-        self.assertEqual(sums[2], 4160)
-
-    def test_RDF(self):
-        graphs = DataWrapper("/home/ilya/CFPQ_PyAlgo/deps/CFPQ_Data/data").get_graphs("RDF",
-                                                                                      include_extensions="txt")
-
-        grammar = RecursiveAutomaton()
-        grammar.from_file("/home/ilya/CFPQ_PyAlgo/src/grammar/test/RSA/ex_w")
-        sums = list()
-
-        print(graphs)
-
-        for path_graph in graphs:
-            graph = LabelGraph.from_txt(path_graph)
-            sums.append(tensor_algo(graph, grammar))
-
-        print(sums)
-
-        self.assertEqual(sums[1], 272)
-        self.assertEqual(sums[0], 65792)
-        self.assertEqual(sums[2], 4160)
-
-
-if __name__ == '__main__':
-    unittest.main()
+test_case_loop()
+test_case_rpq()
+test_case_cycle()
+test_case_simple()

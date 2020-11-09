@@ -7,6 +7,7 @@ from src.utils.graph_size import get_graph_size
 
 MAX_MATRIX_SIZE = 1000000
 
+
 class LabelGraph:
     def __init__(self, matrices_size=MAX_MATRIX_SIZE):
         self.matrices = {}
@@ -24,10 +25,10 @@ class LabelGraph:
         return self.matrices.__iter__()
 
     def get_number_of_vertices(self):
-	return self.matrices_size
+        return self.matrices_size
 
     def get_number_of_edges(self):
-	return sum([self.matrices[label].nvals for label in self.matrices])
+        return sum([self.matrices[label].nvals for label in self.matrices])
 
     @classmethod
     def from_txt(cls, path, verbose=False):
