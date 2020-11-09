@@ -5,6 +5,7 @@ from itertools import islice
 from src.grammar.rsa import RecursiveAutomaton
 from src.graph.label_graph import LabelGraph
 
+
 class Paths:
 
     def __init__(self):
