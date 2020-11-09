@@ -38,7 +38,3 @@ def test_case_simple():
     control_sum, _, _, _ = tensor_algo(graph, rsa)
     assert control_sum == 2
 
-test_case_loop()
-test_case_rpq()
-test_case_cycle()
-test_case_simple()
