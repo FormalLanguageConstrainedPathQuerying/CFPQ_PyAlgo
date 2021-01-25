@@ -59,8 +59,8 @@ class MatrixAllPaths:
 
         self.lib.intersect(self.grammar, self.graph)
 
-    def restore_paths(self, from_vertex, to_vertex, nonterm):
-        return self.lib.getpaths(self.grammar, from_vertex, to_vertex, nonterm.encode('utf-8'), 0)
+    def restore_paths(self, from_vertex, to_vertex, nonterm, boundlen):
+        return self.lib.getpaths(self.grammar, from_vertex, to_vertex, nonterm.encode('utf-8'), boundlen)
 
     def get_elements(self, label):
         elements = self.lib.get_elements(self.grammar, label.encode('utf-8'))
