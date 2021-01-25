@@ -14,6 +14,7 @@ class RecursiveAutomaton:
         self._count_automaton = 0
         self._start_state = dict()
         self._finish_states = dict()
+        self.terminals = set()
 
     def start_state(self):
         return self._start_state
@@ -101,4 +102,5 @@ class RecursiveAutomaton:
                         rsa._finish_states.update({label: [int(second)]})
                     if first == second:
                         rsa._start_and_finish.add(label)
+        rsa.terminals = rsa.labels().difference(rsa.S())
         return rsa
