@@ -1,7 +1,7 @@
 import pytest
 from tqdm import tqdm
 
-from src.algo.matrix_base import matrix_base_algo
+from src.algo.matrix_single_path.matrix_base import matrix_base_algo
 from src.grammar.cnf_grammar import CnfGrammar
 from src.graph.label_graph import LabelGraph
 from src.utils.file_helpers import get_file_name
