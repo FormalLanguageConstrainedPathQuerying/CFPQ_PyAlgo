@@ -1,4 +1,4 @@
-from abc import ABCMeta
+from pathlib import Path
 
 from src.algo.algo_interface import CFPQAlgo
 
@@ -7,10 +7,10 @@ from src.graph.label_graph import LabelGraph
 
 
 class MatrixBaseSolver(CFPQAlgo):
-    def __init__(self, path_to_graph: str, path_to_grammar: str):
+    def __init__(self, path_to_graph: Path, path_to_grammar: Path):
         super().__init__(path_to_graph, path_to_grammar)
-        self.graph = LabelGraph.from_txt(path_to_graph + ".txt")
-        self.grammar = CnfGrammar.from_cnf(path_to_grammar + ".cnf")
+        self.graph = LabelGraph.from_txt(str(path_to_graph) + ".txt")
+        self.grammar = CnfGrammar.from_cnf(str(path_to_grammar) + ".cnf")
 
     def solve(self):
         pass
