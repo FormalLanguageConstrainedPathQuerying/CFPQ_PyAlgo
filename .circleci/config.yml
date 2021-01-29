@@ -6,6 +6,15 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install make into container
+          command: apt-get update && apt-get install make
+      - run:
+          name: Install g++ into container
+          command: apt-get update && apt-get install g++
+      - run:
+          name: Build matrix all paths
+          command: cd src/algo/matrix_all_paths/impl && make && cd ../../../..
+      - run:
           name: Install git into container
           command: apt-get update && apt-get install -y git
       - run:
