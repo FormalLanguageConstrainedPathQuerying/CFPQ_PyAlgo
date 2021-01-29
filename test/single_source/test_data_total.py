@@ -1,7 +1,7 @@
 import pytest
 from tqdm import tqdm
 
-from src.algo.matrix_single_path.matrix_base import matrix_base_algo
+from src.algo.matrix_base.matrix_base import MatrixBaseAlgo
 from src.grammar.cnf_grammar import CnfGrammar
 from src.graph.label_graph import LabelGraph
 from src.utils.file_helpers import get_file_name
@@ -14,7 +14,8 @@ def check_single_source_per_chunk(graph, grammar, algo, chunk_count=None, verbos
     gr = CnfGrammar.from_cnf(grammar)
     a = algo(g, gr)
 
-    m = matrix_base_algo(g, gr)
+    base_algo = MatrixBaseAlgo(graph[:-4], grammar[:-4])
+    m = base_algo.solve()
 
     if chunk_count is None:
         chunk_count = g.matrices_size

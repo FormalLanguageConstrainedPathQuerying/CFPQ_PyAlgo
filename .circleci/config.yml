@@ -6,6 +6,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Build matrix all paths
+          command: cd src/algo/matrix_all_paths/impl && make && cd ../../../..
+      - run:
           name: Install git into container
           command: apt-get update && apt-get install -y git
       - run:
