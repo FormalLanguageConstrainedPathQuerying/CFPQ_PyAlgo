@@ -1,4 +1,4 @@
-FROM graphblas/pygraphblas-minimal
+FROM python:3
 
 ADD . /CFPQ_PyAlgo
 
