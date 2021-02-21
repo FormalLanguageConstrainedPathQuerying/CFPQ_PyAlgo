@@ -4,6 +4,7 @@ from src.algo.algo_interface import CFPQAlgo
 
 from src.grammar.cnf_grammar import CnfGrammar
 from src.graph.label_graph import LabelGraph
+from pygraphblas import BOOL
 
 
 class MatrixBaseSolver(CFPQAlgo):
@@ -27,7 +28,7 @@ class MatrixBaseAlgo(MatrixBaseSolver):
             changed = False
             for l, r1, r2 in self.grammar.complex_rules:
                 old_nnz = m[l].nvals
-                m[l] += m[r1] @ m[r2]
+                m[l] += m[r1].mxm(m[r2], semiring=BOOL.LOR_LAND)
                 new_nnz = m[l].nvals
                 changed |= not old_nnz == new_nnz
         return m[self.grammar.start_nonterm]

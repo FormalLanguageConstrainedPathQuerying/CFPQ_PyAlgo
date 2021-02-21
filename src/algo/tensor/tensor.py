@@ -35,7 +35,7 @@ class TensorAlgoSimple(TensorSolver):
 
             # calculate kronecker
             for label in self.grammar.labels():
-                kron += self.grammar.automaton()[label].kron(self.graph[label])
+                kron += self.grammar.automaton()[label].kronecker(self.graph[label])
 
             # transitive closure
             prev = kron.nvals
@@ -43,7 +43,7 @@ class TensorAlgoSimple(TensorSolver):
             transitive_changed = True
             while transitive_changed:
                 transitive_changed = False
-                degree = degree @ kron
+                degree = degree.mxm(kron, semiring=BOOL.LOR_LAND)
                 kron += degree
                 cur = kron.nvals
                 if prev != cur:
@@ -99,10 +99,10 @@ class TensorAlgoDynamic(TensorSolver):
             # calculate kronecker
             if first_iter:
                 for label in self.grammar.labels():
-                    kron += self.grammar.automaton()[label].kron(self.graph[label])
+                    kron += self.grammar.automaton()[label].kronecker(self.graph[label])
             else:
                 for label in self.grammar.S():
-                    kron += self.grammar.automaton()[label].kron(block[label])
+                    kron += self.grammar.automaton()[label].kronecker(block[label])
 
             if not first_iter:
                 for label in self.grammar.S():
@@ -122,8 +122,9 @@ class TensorAlgoDynamic(TensorSolver):
                     transitive_changed = True
 
             if not first_iter:
-                part = prev_kron @ kron
-                kron = prev_kron + part @ prev_kron + part + kron @ prev_kron + kron
+                part = prev_kron.mxm(kron, semiring=BOOL.LOR_LAND)
+                with BOOL.LOR_LAND:
+                    kron = prev_kron + part @ prev_kron + part + kron @ prev_kron + kron
 
             prev_kron = kron
             first_iter = False

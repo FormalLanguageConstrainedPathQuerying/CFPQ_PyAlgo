@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Iterable, Tuple
-from pygraphblas import Matrix, TransposeA
+from pygraphblas import Matrix
 from pygraphblas.types import BOOL
 
 from src.grammar.cnf_grammar import CnfGrammar
@@ -16,7 +16,7 @@ def update_sources(m: Matrix, dst: Matrix):
     """ dst += {(j, j) : (i, j) in m} by GrB_reduce src to a vector """
 
     # Transpose src and reduce to a vector
-    J, V = m.T.reduce_vector().to_lists()
+    J, V = m.T.reduce_vector(BOOL.LAND_MONOID).to_lists()
 
     # If j-th column of src contains True then add (j, j) to dst
     for k in range(len(J)):
@@ -26,7 +26,7 @@ def update_sources(m: Matrix, dst: Matrix):
 
 def update_sources_opt(m: Matrix, mask: Matrix, res: Matrix):
     """ res += {(j, j): (i, j) in m and (j, j) not in mask}"""
-    src_vec = m.reduce_vector(desc=TransposeA)
+    src_vec = m.reduce_vector(desc=descriptor.T0)
     for i, _ in src_vec:
         if (i, i) not in mask:
             res[i, i] = 1
@@ -97,13 +97,13 @@ class SingleSourceAlgoBrute(SingleSourceSolver):
                     update_sources(index.sources[l], index.sources[r1])
 
                     # 2) tmp = l_src * r1
-                    tmp = index.sources[l] @ index.nonterms[r1]
+                    tmp = index.sources[l].mxm(index.nonterms[r1], semiring=BOOL.LOR_LAND)
 
                     # 3) r2_src += {(j, j) : (i, j) \in tmp}
                     update_sources(tmp, index.sources[r2])
 
                     # 4) l += tmp * r2
-                    index.nonterms[l] += tmp @ index.nonterms[r2]
+                    index.nonterms[l] += tmp.mxm(index.nonterms[r2], semiring=BOOL.LOR_LAND)
 
                     # update nnz
                     nnz[(l, r1, r2)] = index.sources[l].nvals, index.nonterms[r1].nvals, index.nonterms[r2].nvals
@@ -149,13 +149,13 @@ class SingleSourceAlgoSmart(SingleSourceSolver):
                     update_sources(self.index.sources[l], self.index.sources[r1])
 
                     # 2) tmp = l_src * r1
-                    tmp = self.index.sources[l] @ self.index.nonterms[r1]
+                    tmp = self.index.sources[l].mxm(self.index.nonterms[r1], semiring=BOOL.LOR_LAND)
 
                     # 3) r2_src += {(j, j) : (i, j) \in tmp}
                     update_sources(tmp, self.index.sources[r2])
 
                     # 4) l += tmp * r2
-                    self.index.nonterms[l] += tmp @ self.index.nonterms[r2]
+                    self.index.nonterms[l] += tmp.mxm(self.index.nonterms[r2], semiring=BOOL.LOR_LAND)
 
                     # update nnz
                     nnz[(l, r1, r2)] = self.index.sources[l].nvals, self.index.nonterms[r1].nvals, self.index.nonterms[r2].nvals
@@ -206,13 +206,13 @@ class SingleSourceAlgoOpt(SingleSourceSolver):
                             new_sources[r1][i, i] = True
 
                     # 2) tmp = new[l_src] * index[r1]
-                    tmp = new_sources[l] @ self.index.nonterms[r1]
+                    tmp = new_sources[l].mxm(self.index.nonterms[r1], semiring=BOOL.LOR_LAND)
 
                     # 3) new[r2_src] += {(j, j) : (i, j) in tmp and not in index[r2_src]}
                     update_sources_opt(tmp, self.index.sources[r2], new_sources[r2])
 
                     # 4) index[l] += tmp * index[r2]
-                    self.index.nonterms[l] += tmp @ self.index.nonterms[r2]
+                    self.index.nonterms[l] += tmp.mxm(self.index.nonterms[r2], semiring=BOOL.LOR_LAND)
 
                     # update nnz
                     nnz[(l, r1, r2)] = new_sources[l].nvals, self.index.nonterms[r1].nvals, self.index.nonterms[r2].nvals
