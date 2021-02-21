@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Iterable, Tuple
-from pygraphblas import Matrix
+from pygraphblas import Matrix, descriptor
 from pygraphblas.types import BOOL
 
 from src.grammar.cnf_grammar import CnfGrammar
