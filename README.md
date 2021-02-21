@@ -28,8 +28,10 @@ After it you can develop everything locally and run tests and benchmarks inside 
 ## Direct install
 The correct way is to install everything into your local python interpreter or virtual environment.
 
-First of all you need to install [pygraphblas](https://github.com/michelp/pygraphblas) package. There is currently no pip package, so you need to install it manually. There is an [installation script for ubuntu](https://github.com/michelp/pygraphblas/blob/master/install-ubuntu.sh). If you make into troubles during installation, [this issue](https://github.com/michelp/pygraphblas/issues/61) can relieve your sufferings.
-
+First of all you need to install [pygraphblas](https://github.com/michelp/pygraphblas) package.
+```bash
+pip3 install pygraphblas
+```
 Secondly you need to install cfpq_data_devtools package and other requirements:
 
 ```bash
