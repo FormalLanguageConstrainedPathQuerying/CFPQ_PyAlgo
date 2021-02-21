@@ -26,7 +26,7 @@ def update_sources(m: Matrix, dst: Matrix):
 
 def update_sources_opt(m: Matrix, mask: Matrix, res: Matrix):
     """ res += {(j, j): (i, j) in m and (j, j) not in mask}"""
-    src_vec = m.reduce_vector(desc=descriptor.T0)
+    src_vec = m.reduce_vector(BOOL.LAND_MONOID, desc=descriptor.T0)
     for i, _ in src_vec:
         if (i, i) not in mask:
             res[i, i] = 1
