@@ -4,6 +4,7 @@ from src.algo.algo_interface import CFPQAlgo
 
 from src.graph.index_graph import IndexGraph, INDEXTYPE
 from src.grammar.cnf_grammar import CnfGrammar
+from pygraphblas import BOOL
 
 
 class MatrixSinglePathSolver(CFPQAlgo):
@@ -29,7 +30,7 @@ class MatrixSinglePathAlgo(MatrixSinglePathSolver):
                 changed = False
                 for l, r1, r2 in self.grammar.complex_rules:
                     old_nnz = m[l].nvals
-                    m[l] += m[r1] @ m[r2]
+                    m[l] += m[r1].mxm(m[r2], semiring=BOOL.LOR_LAND)
                     new_nnz = m[l].nvals
                     if not old_nnz == new_nnz:
                         changed = True
