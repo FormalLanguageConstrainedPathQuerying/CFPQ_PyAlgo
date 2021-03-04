@@ -15,6 +15,9 @@ jobs:
           name: Install requirements
           command: pip3 install -r requirements.txt
       - run:
+          name: Install PyCuBool
+          command: python3 -m pip install -i https://test.pypi.org/simple/ pycubool
+      - run:
           name: Install cfpq_data_devtools
           command: cd deps/CFPQ_Data && python3 setup.py install
       - run:
