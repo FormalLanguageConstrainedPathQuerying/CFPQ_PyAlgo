@@ -2,20 +2,27 @@ from pygraphblas.matrix import Matrix
 from pygraphblas.types import BOOL
 from tqdm import tqdm
 
+import pycubool
+
 from src.utils.common import chunkify
 from src.utils.graph_size import get_graph_size
+from src.utils.import_from_GB_to_CB import import_to_cubool
 
 MAX_MATRIX_SIZE = 1000000
 
 
 class LabelGraph:
     def __init__(self, matrices_size=MAX_MATRIX_SIZE):
+        self.useCuBool = False
         self.matrices = {}
         self.matrices_size = matrices_size
 
-    def __getitem__(self, item: str) -> Matrix:
+    def __getitem__(self, item: str):
         if item not in self.matrices:
-            self.matrices[item] = Matrix.sparse(BOOL, self.matrices_size, self.matrices_size)
+            if self.useCuBool:
+                self.matrices[item] = pycubool.Matrix.empty([self.matrices_size, self.matrices_size])
+            else:
+                self.matrices[item] = Matrix.sparse(BOOL, self.matrices_size, self.matrices_size)
         return self.matrices[item]
 
     def __setitem__(self, key, value):
@@ -29,6 +36,10 @@ class LabelGraph:
 
     def get_number_of_edges(self):
         return sum([self.matrices[label].nvals for label in self.matrices])
+
+    def to_cubool(self):
+        self.matrices = import_to_cubool(self.matrices)
+        self.useCuBool = True
 
     @classmethod
     def from_txt(cls, path, verbose=False):

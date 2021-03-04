@@ -1,6 +1,8 @@
 from pygraphblas import Matrix, BOOL
 from pathlib import Path
 
+import pycubool
+
 from src.algo.algo_interface import CFPQAlgo
 
 from src.grammar.rsa import RecursiveAutomaton
@@ -12,7 +14,9 @@ class TensorSolver(CFPQAlgo):
     def __init__(self, path_to_graph: Path, path_to_grammar: Path):
         super().__init__(path_to_graph, path_to_grammar)
         self.graph = LabelGraph.from_txt(str(path_to_graph) + ".txt")
+        self.graph.to_cubool()
         self.grammar = RecursiveAutomaton.from_file(str(path_to_grammar) + ".automat")
+        self.grammar.to_cubool()
 
     def solve(self):
         pass
@@ -143,6 +147,89 @@ class TensorAlgoDynamic(TensorSolver):
                                     start_j: start_j + self.graph.matrices_size - 1]
 
                     self.graph[start] += block[start]
+                    new_control_sum = self.graph[start].nvals
+
+                    if new_control_sum != control_sum:
+                        changed = True
+
+            if self.grammar.S().isdisjoint(self.grammar.labels()):
+                break
+
+        return self.graph
+
+
+class TensorAlgoDynamicCuBool(TensorSolver):
+
+    def solve(self):
+
+        for label in self.grammar.start_and_finish():
+            for i in range(self.graph.matrices_size):
+                self.graph[label][i, i] = True
+
+        sizeKron = self.graph.matrices_size * self.grammar.matrices_size()
+
+        prev_kron = pycubool.Matrix.empty([sizeKron, sizeKron])
+        block = dict()
+        for label in self.grammar.S():
+            block.update({label: pycubool.Matrix.empty([self.graph.matrices_size, self.graph.matrices_size])})
+
+        first_iter = True
+        changed = True
+        while changed:
+            kron = pycubool.Matrix.empty([sizeKron, sizeKron])
+            changed = False
+
+            # calculate kronecker
+            if first_iter:
+                for label in self.grammar.labels():
+                    kron = kron.ewiseadd(self.grammar.automaton()[label].kronecker(self.graph[label]))
+            else:
+                for label in self.grammar.S():
+                    kron = kron.ewiseadd(self.grammar.automaton()[label].kronecker(block[label]))
+
+            if not first_iter:
+                for label in self.grammar.S():
+                    block.update({label: pycubool.Matrix.empty([self.graph.matrices_size, self.graph.matrices_size])})
+
+            # transitive closure
+            prev = kron.nvals
+            degree = kron
+            transitive_changed = True
+            while transitive_changed:
+                transitive_changed = False
+                degree = degree.mxm(kron)
+                kron = kron.ewiseadd(degree)
+                cur = kron.nvals
+                if prev != cur:
+                    prev = cur
+                    transitive_changed = True
+
+            if not first_iter:
+                part = prev_kron.mxm(kron)
+                kron = kron.ewiseadd(kron.mxm(prev_kron))
+                kron = kron.ewiseadd(part.mxm(prev_kron))
+                kron = kron.ewiseadd(prev_kron)
+                kron = kron.ewiseadd(part)
+                # kron = prev_kron + part @ prev_kron + part + kron @ prev_kron + kron
+
+            prev_kron = kron
+            first_iter = False
+
+            # update
+            for start in self.grammar.S():
+                for element in self.grammar.states()[start]:
+
+                    i = element[0]
+                    j = element[1]
+
+                    start_i = i * self.graph.matrices_size
+                    start_j = j * self.graph.matrices_size
+
+                    control_sum = self.graph[start].nvals
+                    part = kron.extract_matrix(start_i, start_j, [self.graph.matrices_size, self.graph.matrices_size])
+                    block[start] = block[start].ewiseadd(part)
+
+                    self.graph[start] = self.graph[start].ewiseadd(block[start])
                     new_control_sum = self.graph[start].nvals
 
                     if new_control_sum != control_sum:

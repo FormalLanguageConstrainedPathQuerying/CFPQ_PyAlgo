@@ -1,6 +1,8 @@
 from pygraphblas.matrix import Matrix
 from pygraphblas.types import BOOL
 
+from src.utils.import_from_GB_to_CB import import_to_cubool
+
 
 class RecursiveAutomaton:
     def __init__(self):
@@ -18,6 +20,10 @@ class RecursiveAutomaton:
 
     def start_state(self):
         return self._start_state
+
+    def to_cubool(self):
+        self._automaton = import_to_cubool(self._automaton)
+        self._states = import_to_cubool(self._states)
 
     def finish_states(self):
         return self._finish_states
@@ -70,7 +76,7 @@ class RecursiveAutomaton:
         self._states.update({label: Matrix.sparse(BOOL, self._matrices_size, self._matrices_size)})
 
     @classmethod
-    def from_file(self, path: str):
+    def from_file(cls, path: str):
         rsa = RecursiveAutomaton()
         with open(path, "r") as file:
             count_matrix = int(file.readline())

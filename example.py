@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from src.grammar.cnf_grammar import CnfGrammar
 from src.graph.label_graph import LabelGraph
 from src.utils.time_profiler import SimpleTimer
@@ -12,7 +14,7 @@ print('matrix_base_algo:')
 path_to_grammar = 'test/suites/data/test_case_1/Grammars/grammar'
 path_to_graph = 'test/suites/data/test_case_1/Matrices/graph_1'
 
-matrix_base_algo = MatrixBaseAlgo(path_to_graph, path_to_grammar)
+matrix_base_algo = MatrixBaseAlgo(Path(path_to_graph), Path(path_to_grammar))
 
 with SimpleTimer():
     m = matrix_base_algo.solve()
