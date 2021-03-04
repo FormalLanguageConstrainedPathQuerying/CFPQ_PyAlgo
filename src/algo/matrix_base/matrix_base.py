@@ -13,7 +13,6 @@ class MatrixBaseSolver(CFPQAlgo):
     def __init__(self, path_to_graph: Path, path_to_grammar: Path):
         super().__init__(path_to_graph, path_to_grammar)
         self.graph = LabelGraph.from_txt(str(path_to_graph) + ".txt")
-        self.graph.to_cubool()
         self.grammar = CnfGrammar.from_cnf(str(path_to_grammar) + ".cnf")
 
     def solve(self):

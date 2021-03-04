@@ -14,9 +14,7 @@ class TensorSolver(CFPQAlgo):
     def __init__(self, path_to_graph: Path, path_to_grammar: Path):
         super().__init__(path_to_graph, path_to_grammar)
         self.graph = LabelGraph.from_txt(str(path_to_graph) + ".txt")
-        self.graph.to_cubool()
         self.grammar = RecursiveAutomaton.from_file(str(path_to_grammar) + ".automat")
-        self.grammar.to_cubool()
 
     def solve(self):
         pass
