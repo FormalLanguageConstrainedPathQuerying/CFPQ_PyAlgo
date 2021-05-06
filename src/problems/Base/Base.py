@@ -2,11 +2,13 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 
-class CFPQAlgo(ABC):
+class BaseProblem(ABC):
+    """
+    Base class for base problem
+    """
+
     @abstractmethod
-    def __init__(self, path_to_graph: Path, path_to_grammar: Path):
-        self.graph = None
-        self.grammar = None
+    def prepare(self, graph: Path, grammar: Path):
         pass
 
     @abstractmethod

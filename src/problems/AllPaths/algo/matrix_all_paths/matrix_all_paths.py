@@ -1,11 +1,19 @@
 import ctypes
 import ctypes.util
+import os.path
+from pathlib import Path
+
+from src.problems.AllPaths.AllPaths import AllPathsProblem
+
+PATH_TO_SO = Path('src/problems/AllPaths/algo/matrix_all_paths/impl')
 
 
 class LibBuilder:
     def __init__(self):
+        if not os.path.isfile(PATH_TO_SO.joinpath('libAllPaths.so')):
+            raise Exception("Please run the command 'make' in src/problems/AllPaths/algo/matrix_all_paths/impl")
 
-        self.lib = ctypes.CDLL('src/algo/matrix_all_paths/impl/libAllPaths.so')
+        self.lib = ctypes.CDLL(PATH_TO_SO.joinpath('libAllPaths.so'))
         LP_c_char = ctypes.POINTER(ctypes.c_char)
         self.lib.grammar_new.argtypes = [LP_c_char]
         self.lib.grammar_new.restype = ctypes.c_void_p
@@ -28,16 +36,14 @@ class LibBuilder:
         self.lib.getpaths.restype = ctypes.c_int
         self.lib.graphblas_init()
 
-    def get_lib(self):
-        return self.lib
 
+class MatrixAlgo(AllPathsProblem):
 
-class MatrixAllPaths:
-    def __init__(self, graph: str, grammar: str):
+    def prepare(self, graph: Path, grammar: Path):
         lib_builder = LibBuilder()
-        self.lib = lib_builder.get_lib()
-        self.grammar = self.lib.grammar_new(grammar.encode('utf-8'))
-        self.graph = self.lib.graph_new(graph.encode('utf-8'))
+        self.lib = lib_builder.lib
+        self.grammar = self.lib.grammar_new(str(grammar.rename(grammar.with_suffix(".cnf"))).encode('utf-8'))
+        self.graph = self.lib.graph_new(str(graph.rename(graph.with_suffix(".txt"))).encode('utf-8'))
 
     def __del__(self):
         if self.grammar:
@@ -49,18 +55,11 @@ class MatrixAllPaths:
     def get_grammar(self):
         return self.grammar
 
-    def create_index(self):
-        if self.grammar:
-            self.lib.grammar_del(self.grammar)
-            self.grammar = None
-        if self.graph:
-            self.lib.graph_del(self.graph)
-            self.graph = None
-
+    def solve(self):
         self.lib.intersect(self.grammar, self.graph)
 
-    def restore_paths(self, from_vertex, to_vertex, nonterm, boundlen):
-        return self.lib.getpaths(self.grammar, from_vertex, to_vertex, nonterm.encode('utf-8'), boundlen)
+    def getPaths(self, v_start, v_finish, nonterminal, max_len):
+        return self.lib.getpaths(self.grammar, v_start, v_finish, nonterminal.encode('utf-8'), max_len)
 
     def get_elements(self, label):
         elements = self.lib.get_elements(self.grammar, label.encode('utf-8'))

@@ -74,8 +74,8 @@ class TensorPaths:
                 second_graph = path[i + 1] % self.graph_size
 
                 check = False
-                for label in self.rsa.S():
-                    if (first_rsa, second_rsa) in self.rsa.automaton()[label]:
+                for label in self.rsa.nonterminals():
+                    if (first_rsa, second_rsa) in self.rsa.matrices()[label]:
                         callNonterm.append([first_graph, second_graph, label])
                         check = True
 
