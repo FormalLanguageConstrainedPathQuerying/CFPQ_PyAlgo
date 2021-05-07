@@ -34,13 +34,13 @@ class TensorSimpleAlgo(AllPathsProblem):
         self.grammar = RecursiveAutomaton.from_file(grammar.rename(grammar.with_suffix(".automat")))
 
     def solve(self):
-        restore_eps_paths(self.grammar.start_and_finish(), self.graph)
+        restore_eps_paths(self.grammar.start_and_finish, self.graph)
 
-        sizeKron = self.graph.matrices_size * self.grammar.matrices_size()
+        sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
         kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
-        for label in self.grammar.labels():
-            kron += self.grammar.matrices()[label].kronecker(self.graph[label])
+        for label in self.grammar.labels:
+            kron += self.grammar[label].kronecker(self.graph[label])
 
         iter = 0
         changed = True
@@ -48,14 +48,14 @@ class TensorSimpleAlgo(AllPathsProblem):
             iter += 1
             changed = False
 
-            for nonterminal in self.grammar.nonterminals():
-                kron += self.grammar.matrices()[nonterminal].kronecker(self.graph[nonterminal])
+            for nonterminal in self.grammar.nonterminals:
+                kron += self.grammar[nonterminal].kronecker(self.graph[nonterminal])
 
             kron_tc = transitive_closure(kron)
 
             # update
-            for nonterminal in self.grammar.nonterminals():
-                for element in self.grammar.states()[nonterminal]:
+            for nonterminal in self.grammar.nonterminals:
+                for element in self.grammar.states[nonterminal]:
                     i = element[0]
                     j = element[1]
 
@@ -72,7 +72,7 @@ class TensorSimpleAlgo(AllPathsProblem):
                     if new_control_sum != control_sum:
                         changed = True
 
-            if self.grammar.nonterminals().isdisjoint(self.grammar.labels()):
+            if self.grammar.nonterminals.isdisjoint(self.grammar.labels):
                 break
 
         self.kron = kron
@@ -89,13 +89,13 @@ class TensorDynamicAlgo(AllPathsProblem):
         self.grammar = RecursiveAutomaton.from_file(grammar.rename(grammar.with_suffix(".automat")))
 
     def solve(self):
-        restore_eps_paths(self.grammar.start_and_finish(), self.graph)
+        restore_eps_paths(self.grammar.start_and_finish, self.graph)
 
-        sizeKron = self.graph.matrices_size * self.grammar.matrices_size()
+        sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
         kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
         for label in self.grammar.labels():
-            kron += self.grammar.matrices()[label].kronecker(self.graph[label])
+            kron += self.grammar[label].kronecker(self.graph[label])
 
         prev_kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
         iter = 0
@@ -104,7 +104,7 @@ class TensorDynamicAlgo(AllPathsProblem):
         while changed:
             iter += 1
             for nonterminal in block:
-                kron += self.grammar.matrices()[nonterminal].kronecker(block[nonterminal])
+                kron += self.grammar[nonterminal].kronecker(block[nonterminal])
                 block[nonterminal] = Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)
 
             kron_tc = transitive_closure(kron)
@@ -114,8 +114,8 @@ class TensorDynamicAlgo(AllPathsProblem):
 
             prev_kron = kron_tc
 
-            for nonterminal in self.grammar.nonterminals():
-                for element in self.grammar.states()[nonterminal]:
+            for nonterminal in self.grammar.nonterminals:
+                for element in self.grammar.states[nonterminal]:
                     i = element[0]
                     j = element[1]
 
@@ -132,7 +132,7 @@ class TensorDynamicAlgo(AllPathsProblem):
                     if new_control_sum != control_sum:
                         changed = True
 
-            if self.grammar.nonterminals().isdisjoint(self.grammar.labels()):
+            if self.grammar.nonterminals.isdisjoint(self.grammar.labels):
                 break
 
         self.kron = kron

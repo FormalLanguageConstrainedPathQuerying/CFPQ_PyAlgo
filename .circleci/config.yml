@@ -18,8 +18,8 @@ jobs:
           name: Install cfpq_data_devtools
           command: cd deps/CFPQ_Data && python3 setup.py install
       - run:
-          name: Build matrix all paths
-          command: cd src/algo/matrix_all_paths/impl && make && cd ../../../..
+          name: Build matrix AllPaths
+          command: cd src/problems/AllPaths/algo/matrix_all_paths/impl && make && cd -
       - run:
           name: Run tests
           command: python3 -m pytest test -v -m "CI"
