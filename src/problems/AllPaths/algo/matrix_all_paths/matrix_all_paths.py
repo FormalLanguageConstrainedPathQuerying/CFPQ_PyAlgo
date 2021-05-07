@@ -13,7 +13,7 @@ class LibBuilder:
         if not os.path.isfile(PATH_TO_SO.joinpath('libAllPaths.so')):
             raise Exception("Please run the command 'make' in src/problems/AllPaths/algo/matrix_all_paths/impl")
 
-        self.lib = ctypes.CDLL(PATH_TO_SO.joinpath('libAllPaths.so'))
+        self.lib = ctypes.CDLL(str(PATH_TO_SO.joinpath('libAllPaths.so')))
         LP_c_char = ctypes.POINTER(ctypes.c_char)
         self.lib.grammar_new.argtypes = [LP_c_char]
         self.lib.grammar_new.restype = ctypes.c_void_p

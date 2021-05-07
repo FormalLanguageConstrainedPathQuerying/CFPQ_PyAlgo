@@ -1,4 +1,5 @@
-from pygraphblas import Matrix, binop, Type
+from pygraphblas import Matrix
+from pygraphblas.types import Type, binop
 
 MAX_MATRIX_SIZE = 10000000
 

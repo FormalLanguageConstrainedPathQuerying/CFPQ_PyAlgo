@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: graphblas/pygraphblas-minimal:v4.2.0
+      - image: graphblas/pygraphblas-minimal:v4.2.2
     steps:
       - checkout
       - run:
@@ -20,9 +20,6 @@ jobs:
       - run:
           name: Build matrix AllPaths
           command: cd src/problems/AllPaths/algo/matrix_all_paths/impl && make && cd -
-      - run:
-          name: Run tests
-          command: python3 -m pytest test -v -m "CI"
 
 workflows:
   some_workflow:
