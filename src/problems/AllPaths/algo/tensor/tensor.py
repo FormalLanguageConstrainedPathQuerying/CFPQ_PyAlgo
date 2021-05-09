@@ -108,8 +108,9 @@ class TensorDynamicAlgo(AllPathsProblem):
         block = LabelGraph(self.graph.matrices_size)
         changed = True
         while changed:
+            changed = False
             iter += 1
-            for nonterminal in block:
+            for nonterminal in block.matrices:
                 kron += self.grammar[nonterminal].kronecker(block[nonterminal])
                 block[nonterminal] = Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)
 
@@ -129,10 +130,11 @@ class TensorDynamicAlgo(AllPathsProblem):
                     start_j = j * self.graph.matrices_size
 
                     control_sum = self.graph[nonterminal].nvals
-                    block[nonterminal] += kron[start_i:start_i + self.graph.matrices_size - 1,
+                    block[nonterminal] += kron_tc[start_i:start_i + self.graph.matrices_size - 1,
                                                start_j:start_j + self.graph.matrices_size - 1]
 
                     self.graph[nonterminal] += block[nonterminal]
+                    print(block[nonterminal])
                     new_control_sum = self.graph[nonterminal].nvals
 
                     if new_control_sum != control_sum:

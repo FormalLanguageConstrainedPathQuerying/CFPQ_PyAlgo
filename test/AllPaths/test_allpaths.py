@@ -39,7 +39,7 @@ def test_line(algo):
     allpath_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = allpath_algo.solve()
-    assert result.matrix_S.nvals == 1
+    assert result.matrix_S.nvals == 2
 
     paths = allpath_algo.getPaths(0, 4, "S", 2)
     assert len(paths) == 0

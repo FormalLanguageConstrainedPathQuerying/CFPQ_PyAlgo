@@ -2,4 +2,5 @@ S A
 a
 S -> A S
 S -> eps
+S -> a
 A -> a
