@@ -58,8 +58,8 @@ class TensorPaths:
             return []
 
         supposed_paths = []
-        for finish_state in self.rsa.finish_states()[nonterm]:
-            supposed_paths += self.gen_paths(self.rsa.start_state()[nonterm] * self.graph_size + start,
+        for finish_state in self.rsa.finish_states[nonterm]:
+            supposed_paths += self.gen_paths(self.rsa.start_state[nonterm] * self.graph_size + start,
                                             finish_state * self.graph_size + finish, max_len)
 
         result_paths = []
@@ -74,8 +74,8 @@ class TensorPaths:
                 second_graph = path[i + 1] % self.graph_size
 
                 check = False
-                for label in self.rsa.nonterminals():
-                    if (first_rsa, second_rsa) in self.rsa.matrices()[label]:
+                for label in self.rsa.nonterminals:
+                    if (first_rsa, second_rsa) in self.rsa[label]:
                         callNonterm.append([first_graph, second_graph, label])
                         check = True
 

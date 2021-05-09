@@ -37,13 +37,13 @@ class LibBuilder:
         self.lib.graphblas_init()
 
 
-class MatrixAlgo(AllPathsProblem):
+class MatrixAllAlgo(AllPathsProblem):
 
     def prepare(self, graph: Path, grammar: Path):
         lib_builder = LibBuilder()
         self.lib = lib_builder.lib
-        self.grammar = self.lib.grammar_new(str(grammar.rename(grammar.with_suffix(".cnf"))).encode('utf-8'))
-        self.graph = self.lib.graph_new(str(graph.rename(graph.with_suffix(".txt"))).encode('utf-8'))
+        self.grammar = self.lib.grammar_new(str(grammar.with_suffix(".cnf")).encode('utf-8'))
+        self.graph = self.lib.graph_new(str(graph.with_suffix(".txt")).encode('utf-8'))
 
     def __del__(self):
         if self.grammar:

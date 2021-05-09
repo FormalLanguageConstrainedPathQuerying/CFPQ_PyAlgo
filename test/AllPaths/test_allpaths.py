@@ -13,10 +13,10 @@ def test_binary_tree(algo):
     allpath_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = allpath_algo.solve()
-    #assert result.matrix_S.nvals == ?
+    assert result.matrix_S.nvals == 20
 
     paths = allpath_algo.getPaths(0, 3, "S", 5)
-    #assert len(paths) == ?
+    assert len(paths) == 1
 
 
 @pytest.mark.CI
@@ -26,10 +26,10 @@ def test_cycle(algo):
     allpath_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = allpath_algo.solve()
-    # assert result.matrix_S.nvals == ?
+    assert result.matrix_S.nvals == 9
 
     paths = allpath_algo.getPaths(0, 1, "S", 3)
-    # assert len(paths) == ?
+    assert len(paths) == 1
 
 
 @pytest.mark.CI
@@ -39,10 +39,10 @@ def test_line(algo):
     allpath_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = allpath_algo.solve()
-    # assert result.matrix_S.nvals == ?
+    assert result.matrix_S.nvals == 1
 
     paths = allpath_algo.getPaths(0, 4, "S", 2)
-    # assert len(paths) == ?
+    assert len(paths) == 0
 
 
 @pytest.mark.CI
@@ -52,10 +52,10 @@ def test_loop(algo):
     allpath_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = allpath_algo.solve()
-    # assert result.matrix_S.nvals == ?
+    assert result.matrix_S.nvals == 1
 
     paths = allpath_algo.getPaths(0, 0, "S", 1)
-    # assert len(paths) == ?
+    assert len(paths) == 0
 
 
 @pytest.mark.CI
@@ -65,7 +65,7 @@ def test_two_cycles(algo):
     allpath_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = allpath_algo.solve()
-    # assert result.matrix_S.nvals == ?
+    assert result.matrix_S.nvals == 6
 
     paths = allpath_algo.getPaths(1, 3, "S", 3)
-    # assert len(paths) == ?
+    assert len(paths) == 1

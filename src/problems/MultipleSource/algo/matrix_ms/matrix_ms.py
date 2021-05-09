@@ -41,8 +41,8 @@ def init_simple_rules(rules, graph: LabelGraph):
 class MatrixMSBruteAlgo(MultipleSourceProblem):
 
     def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.rename(graph.with_suffix(".txt")))
-        self.grammar = CnfGrammar.from_cnf(grammar.rename(grammar.with_suffix(".cnf")))
+        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
+        self.grammar = CnfGrammar.from_cnf(grammar.with_suffix(".cnf"))
 
         self.sources = LabelGraph(self.graph.matrices_size)
 
@@ -102,8 +102,8 @@ class MatrixMSBruteAlgo(MultipleSourceProblem):
 
 class MatrixMSSmartAlgo(MultipleSourceProblem):
     def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.rename(graph.with_suffix(".txt")))
-        self.grammar = CnfGrammar.from_cnf(grammar.rename(grammar.with_suffix(".cnf")))
+        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
+        self.grammar = CnfGrammar.from_cnf(grammar.with_suffix(".cnf"))
 
         self.sources = LabelGraph(self.graph.matrices_size)
 
@@ -158,8 +158,8 @@ class MatrixMSSmartAlgo(MultipleSourceProblem):
 
 class MatrixMSOptAlgo(MultipleSourceProblem):
     def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.rename(graph.with_suffix(".txt")))
-        self.grammar = CnfGrammar.from_cnf(grammar.rename(grammar.with_suffix(".cnf")))
+        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
+        self.grammar = CnfGrammar.from_cnf(grammar.with_suffix(".cnf"))
 
         self.sources = LabelGraph(self.graph.matrices_size)
 

@@ -13,7 +13,7 @@ def test_binary_tree(algo):
     ms_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = ms_algo.solve([0])
-    #assert result.matrix_S.nvals == ?
+    assert result.matrix_S.nvals == 6
 
 
 @pytest.mark.CI
@@ -23,4 +23,4 @@ def test_line(algo):
     ms_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = ms_algo.solve([1])
-    #assert result.matrix_S.nvals == ?
+    assert result.matrix_S.nvals == 1

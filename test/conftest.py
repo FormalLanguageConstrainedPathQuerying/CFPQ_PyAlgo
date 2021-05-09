@@ -7,7 +7,7 @@ def pytest_configure(config):
         'markers', 'CI: small test to run in CI'
     )
 
-    for suite, graph, grammar in get_all_test_cases(GLOBAL_CFPQ_DATA) + get_all_test_cases(LOCAL_CFPQ_DATA):
+    for suite, graph, grammar in get_all_test_cases(LOCAL_CFPQ_DATA):
         for mark in get_markers(suite, graph, grammar):
             config.addinivalue_line(
                 'markers', f'{mark}: generated marker'

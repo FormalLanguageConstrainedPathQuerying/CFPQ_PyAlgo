@@ -6,7 +6,7 @@ from src.utils.useful_paths import LOCAL_CFPQ_DATA
 from src.problems.utils import ResultAlgo
 
 
-@pytest.mark.CI
+#@pytest.mark.CI
 def test_binary_tree(algo):
     test_data_path = LOCAL_CFPQ_DATA.joinpath('binary_tree')
     singlepath_algo: SinglePathProblem = algo()
@@ -19,7 +19,7 @@ def test_binary_tree(algo):
     # assert len(paths) == ?
 
 
-@pytest.mark.CI
+#@pytest.mark.CI
 def test_cycle(algo):
     test_data_path = LOCAL_CFPQ_DATA.joinpath('cycle')
     singlepath_algo: SinglePathProblem = algo()
@@ -32,7 +32,7 @@ def test_cycle(algo):
     # assert len(paths) == ?
 
 
-@pytest.mark.CI
+#@pytest.mark.CI
 def test_line(algo):
     test_data_path = LOCAL_CFPQ_DATA.joinpath('line')
     singlepath_algo: SinglePathProblem = algo()
@@ -45,7 +45,7 @@ def test_line(algo):
     # assert len(paths) == ?
 
 
-@pytest.mark.CI
+#@pytest.mark.CI
 def test_loop(algo):
     test_data_path = LOCAL_CFPQ_DATA.joinpath('loop')
     singlepath_algo: SinglePathProblem = algo()
@@ -58,7 +58,7 @@ def test_loop(algo):
     # assert len(paths) == ?
 
 
-@pytest.mark.CI
+#@pytest.mark.CI
 def test_two_cycles(algo):
     test_data_path = LOCAL_CFPQ_DATA.joinpath('two_cycles')
     singlepath_algo: SinglePathProblem = algo()

@@ -33,6 +33,7 @@ class RecursiveAutomaton:
 
             for i in range(count_matrix):
                 label = file.readline().replace("\n", "")
+                rsa.labels.add(label)
                 count_edge = int(file.readline())
                 for j in range(count_edge):
                     first, second = file.readline().split()
@@ -40,6 +41,7 @@ class RecursiveAutomaton:
 
             for i in range(count_nonterminals):
                 label = file.readline().replace("\n", "")
+                rsa.nonterminals.add(label)
                 rsa.states.update({label: Matrix.sparse(BOOL, rsa.matrices_size, rsa.matrices_size)})
                 count_edge = int(file.readline())
                 for j in range(count_edge):

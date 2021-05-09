@@ -7,11 +7,11 @@ from src.graph.index_graph import IndexGraph, INDEXTYPE
 from src.grammar.cnf_grammar import CnfGrammar
 
 
-class MatrixSinglePathAlgo(SinglePathProblem):
+class MatrixSingleAlgo(SinglePathProblem):
 
     def prepare(self, graph: Path, grammar: Path):
-        self.graph = IndexGraph.from_txt(graph.rename(graph.with_suffix(".txt")))
-        self.grammar = CnfGrammar.from_cnf(grammar.rename(grammar.with_suffix(".cnf")))
+        self.graph = IndexGraph.from_txt(graph.with_suffix(".txt"))
+        self.grammar = CnfGrammar.from_cnf(grammar.with_suffix(".cnf"))
 
     def solve(self):
         IndexType_monoid = INDEXTYPE.new_monoid(INDEXTYPE.PLUS, INDEXTYPE.one)

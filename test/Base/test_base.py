@@ -13,7 +13,7 @@ def test_binary_tree(algo):
     base_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = base_algo.solve()
-    #assert result.matrix_S.nvals == ?
+    assert result.matrix_S.nvals == 20
 
 
 @pytest.mark.CI
@@ -23,7 +23,7 @@ def test_cycle(algo):
     base_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = base_algo.solve()
-    # assert result.matrix_S.nvals == ?
+    assert result.matrix_S.nvals == 9
 
 
 @pytest.mark.CI
@@ -33,7 +33,7 @@ def test_line(algo):
     base_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = base_algo.solve()
-    # assert result.matrix_S.nvals == ?
+    assert result.matrix_S.nvals == 1
 
 
 @pytest.mark.CI
@@ -43,7 +43,7 @@ def test_loop(algo):
     base_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = base_algo.solve()
-    # assert result.matrix_S.nvals == ?
+    assert result.matrix_S.nvals == 1
 
 
 @pytest.mark.CI
@@ -53,4 +53,4 @@ def test_two_cycles(algo):
     base_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = base_algo.solve()
-    # assert result.matrix_S.nvals == ?
+    assert result.matrix_S.nvals == 6

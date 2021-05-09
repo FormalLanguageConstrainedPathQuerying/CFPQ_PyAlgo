@@ -49,7 +49,7 @@ python3 -m pytest test -v -m "CI"
 # Project structure
 The global project structure is the following:
 
-```bash
+```
 .
 ├── deps
 │   └── CFPQ_Data - repository with graphs and grammars suites

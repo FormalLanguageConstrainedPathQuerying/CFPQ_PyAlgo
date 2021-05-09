@@ -11,8 +11,8 @@ from src.problems.utils import ResultAlgo
 class MatrixBaseAlgo(BaseProblem):
 
     def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.rename(graph.with_suffix(".txt")))
-        self.grammar = CnfGrammar.from_cnf(grammar.rename(grammar.with_suffix(".cnf")))
+        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
+        self.grammar = CnfGrammar.from_cnf(grammar.with_suffix(".cnf"))
 
     def solve(self):
         m = LabelGraph(self.graph.matrices_size)

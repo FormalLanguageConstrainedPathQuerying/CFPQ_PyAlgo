@@ -19,7 +19,7 @@ def restore_eps_paths(nonterminals: Iterable, graph: LabelGraph):
 
 def transitive_closure(m: Matrix):
     prev = 0
-    result = m
+    result = m.dup()
     while prev != result.nvals:
         prev = result.nvals
         result += result.mxm(result, semiring=BOOL.LOR_LAND)
@@ -30,11 +30,14 @@ def transitive_closure(m: Matrix):
 class TensorSimpleAlgo(AllPathsProblem):
 
     def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.rename(graph.with_suffix(".txt")))
-        self.grammar = RecursiveAutomaton.from_file(grammar.rename(grammar.with_suffix(".automat")))
+        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
+        self.grammar = RecursiveAutomaton.from_file(grammar.with_suffix(".automat"))
 
     def solve(self):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
+
+        for label in self.grammar.nonterminals:
+            self.graph[label].clear()
 
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
@@ -85,11 +88,14 @@ class TensorSimpleAlgo(AllPathsProblem):
 class TensorDynamicAlgo(AllPathsProblem):
 
     def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.rename(graph.with_suffix(".txt")))
-        self.grammar = RecursiveAutomaton.from_file(grammar.rename(grammar.with_suffix(".automat")))
+        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
+        self.grammar = RecursiveAutomaton.from_file(grammar.with_suffix(".automat"))
 
     def solve(self):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
+
+        for label in self.grammar.nonterminals:
+            self.graph[label].clear()
 
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
