@@ -100,7 +100,7 @@ class TensorDynamicAlgo(AllPathsProblem):
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
         kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
-        for label in self.grammar.labels():
+        for label in self.grammar.labels:
             kron += self.grammar[label].kronecker(self.graph[label])
 
         prev_kron = Matrix.sparse(BOOL, sizeKron, sizeKron)

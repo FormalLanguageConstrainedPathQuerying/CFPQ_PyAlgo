@@ -33,7 +33,7 @@ def test_line(algo):
     base_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = base_algo.solve()
-    assert result.matrix_S.nvals == 1
+    assert result.matrix_S.nvals == 2
 
 
 @pytest.mark.CI
@@ -43,7 +43,7 @@ def test_loop(algo):
     base_algo.prepare(test_data_path.joinpath('Matrices/graph_1'), test_data_path.joinpath('Grammars/g'))
 
     result: ResultAlgo = base_algo.solve()
-    assert result.matrix_S.nvals == 1
+    assert result.matrix_S.nvals == 0
 
 
 @pytest.mark.CI
