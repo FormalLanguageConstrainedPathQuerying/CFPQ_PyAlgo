@@ -20,6 +20,9 @@ jobs:
       - run:
           name: Build matrix AllPaths
           command: cd src/problems/AllPaths/algo/matrix_all_paths/impl && make && cd -
+      - run:
+          name: Run tests
+          command: python3 -m pytest test -v -m "CI"
 
 workflows:
   some_workflow:
