@@ -1,6 +1,6 @@
 import pytest
 from cfpq_data_devtools.data_wrapper import DataWrapper
-from src.utils.file_helpers import get_file_name, get_file_size
+from src.utils.file_helpers import get_file_name
 
 
 def get_markers(suite, graph, grammar):

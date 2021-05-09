@@ -1,7 +1,7 @@
 [![CircleCI](https://circleci.com/gh/JetBrains-Research/CFPQ_PyAlgo/tree/master.svg?style=svg)](https://circleci.com/gh/JetBrains-Research/CFPQ_PyAlgo/tree/master)
 
 # CFPQ_PyAlgo
-The CFPQ_PyAlgo is a repository for developing, testing and benchmarking algorithms that solve Formal-Language-Constrained Path Problems, such as Context-Free Path Queries and Regular Path Queries. All algorithms are based on the [GraphBLAS](http://graphblas.org/index.php?title=Graph_BLAS_Forum) framework that allows you to represent graphs as matrices and work with them in terms of linear algebra. For convenience, all the code is written in Python using [pygraphblas](https://github.com/michelp/pygraphblas), which is Python wrapper around GraphBLAS API.
+The CFPQ_PyAlgo is a repository for developing, testing and benchmarking algorithms that solve Formal-Language-Constrained Path Problems, such as Context-Free Path Queries and Regular Path Queries. All algorithms are based on the [GraphBLAS](http://graphblas.org/index.php?title=Graph_BLAS_Forum) framework that allows you to represent graphs as matrices and work with them in terms of linear algebra. For convenience, all the code is written in Python using [pygraphblas](https://github.com/michelp/pygraphblas) or in C/C++ using purely [SuiteSparse](https://github.com/DrTimothyAldenDavis/SuiteSparse) with a Python wrapper. 
 
 # Installation
 First of all you need to clone repository with its submodules:
@@ -54,7 +54,11 @@ The global project structure is the following:
 ├── deps
 │   └── CFPQ_Data - repository with graphs and grammars suites
 ├── src
-│   ├── algo - directory where all algorithm implementations are locating
+│   ├── problems - directory where all the problems CFPQ that we know how to solve
+│   │   ├───AllPaths
+│   │   ├───Base
+│   │   ├───MultipleSource
+│   │   └───SinglePath
 │   ├── grammar - directory for all grammar formats representation and its loading  
 │   ├── graph - directory for all graph formats representation and its loading
 │   └── utils - directory for other useful classes and methods
@@ -62,4 +66,5 @@ The global project structure is the following:
     ├── some_algo_tests - directory for testing some algorithm 
     ├── another_algo_tests - directory for testing another algorithm
     └── suites - directory for test data and its wrappers
+
 ```
