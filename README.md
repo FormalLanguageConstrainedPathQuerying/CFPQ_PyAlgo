@@ -58,15 +58,19 @@ For example, you want to solve a basic problem CFPQ using the matrix algorithm. 
 The file containing the grammar **G** representation must be named *.cnf (for algorithms using RSA *.automat). The file containing the graph representation, the name must be *.txt.
 
 Then the matrix algorithm can be run as follows, where *PATH_TO_GRAMMAR* --- path to file *.cnf, *PATH_TO_GRAPH* --- path to file *.txt
+
 ```cython
 from src.problems.Base.algo.matrix_base.matrix_base import MatrixBaseAlgo
+from pathlib import Path
 
 algo = MatrixBaseAlgo()
-algo.prepare(PATH_TO_GRAPH, PATH_TO_GRAMMAR)
+algo.prepare(Path(PATH_TO_GRAPH), Path(PATH_TO_GRAMMAR))
 res = algo.solve()
 print(res.matrix_S.nvals)
 ```
 The given fragment displays the number of pairs of vertices between which the desired path exists.
+
+**Note**: Paths to files with grammar and graph should be without extension. That is, for example, if you have a grammar *g.cnf* in the directory *Grammars* and graph *graph.txt* in *Graphs*, then in ```algo.prepare``` you need to pass arguments ```(Path("Graphs/graph"), Path("Grammars/g"))```. Thus, the implementations of the algorithms "themselves know" the file with which extension they need to choose.
 
 More examples can be found in *test*
 
