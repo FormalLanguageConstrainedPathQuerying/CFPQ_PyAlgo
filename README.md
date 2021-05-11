@@ -49,7 +49,7 @@ python3 -m pytest test -v -m "CI"
 # Benchmark
 Look please [Readme](https://github.com/JetBrains-Research/CFPQ_PyAlgo/blob/master/benchmark/README.md) in *benchmark*
 
-#Usage
+# Usage
 
 Let's describe an example of using the implementation outside this environment.
 

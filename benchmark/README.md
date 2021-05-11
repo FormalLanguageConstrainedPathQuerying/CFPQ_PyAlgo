@@ -9,7 +9,7 @@ There are also a number of optional parameters:
 + -with_paths --- indicate additionally measure the extraction of paths
 + -result_dir --- specify a directory for uploading the results
 
-#Add new algorithm
+# Add new algorithm
 To add a new implementation of the algorithm to the list of available measurements, you must:
 1. Add you algorithm in *algo_impl.ALGO_PROBLEM*
 2. Add you implementation in *algo_impl.ALGO_IMPL*
