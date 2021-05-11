@@ -3,4 +3,14 @@ First, create a directory for the dataset. It should have two subdirectories for
 ```
 python3 start_benchmark.py -algo ALGO -data_dir DATA_DIR
 ```
-You can also set the number of rounds for measurements (-round), a config file (-config) in the "graph grammar" format to indicate only certain data for measurements from a directory (DATA_DIR), indicate additionally measure the extraction of paths (-with_paths), and also specify a directory for uploading the results (-result_dir).
+There are also a number of optional parameters:
++ -round --- number of rounds for measurements
++ -config --- config file in the "graph grammar" format to indicate only certain data for measurements from a directory DATA_DIR
++ -with_paths --- indicate additionally measure the extraction of paths
++ -result_dir --- specify a directory for uploading the results
+
+#Add new algorithm
+To add a new implementation of the algorithm to the list of available measurements, you must:
+1. Add you algorithm in *algo_impl.ALGO_PROBLEM*
+2. Add you implementation in *algo_impl.ALGO_IMPL*
+3. Create new or use the existing pipeline or  in *bench.benchmark* 

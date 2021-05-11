@@ -46,6 +46,30 @@ To check if the installation was successful you can run simple tests
 ```bash
 python3 -m pytest test -v -m "CI"
 ```
+# Benchmark
+Look please [Readme](https://github.com/JetBrains-Research/CFPQ_PyAlgo/blob/master/benchmark/README.md) in *benchmark*
+
+#Usage
+
+Let's describe an example of using the implementation outside this environment.
+
+For example, you want to solve a basic problem CFPQ using the matrix algorithm. To do this, you need a grammar (**Gr**) in the CNF (you can get using the tools from *deps/CFPQ_Data*), as well as a graph (**G**) in the format of "triplets". 
+
+The file containing the grammar **G** representation must be named *.cnf (for algorithms using RSA *.automat). The file containing the graph representation, the name must be *.txt.
+
+Then the matrix algorithm can be run as follows, where *PATH_TO_GRAMMAR* --- path to file *.cnf, *PATH_TO_GRAPH* --- path to file *.txt
+```cython
+from src.problems.Base.algo.matrix_base.matrix_base import MatrixBaseAlgo
+
+algo = MatrixBaseAlgo()
+algo.prepare(PATH_TO_GRAPH, PATH_TO_GRAMMAR)
+res = algo.solve()
+print(res.matrix_S.nvals)
+```
+The given fragment displays the number of pairs of vertices between which the desired path exists.
+
+More examples can be found in *test*
+
 # Project structure
 The global project structure is the following:
 
