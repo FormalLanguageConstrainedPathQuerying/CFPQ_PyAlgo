@@ -53,6 +53,7 @@ The global project structure is the following:
 .
 ├── deps
 │   └── CFPQ_Data - repository with graphs and grammars suites
+├───benchmark - directory for performance measurements of implementations
 ├── src
 │   ├── problems - directory where all the problems CFPQ that we know how to solve
 │   │   ├───AllPaths
@@ -63,8 +64,11 @@ The global project structure is the following:
 │   ├── graph - directory for all graph formats representation and its loading
 │   └── utils - directory for other useful classes and methods
 └── test
-    ├── some_algo_tests - directory for testing some algorithm 
-    ├── another_algo_tests - directory for testing another algorithm
-    └── suites - directory for test data and its wrappers
+    ├───AllPaths - tests for implementations in src.problems.AllPaths
+    ├───Base - tests for implementations in src.problems.Base
+    ├───data - dataset for tests
+    ├───MultipleSource - tests for implementations in src.problems.MultipleSource
+    ├───SinglePath - tests for implementations in src.problems.SinglePath
+    └───suites
 
 ```
