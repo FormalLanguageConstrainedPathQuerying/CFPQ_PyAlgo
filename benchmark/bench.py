@@ -5,7 +5,7 @@ from tqdm import tqdm
 from time import time
 from pathlib import Path
 
-from algo_impl import ALGO_PROBLEM, ALGO_IMPL
+from benchmark.algo_impl import ALGO_PROBLEM, ALGO_IMPL
 from src.graph.label_graph import LabelGraph
 
 GRAMMAR_DIR = 'Grammars/'
@@ -13,6 +13,11 @@ GRAPH_DIR = 'Graphs/'
 
 
 def parse_config(config):
+    """
+    Returns information about which graph with which grammar to run
+    @param config: Path to csv file with header:["Graph", "Grammar"]
+    @return: dictionary in which keys are paths to graphs and values are paths to grammars
+    """
     graph_grammar = dict()
     with open(config, "r") as csv_file:
         reader = csv.DictReader(csv_file)
@@ -33,6 +38,15 @@ def get_variance(data, sample_mean):
 
 
 def benchmark(algo, data_dir, result_dir, config, with_paths, rounds):
+    """
+    Pipeline builder function for measuring performance
+    @param algo: name algorithm in string
+    @param data_dir: path to dataset
+    @param result_dir: path to result directory
+    @param config: path to config file (csv)
+    @param with_paths: flag for setting measurements for fetching paths
+    @param rounds: number of measurement rounds
+    """
     type_problem = ALGO_PROBLEM[algo]
     graph_grammar = dict()
     if config is not None:
@@ -62,6 +76,14 @@ def benchmark(algo, data_dir, result_dir, config, with_paths, rounds):
 
 
 def benchmark_index(algo_name, data, result_dir, rounds):
+    """
+    Measurement function for finding paths between all pairs of vertices
+    @param algo_name: concrete implementation of the algorithm
+    @param data: dictionary in format {path to graph: list of paths to grammars}
+    @param result_dir: directory for uploading results of measurement
+    @param rounds: number of measurement rounds
+    @return: variance value for each round of measurements
+    """
     header_index = ['graph', 'grammar', 'time', 'count_S']
 
     variances = []
@@ -97,6 +119,12 @@ def benchmark_index(algo_name, data, result_dir, rounds):
 
 
 def benchmark_all_paths(algo_name, data, result_dir):
+    """
+    Measurement function for extract all paths
+    @param algo_name: concrete implementation of the algorithm
+    @param data: dictionary in format {path to graph: list of paths to grammars}
+    @param result_dir: directory for uploading results of measurement
+    """
     header_paths = ['graph', 'grammar', 'count_paths', 'time']
 
     for graph in data:
@@ -124,6 +152,12 @@ def benchmark_all_paths(algo_name, data, result_dir):
 
 
 def benchmark_single_path(algo_name, data, result_dir):
+    """
+    Measurement function for extract single path
+    @param algo_name: concrete implementation of the algorithm
+    @param data: dictionary in format {path to graph: list of paths to grammars}
+    @param result_dir: directory for uploading results of measurement
+    """
     header_paths = ['graph', 'grammar', 'len_path', 'time']
 
     for graph in data:
@@ -154,6 +188,12 @@ def benchmark_single_path(algo_name, data, result_dir):
 
 
 def benchmark_ms(algo_name, data, result_dir):
+    """
+    Measurement function for finding paths from set of vertices
+    @param algo_name: concrete implementation of the algorithm
+    @param data: dictionary in format {path to graph: list of paths to grammars}
+    @param result_dir: directory for uploading results of measurement
+    """
     header_index = ['graph', 'grammar', 'size_chunk', 'time', 'count_S']
 
     chunk_sizes = [1, 2, 4, 8, 16, 32, 50, 100, 500, 1000, 5000, 10000, None]
