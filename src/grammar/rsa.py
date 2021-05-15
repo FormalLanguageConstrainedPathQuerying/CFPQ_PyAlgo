@@ -6,7 +6,7 @@ from pathlib import Path
 
 class RecursiveAutomaton:
     """
-    This class representing recursive state automaton
+    This class representing recursive state automaton. supports only the functions necessary for the algorithms to work
     """
     def __init__(self):
         self.labels = set()

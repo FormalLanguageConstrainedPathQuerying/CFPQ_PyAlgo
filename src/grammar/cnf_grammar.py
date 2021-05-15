@@ -1,6 +1,6 @@
 class CnfGrammar:
     """
-    This class representing grammar in CNF
+    This class representing grammar in CNF. Supports only the functions necessary for the algorithms to work
     """
     def __init__(self):
         self.start_nonterm = None
