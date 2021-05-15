@@ -1,4 +1,7 @@
 class CnfGrammar:
+    """
+    This class representing grammar in CNF
+    """
     def __init__(self):
         self.start_nonterm = None
         self.nonterms = set()
@@ -21,6 +24,11 @@ class CnfGrammar:
 
     @classmethod
     def from_cnf(cls, path):
+        """
+        Load grammar in CNF format from file
+        @param path: path to file with grammar
+        @return: initialized class
+        """
         grammar = CnfGrammar()
         with open(path, 'r') as f:
             lines = f.readlines()
