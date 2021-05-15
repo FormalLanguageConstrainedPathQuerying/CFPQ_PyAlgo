@@ -12,6 +12,9 @@ from src.problems.MultipleSource.algo.matrix_ms.matrix_ms import MatrixMSOptAlgo
 from src.problems.MultipleSource.algo.matrix_ms.matrix_ms import MatrixMSSmartAlgo
 from src.problems.MultipleSource.algo.matrix_ms.matrix_ms import MatrixMSBruteAlgo
 
+"""
+Correspondence of algo and problem it solves
+"""
 ALGO_PROBLEM: Final = {'TensorSimple': 'AllPath',
                        'TensorDynamic': 'AllPath',
                        'MatrixAll': 'AllPath',
@@ -21,6 +24,9 @@ ALGO_PROBLEM: Final = {'TensorSimple': 'AllPath',
                        'MatrixMSOpt': 'MS',
                        'MatrixSingle': 'SinglePath'}
 
+"""
+Matching name of algo and its implementation
+"""
 ALGO_IMPL: Final = {'TensorSimple': TensorSimpleAlgo,
                     'TensorDynamic': TensorDynamicAlgo,
                     'MatrixAll': MatrixAllAlgo,

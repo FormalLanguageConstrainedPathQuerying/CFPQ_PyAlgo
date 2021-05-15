@@ -5,6 +5,9 @@ from pathlib import Path
 
 
 class RecursiveAutomaton:
+    """
+    This class representing recursive state automaton. supports only the functions necessary for the algorithms to work
+    """
     def __init__(self):
         self.labels = set()
         self.nonterminals = set()
@@ -23,7 +26,12 @@ class RecursiveAutomaton:
         return self.matrices[item]
 
     @classmethod
-    def from_file(self, path: Path):
+    def from_file(cls, path: Path):
+        """
+        Load RSA from file
+        @param path: path to file with RSA
+        @return: initialized class
+        """
         rsa = RecursiveAutomaton()
         with open(path, "r") as file:
             count_matrix = int(file.readline())

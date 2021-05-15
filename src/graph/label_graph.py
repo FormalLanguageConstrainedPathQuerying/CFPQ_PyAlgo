@@ -9,6 +9,9 @@ MAX_MATRIX_SIZE = 1000000
 
 
 class LabelGraph:
+    """
+    This class representing label directed graph. supports only the functions necessary for the algorithms to work
+    """
     def __init__(self, matrices_size=MAX_MATRIX_SIZE):
         self.matrices = {}
         self.matrices_size = matrices_size
@@ -32,6 +35,12 @@ class LabelGraph:
 
     @classmethod
     def from_txt(cls, path, verbose=False):
+        """
+        Load graph from file in format triplets
+        @param path: path to file
+        @param verbose: flag to set the output of information on download
+        @return: initialized class
+        """
         g = LabelGraph(get_graph_size(path))
         with open(path, 'r') as f:
             for line in tqdm(f.readlines()) if verbose else f.readlines():

@@ -3,11 +3,15 @@ from pathlib import Path, PosixPath
 import os
 import datetime
 
-import algo_impl
+from benchmark.algo_impl import *
 from benchmark.bench import benchmark
 
 
 def result_folder():
+    """
+    Creates and returns an unused result directory
+    @return: path to new directory
+    """
     results = 'results'
     if not os.path.exists(results):
         os.mkdir(f'results')
@@ -24,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('-result_dir', dest='result_dir', default=result_folder(),
                         help='Directory for uploading '
                              'experiment results')
-    algo_name = algo_impl.ALGO_PROBLEM.keys()
+    algo_name = ALGO_PROBLEM.keys()
     parser.add_argument('-algo', dest='algo', required=True, choices=algo_name,
                         help='Algorithm implementation that will be measured')
     parser.add_argument('-config', dest='config', default=None, help='Config file for benchmark')
