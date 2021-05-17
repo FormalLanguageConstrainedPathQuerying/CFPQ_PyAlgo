@@ -5,6 +5,7 @@ MAX_MATRIX_SIZE = 10000000
 
 
 class INDEXTYPE(Type):
+    _base_name = "UDT"
     members = ['uint32_t left', 'uint32_t right', 'uint32_t middle', 'uint32_t height', 'uint32_t length']
     one = (0, 0, 0, 0, 0)
 

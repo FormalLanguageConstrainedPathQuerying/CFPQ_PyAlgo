@@ -5,6 +5,7 @@ from src.problems.SinglePath.algo.matrix_single_path.matrix_single_path import M
 
 from src.graph.index_graph import IndexGraph, INDEXTYPE
 from src.grammar.cnf_grammar import CnfGrammar
+from src.problems.utils import ResultAlgo
 
 
 class MatrixSingleAlgo(SinglePathProblem):
@@ -22,7 +23,9 @@ class MatrixSingleAlgo(SinglePathProblem):
                 m[l] += self.graph[r]
 
             changed = True
+            iter = 0
             while changed:
+                iter += 1
                 changed = False
                 for l, r1, r2 in self.grammar.complex_rules:
                     old_nnz = m[l].nvals
@@ -30,7 +33,8 @@ class MatrixSingleAlgo(SinglePathProblem):
                     new_nnz = m[l].nvals
                     if not old_nnz == new_nnz:
                         changed = True
-            return m
+            self.res_m = m
+            return ResultAlgo(m["S"], iter)
 
     def getPath(self, v_start: int, v_finish: int, nonterminal: str):
-        return MatrixSinglePath(self.graph, self.grammar).get_path(v_start, v_finish, nonterminal)
+        return MatrixSinglePath(self.res_m, self.grammar).get_path(v_start, v_finish, nonterminal)
