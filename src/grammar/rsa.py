@@ -18,6 +18,7 @@ class RecursiveAutomaton:
         self.start_state = dict()
         self.finish_states = dict()
         self.terminals = set()
+        self.out_states = dict()
 
     def __getitem__(self, item: str) -> Matrix:
         if item not in self.matrices:
@@ -46,6 +47,11 @@ class RecursiveAutomaton:
                 for j in range(count_edge):
                     first, second = file.readline().split()
                     rsa[label][int(first), int(second)] = True
+
+                    if int(first) in rsa.out_states:
+                        rsa.out_states[int(first)].append((int(second), label))
+                    else:
+                        rsa.out_states[int(first)] = [(int(second), label)]
 
             for i in range(count_nonterminals):
                 label = file.readline().replace("\n", "")
