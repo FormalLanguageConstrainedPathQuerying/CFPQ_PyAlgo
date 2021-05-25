@@ -3,6 +3,9 @@ from pygraphblas.types import BOOL
 
 from pathlib import Path
 
+from pyformlang.cfg import CFG
+from cfpq_data import rsm_from_text
+
 
 class RecursiveAutomaton:
     """
@@ -25,6 +28,64 @@ class RecursiveAutomaton:
             self.matrices[item] = Matrix.sparse(BOOL, self.matrices_size, self.matrices_size)
 
         return self.matrices[item]
+
+    @classmethod
+    def from_cfg(cls, cfg: CFG):
+        grammar = cfg.to_text()
+
+        productions = dict()
+        for line in grammar.split("\n"):
+            part_line = line.split(" -> ")
+            right = part_line[1]
+            if right == "":
+                right = "epsilon"
+            if part_line[0] in productions:
+                productions[part_line[0]] += " | " + right
+            else:
+                productions[part_line[0]] = right
+
+        grammar_new = ""
+        for nonterminal in productions:
+            grammar_new += nonterminal + " -> " + productions[nonterminal] + "\n"
+
+        grammar_new = grammar_new[:-1]
+        base_rsm = rsm_from_text(grammar_new)
+
+        rsa = RecursiveAutomaton()
+        current_state = 0
+        mapping_state = dict()
+        transtion_by_label = dict()
+        for nonterm, dfa in base_rsm.boxes:
+            rsa.nonterminals.add(nonterm)
+            rsa.labels.union(dfa.symbols)
+            for label in dfa.symbols:
+                if label not in transtion_by_label:
+                    transtion_by_label.update({label: []})
+
+            dfa_dict = dfa.to_dict()
+            for state in dfa_dict:
+                if state not in mapping_state:
+                    mapping_state[state] = current_state
+                    current_state += 1
+
+                for trans in dfa_dict[state]:
+                    if dfa_dict[state][trans] not in mapping_state:
+                        mapping_state[dfa_dict[state][trans]] = current_state
+                        current_state += 1
+                    transtion_by_label[trans].append((mapping_state[state], mapping_state[dfa_dict[state][trans]]))
+
+        rsa.matrices_size = current_state
+        for label in transtion_by_label:
+            rsa.matrices[label] = Matrix.sparse(BOOL, rsa.matrices_size, rsa.matrices_size)
+            for trans in transtion_by_label[label]:
+                rsa.matrices[label][trans[0], trans[1]] = True
+
+        for nonterm, dfa in base_rsm.boxes:
+            rsa.states[nonterm] = Matrix.sparse(BOOL, rsa.matrices_size, rsa.matrices_size)
+            for final_state in dfa.final_states:
+                rsa.states[nonterm][mapping_state[dfa.start_state], mapping_state[final_state]] = True
+
+        return rsa
 
     @classmethod
     def from_file(cls, path: Path):

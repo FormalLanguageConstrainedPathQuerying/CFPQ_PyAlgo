@@ -1,5 +1,6 @@
 from typing import Iterable
-from pathlib import Path
+from pyformlang.cfg import CFG
+from src.graph.graph import Graph
 
 from pygraphblas import Matrix, descriptor
 from pygraphblas.types import BOOL
@@ -40,9 +41,9 @@ def init_simple_rules(rules, graph: LabelGraph):
 
 class MatrixMSBruteAlgo(MultipleSourceProblem):
 
-    def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
-        self.grammar = CnfGrammar.from_cnf(grammar.with_suffix(".cnf"))
+    def prepare(self, graph: Graph, grammar: CFG):
+        self.graph = graph.load_bool_graph()
+        self.grammar = CnfGrammar.from_cfg(grammar)
 
         self.sources = LabelGraph(self.graph.matrices_size)
 
@@ -101,9 +102,9 @@ class MatrixMSBruteAlgo(MultipleSourceProblem):
 
 
 class MatrixMSSmartAlgo(MultipleSourceProblem):
-    def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
-        self.grammar = CnfGrammar.from_cnf(grammar.with_suffix(".cnf"))
+    def prepare(self, graph: Graph, grammar: CFG):
+        self.graph = graph.load_bool_graph()
+        self.grammar = CnfGrammar.from_cfg(grammar)
 
         self.sources = LabelGraph(self.graph.matrices_size)
 
@@ -157,9 +158,9 @@ class MatrixMSSmartAlgo(MultipleSourceProblem):
 
 
 class MatrixMSOptAlgo(MultipleSourceProblem):
-    def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
-        self.grammar = CnfGrammar.from_cnf(grammar.with_suffix(".cnf"))
+    def prepare(self, graph: Graph, grammar: CFG):
+        self.graph = graph.load_bool_graph()
+        self.grammar = CnfGrammar.from_cfg(grammar)
 
         self.sources = LabelGraph(self.graph.matrices_size)
 

@@ -1,5 +1,6 @@
 from pygraphblas import Matrix, BOOL
-from pathlib import Path
+from pyformlang.cfg import CFG
+from src.graph.graph import Graph
 from typing import Iterable
 
 from src.grammar.rsa import RecursiveAutomaton
@@ -29,9 +30,9 @@ def transitive_closure(m: Matrix):
 
 class TensorSimpleAlgo(AllPathsProblem):
 
-    def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
-        self.grammar = RecursiveAutomaton.from_file(grammar.with_suffix(".automat"))
+    def prepare(self, graph: Graph, grammar: CFG):
+        self.graph = graph.load_bool_graph()
+        self.grammar = RecursiveAutomaton.from_cfg(grammar)
 
     def solve(self):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
@@ -87,9 +88,9 @@ class TensorSimpleAlgo(AllPathsProblem):
 
 class TensorDynamicAlgo(AllPathsProblem):
 
-    def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
-        self.grammar = RecursiveAutomaton.from_file(grammar.with_suffix(".automat"))
+    def prepare(self, graph: Graph, grammar: CFG):
+        self.graph = graph.load_bool_graph()
+        self.grammar = RecursiveAutomaton.from_cfg(grammar)
 
     def solve(self):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)

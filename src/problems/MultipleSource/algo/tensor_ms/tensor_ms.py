@@ -1,4 +1,5 @@
-from pathlib import Path
+from pyformlang.cfg import CFG
+from src.graph.graph import Graph
 from typing import Iterable
 
 from pygraphblas import Matrix, BOOL
@@ -14,9 +15,9 @@ from src.problems.utils import ResultAlgo
 
 class TensorMSAlgo(MultipleSourceProblem):
 
-    def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
-        self.grammar = RecursiveAutomaton.from_file(grammar.with_suffix(".automat"))
+    def prepare(self, graph: Graph, grammar: CFG):
+        self.graph = graph.load_bool_graph()
+        self.grammar = RecursiveAutomaton.from_cfg(grammar)
         self.part_graph = LabelGraph(self.graph.matrices_size)
         self.src_for_states = dict()
         for i in range(self.grammar.matrices_size):

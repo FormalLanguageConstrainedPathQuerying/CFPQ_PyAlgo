@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
+from pyformlang.cfg import CFG
+from src.graph.graph import Graph
 
 
 class AllPathsProblem(ABC):
@@ -8,7 +9,7 @@ class AllPathsProblem(ABC):
     """
 
     @abstractmethod
-    def prepare(self, graph: Path, grammar: Path):
+    def prepare(self, graph: Graph, grammar: CFG):
         """
         Prepare for the operation of the algorithm: load graph and grammar
         @param graph: path to file with graph
