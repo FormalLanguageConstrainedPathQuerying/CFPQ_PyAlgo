@@ -1,7 +1,7 @@
 # How to start
 First, create a directory for the dataset. It should have two subdirectories for graphs (Graphs) and grammars (Grammars). In the second step, select an algorithm for benchmarking. Then run the command: 
 ```
-python3 start_benchmark.py -algo ALGO -data_dir DATA_DIR
+python3 -m benchmark.start_benchmark.py -algo ALGO -data_dir DATA_DIR
 ```
 There are also a number of optional parameters:
 + -round --- number of rounds for measurements
