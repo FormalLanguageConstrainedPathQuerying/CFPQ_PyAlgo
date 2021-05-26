@@ -1,6 +1,6 @@
 from pygraphblas import Matrix
 
-from src.graph.label_graph import LabelGraph
+from src.graph.graph import Graph
 from src.grammar.rsa import RecursiveAutomaton
 
 
@@ -15,7 +15,7 @@ class Paths:
 
 
 class TensorPaths:
-    def __init__(self, graph: LabelGraph, rsa: RecursiveAutomaton, tc: Matrix):
+    def __init__(self, graph: Graph, rsa: RecursiveAutomaton, tc: Matrix):
         self.graph = graph
         self.rsa = rsa
         self.tc = tc

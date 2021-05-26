@@ -137,7 +137,6 @@ class TensorDynamicAlgo(AllPathsProblem):
                                                start_j:start_j + self.graph.matrices_size - 1]
 
                     self.graph[nonterminal] += block[nonterminal]
-                    print(block[nonterminal])
                     new_control_sum = self.graph[nonterminal].nvals
 
                     if new_control_sum != control_sum:
