@@ -34,7 +34,10 @@ class CnfGrammar:
         cnf.start_nonterm = base_cnf.start_symbol.to_text()
 
         for product in base_cnf.productions:
-            cnf[product.head.to_text().strip('"')] = [x.to_text().strip('"') for x in product.body]
+            if not product.body:
+                cnf[product.head.to_text().strip('"')] = ["epsilon"]
+            else:
+                cnf[product.head.to_text().strip('"')] = [x.to_text().strip('"') for x in product.body]
 
         return cnf
 

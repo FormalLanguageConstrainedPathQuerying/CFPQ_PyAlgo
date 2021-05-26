@@ -12,7 +12,7 @@ from src.problems.AllPaths.AllPaths import AllPathsProblem
 from src.problems.utils import ResultAlgo
 
 
-def restore_eps_paths(nonterminals: Iterable, graph: LabelGraph):
+def restore_eps_paths(nonterminals: Iterable, graph: Graph):
     for label in nonterminals:
         for i in range(graph.matrices_size):
             graph[label][i, i] = True
@@ -31,7 +31,8 @@ def transitive_closure(m: Matrix):
 class TensorSimpleAlgo(AllPathsProblem):
 
     def prepare(self, graph: Graph, grammar: CFG):
-        self.graph = graph.load_bool_graph()
+        self.graph = graph
+        self.graph.load_bool_graph()
         self.grammar = RecursiveAutomaton.from_cfg(grammar)
 
     def solve(self):

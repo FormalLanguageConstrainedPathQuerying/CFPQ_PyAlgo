@@ -16,7 +16,8 @@ from src.problems.utils import ResultAlgo
 class TensorMSAlgo(MultipleSourceProblem):
 
     def prepare(self, graph: Graph, grammar: CFG):
-        self.graph = graph.load_bool_graph()
+        self.graph = graph
+        self.graph.load_bool_graph()
         self.grammar = RecursiveAutomaton.from_cfg(grammar)
         self.part_graph = LabelGraph(self.graph.matrices_size)
         self.src_for_states = dict()

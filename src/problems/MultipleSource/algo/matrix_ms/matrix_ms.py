@@ -31,7 +31,7 @@ def update_sources_opt(m: Matrix, mask: Matrix, res: Matrix):
             res[i, i] = 1
 
 
-def init_simple_rules(rules, graph: LabelGraph):
+def init_simple_rules(rules, graph: Graph):
     nonterms = LabelGraph(graph.matrices_size)
     for l, r in rules:
         nonterms[l] += graph[r]
@@ -42,7 +42,8 @@ def init_simple_rules(rules, graph: LabelGraph):
 class MatrixMSBruteAlgo(MultipleSourceProblem):
 
     def prepare(self, graph: Graph, grammar: CFG):
-        self.graph = graph.load_bool_graph()
+        self.graph = graph
+        self.graph.load_bool_graph()
         self.grammar = CnfGrammar.from_cfg(grammar)
 
         self.sources = LabelGraph(self.graph.matrices_size)
@@ -103,7 +104,8 @@ class MatrixMSBruteAlgo(MultipleSourceProblem):
 
 class MatrixMSSmartAlgo(MultipleSourceProblem):
     def prepare(self, graph: Graph, grammar: CFG):
-        self.graph = graph.load_bool_graph()
+        self.graph = graph
+        self.graph.load_bool_graph()
         self.grammar = CnfGrammar.from_cfg(grammar)
 
         self.sources = LabelGraph(self.graph.matrices_size)
@@ -159,7 +161,8 @@ class MatrixMSSmartAlgo(MultipleSourceProblem):
 
 class MatrixMSOptAlgo(MultipleSourceProblem):
     def prepare(self, graph: Graph, grammar: CFG):
-        self.graph = graph.load_bool_graph()
+        self.graph = graph
+        self.graph.load_bool_graph()
         self.grammar = CnfGrammar.from_cfg(grammar)
 
         self.sources = LabelGraph(self.graph.matrices_size)

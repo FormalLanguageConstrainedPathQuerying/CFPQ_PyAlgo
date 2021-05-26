@@ -34,7 +34,7 @@ class RecursiveAutomaton:
         grammar = cfg.to_text()
 
         productions = dict()
-        for line in grammar.split("\n"):
+        for line in grammar.split("\n")[:-1]:
             part_line = line.split(" -> ")
             right = part_line[1]
             if right == "":
@@ -56,8 +56,9 @@ class RecursiveAutomaton:
         mapping_state = dict()
         transtion_by_label = dict()
         for nonterm, dfa in base_rsm.boxes:
-            rsa.nonterminals.add(nonterm)
-            rsa.labels.union(dfa.symbols)
+            rsa.nonterminals.add(nonterm.to_text())
+            rsa.labels = rsa.labels.union(dfa.symbols)
+
             for label in dfa.symbols:
                 if label not in transtion_by_label:
                     transtion_by_label.update({label: []})
@@ -80,11 +81,20 @@ class RecursiveAutomaton:
             for trans in transtion_by_label[label]:
                 rsa.matrices[label][trans[0], trans[1]] = True
 
+                if trans[0] in rsa.out_states:
+                    rsa.out_states[trans[0]].append((trans[1], label))
+                else:
+                    rsa.out_states[trans[0]] = [(trans[1], label)]
+
         for nonterm, dfa in base_rsm.boxes:
             rsa.states[nonterm] = Matrix.sparse(BOOL, rsa.matrices_size, rsa.matrices_size)
+            rsa.start_state[nonterm] = mapping_state[dfa.start_state]
+            rsa.finish_states[nonterm] = []
             for final_state in dfa.final_states:
                 rsa.states[nonterm][mapping_state[dfa.start_state], mapping_state[final_state]] = True
-
+                rsa.finish_states[nonterm].append(mapping_state[final_state])
+                if mapping_state[dfa.start_state] == mapping_state[final_state]:
+                    rsa.start_and_finish.add(nonterm)
         return rsa
 
     @classmethod

@@ -12,7 +12,8 @@ from src.problems.utils import ResultAlgo
 class MatrixBaseAlgo(BaseProblem):
 
     def prepare(self, graph: Graph, grammar: CFG):
-        self.graph = graph.load_bool_graph()
+        self.graph = graph
+        self.graph.load_bool_graph()
         self.grammar = CnfGrammar.from_cfg(grammar)
 
     def solve(self):

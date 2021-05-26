@@ -2,7 +2,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from pygraphblas import Matrix, BOOL
-from index_graph import SAVEMIDDLETYPE
+from src.graph.index_graph import SAVEMIDDLETYPE
 
 from src.utils.graph_size import get_graph_size
 

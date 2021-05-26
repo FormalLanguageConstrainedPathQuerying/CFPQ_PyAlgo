@@ -12,7 +12,8 @@ from src.problems.utils import ResultAlgo
 class MatrixSingleAlgo(SinglePathProblem):
 
     def prepare(self, graph: Graph, grammar: CFG):
-        self.graph = graph.load_save_middle_graph()
+        self.graph = graph
+        self.graph.load_save_middle_graph()
         self.grammar = CnfGrammar.from_cfg(grammar)
 
     def solve(self):
