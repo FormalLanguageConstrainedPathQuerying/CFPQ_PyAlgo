@@ -63,11 +63,11 @@ def graph_to_txt(graph, path):
 
 def load_graph_by_type(type):
     for name_graph in DATASET[type].keys():
-        graph_to_txt(graph_from_dataset(name_graph), DEFAULT_GRAPH_PATH)
+        graph_to_txt(graph_from_dataset(name_graph), DEFAULT_GRAPH_PATH.joinpath(name_graph))
 
 
 def load_graph_by_name(name_graph):
-    graph_to_txt(graph_from_dataset(name_graph), DEFAULT_GRAPH_PATH)
+    graph_to_txt(graph_from_dataset(name_graph), DEFAULT_GRAPH_PATH.joinpath(name_graph))
 
 
 def load_grammar_by_type(name_grammar):
