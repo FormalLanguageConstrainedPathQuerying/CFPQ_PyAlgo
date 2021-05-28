@@ -118,6 +118,7 @@ class TensorDynamicAlgo(AllPathsProblem):
         iter = 0
         block = LabelGraph(self.graph.matrices_size)
         changed = True
+        first_iter = True
         while changed:
             changed = False
             iter += 1
@@ -126,9 +127,13 @@ class TensorDynamicAlgo(AllPathsProblem):
                 block[nonterminal] = Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)
 
             transitive_closure(kron)
-            part = prev_kron.mxm(kron, semiring=BOOL.LOR_LAND)
-            with BOOL.LOR_LAND:
-                kron += prev_kron + part @ prev_kron + part + kron @ prev_kron
+
+            if not first_iter:
+                part = prev_kron.mxm(kron, semiring=BOOL.LOR_LAND)
+                with BOOL.LOR_LAND:
+                    kron += prev_kron + part @ prev_kron + part + kron @ prev_kron
+            else:
+                first_iter = False
 
             prev_kron = kron
 
