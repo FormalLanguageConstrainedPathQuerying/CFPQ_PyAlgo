@@ -61,7 +61,7 @@ class TensorMSAlgo(MultipleSourceProblem):
             for label in self.grammar.labels:
                 kron += self.grammar[label].kronecker(self.part_graph[label])
 
-            kron_tc = transitive_closure(kron)
+            transitive_closure(kron)
 
             for start in self.grammar.nonterminals:
                 for element in self.grammar.states[start]:
@@ -72,8 +72,8 @@ class TensorMSAlgo(MultipleSourceProblem):
                     start_j = j * self.graph.matrices_size
 
                     control_sum = self.graph[start].nvals
-                    block = kron_tc[start_i:start_i + self.graph.matrices_size - 1,
-                            start_j: start_j + self.graph.matrices_size - 1]
+                    block = kron[start_i:start_i + self.graph.matrices_size - 1,
+                                 start_j: start_j + self.graph.matrices_size - 1]
 
                     self.graph[start] += block
                     new_control_sum = self.graph[start].nvals
