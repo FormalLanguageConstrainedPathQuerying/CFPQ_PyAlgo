@@ -25,6 +25,10 @@ class AllPathsProblem(ABC):
         pass
 
     @abstractmethod
+    def prepare_for_exctract_paths(self):
+        pass
+
+    @abstractmethod
     def getPaths(self, v_start: int, v_finish: int, nonterminal: str, max_len: int):
         """
         Extract all paths between two vertices, the length of which does not exceed the given parameter

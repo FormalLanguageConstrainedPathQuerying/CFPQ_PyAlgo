@@ -19,6 +19,7 @@ def test_binary_tree(algo):
     result: ResultAlgo = allpath_algo.solve()
     assert result.matrix_S.nvals == 20
 
+    allpath_algo.prepare_for_exctract_paths()
     paths = allpath_algo.getPaths(0, 3, "S", 5)
     assert len(paths) == 1
 
@@ -34,6 +35,7 @@ def test_cycle(algo):
     result: ResultAlgo = allpath_algo.solve()
     assert result.matrix_S.nvals == 9
 
+    allpath_algo.prepare_for_exctract_paths()
     paths = allpath_algo.getPaths(0, 1, "S", 3)
     assert len(paths) == 1
 
@@ -49,6 +51,7 @@ def test_line(algo):
     result: ResultAlgo = allpath_algo.solve()
     assert result.matrix_S.nvals == 2
 
+    allpath_algo.prepare_for_exctract_paths()
     paths = allpath_algo.getPaths(0, 4, "S", 2)
     assert len(paths) == 0
 
@@ -64,6 +67,7 @@ def test_loop(algo):
     result: ResultAlgo = allpath_algo.solve()
     assert result.matrix_S.nvals == 1
 
+    allpath_algo.prepare_for_exctract_paths()
     paths = allpath_algo.getPaths(0, 0, "S", 1)
     assert len(paths) == 0
 
@@ -79,5 +83,6 @@ def test_two_cycles(algo):
     result: ResultAlgo = allpath_algo.solve()
     assert result.matrix_S.nvals == 6
 
+    allpath_algo.prepare_for_exctract_paths()
     paths = allpath_algo.getPaths(1, 3, "S", 3)
     assert len(paths) == 1

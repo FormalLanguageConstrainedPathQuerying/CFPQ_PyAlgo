@@ -20,12 +20,9 @@ def restore_eps_paths(nonterminals: Iterable, graph: Graph):
 
 def transitive_closure(m: Matrix):
     prev = 0
-    result = m.dup()
-    while prev != result.nvals:
-        prev = result.nvals
-        result += result.mxm(result, semiring=BOOL.LOR_LAND)
-
-    return result
+    while prev != m.nvals:
+        prev = m.nvals
+        m += m.mxm(m, semiring=BOOL.LOR_LAND)
 
 
 class TensorSimpleAlgo(AllPathsProblem):
@@ -56,7 +53,7 @@ class TensorSimpleAlgo(AllPathsProblem):
             for nonterminal in self.grammar.nonterminals:
                 kron += self.grammar[nonterminal].kronecker(self.graph[nonterminal])
 
-            kron_tc = transitive_closure(kron)
+            transitive_closure(kron)
 
             # update
             for nonterminal in self.grammar.nonterminals:
@@ -68,8 +65,8 @@ class TensorSimpleAlgo(AllPathsProblem):
                     start_j = j * self.graph.matrices_size
 
                     control_sum = self.graph[nonterminal].nvals
-                    block = kron_tc[start_i:start_i + self.graph.matrices_size - 1,
-                                    start_j:start_j + self.graph.matrices_size - 1]
+                    block = kron[start_i:start_i + self.graph.matrices_size - 1,
+                                 start_j:start_j + self.graph.matrices_size - 1]
 
                     self.graph[nonterminal] += block
                     new_control_sum = self.graph[nonterminal].nvals
@@ -80,8 +77,13 @@ class TensorSimpleAlgo(AllPathsProblem):
             if self.grammar.nonterminals.isdisjoint(self.grammar.labels):
                 break
 
-        self.kron = kron
         return ResultAlgo(self.graph["S"], iter)
+
+    def prepare_for_exctract_paths(self):
+        sizeKron = self.graph.matrices_size * self.grammar.matrices_size
+        self.kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
+        for label in self.grammar.labels:
+            self.kron += self.grammar[label].kronecker(self.graph[label])
 
     def getPaths(self, v_start: int, v_finish: int, nonterminal: str, max_len: int):
         return TensorPaths(self.graph, self.grammar, self.kron).get_paths(v_start, v_finish, nonterminal, max_len)
@@ -117,12 +119,12 @@ class TensorDynamicAlgo(AllPathsProblem):
                 kron += self.grammar[nonterminal].kronecker(block[nonterminal])
                 block[nonterminal] = Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)
 
-            kron_tc = transitive_closure(kron)
-            part = prev_kron.mxm(kron_tc, semiring=BOOL.LOR_LAND)
+            transitive_closure(kron)
+            part = prev_kron.mxm(kron, semiring=BOOL.LOR_LAND)
             with BOOL.LOR_LAND:
-                kron_tc += prev_kron + part @ prev_kron + part + kron_tc @ prev_kron
+                kron += prev_kron + part @ prev_kron + part + kron @ prev_kron
 
-            prev_kron = kron_tc
+            prev_kron = kron
 
             for nonterminal in self.grammar.nonterminals:
                 for element in self.grammar.states[nonterminal]:
@@ -133,7 +135,7 @@ class TensorDynamicAlgo(AllPathsProblem):
                     start_j = j * self.graph.matrices_size
 
                     control_sum = self.graph[nonterminal].nvals
-                    block[nonterminal] += kron_tc[start_i:start_i + self.graph.matrices_size - 1,
+                    block[nonterminal] += kron[start_i:start_i + self.graph.matrices_size - 1,
                                                start_j:start_j + self.graph.matrices_size - 1]
 
                     self.graph[nonterminal] += block[nonterminal]
@@ -145,8 +147,13 @@ class TensorDynamicAlgo(AllPathsProblem):
             if self.grammar.nonterminals.isdisjoint(self.grammar.labels):
                 break
 
-        self.kron = kron
         return ResultAlgo(self.graph["S"], iter)
+
+    def prepare_for_exctract_paths(self):
+        sizeKron = self.graph.matrices_size * self.grammar.matrices_size
+        self.kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
+        for label in self.grammar.labels:
+            self.kron += self.grammar[label].kronecker(self.graph[label])
 
     def getPaths(self, v_start: int, v_finish: int, nonterminal: str, max_len: int):
         return TensorPaths(self.graph, self.grammar, self.kron).get_paths(v_start, v_finish, nonterminal, max_len)
