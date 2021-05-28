@@ -19,10 +19,16 @@ def restore_eps_paths(nonterminals: Iterable, graph: Graph):
 
 
 def transitive_closure(m: Matrix):
-    prev = 0
+    prev = m.nvals
+    degree = m
+    with BOOL.LOR_LAND:
+        degree = degree @ m
+        m += degree
     while prev != m.nvals:
         prev = m.nvals
-        m += m.mxm(m, semiring=BOOL.LOR_LAND)
+        with BOOL.LOR_LAND:
+            degree = degree @ m
+            m += degree
 
 
 class TensorSimpleAlgo(AllPathsProblem):
