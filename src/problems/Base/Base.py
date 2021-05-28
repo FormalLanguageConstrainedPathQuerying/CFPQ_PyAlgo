@@ -18,6 +18,10 @@ class BaseProblem(ABC):
         pass
 
     @abstractmethod
+    def prepare_for_solve(self):
+        pass
+
+    @abstractmethod
     def solve(self):
         """
         Solve problem with graph and grammar

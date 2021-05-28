@@ -108,6 +108,7 @@ def benchmark_index(algo_name, data, result_dir, rounds):
             count_S = 0
             times = []
             for _ in tqdm(range(rounds), desc=f'{graph.stem}-{grammar.stem}'):
+                algo.prepare_for_solve()
                 start = time()
                 res = algo.solve()
                 finish = time()
@@ -148,6 +149,7 @@ def benchmark_all_paths(algo_name, data, result_dir):
             algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
             res = algo_name.solve()
             for elem in tqdm(res.matrix_S, desc=f'{graph.stem}-{grammar.stem}-paths'):
+                algo.prepare_for_exctract_paths()
                 start = time()
                 paths = algo.getPaths(elem[0], elem[1], "S")
                 finish = time()

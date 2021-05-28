@@ -25,6 +25,10 @@ class SinglePathProblem(ABC):
         pass
 
     @abstractmethod
+    def prepare_for_solve(self):
+        pass
+
+    @abstractmethod
     def getPath(self, v_start: int, v_finish: int, nonterminal: str):
         """
         Extract one path between two vertices

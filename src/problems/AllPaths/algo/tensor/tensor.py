@@ -41,9 +41,6 @@ class TensorSimpleAlgo(AllPathsProblem):
     def solve(self):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
 
-        for label in self.grammar.nonterminals:
-            self.graph[label].clear()
-
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
         kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
@@ -85,6 +82,10 @@ class TensorSimpleAlgo(AllPathsProblem):
 
         return ResultAlgo(self.graph["S"], iter)
 
+    def prepare_for_solve(self):
+        for label in self.grammar.nonterminals:
+            self.graph[label].clear()
+
     def prepare_for_exctract_paths(self):
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
         self.kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
@@ -104,9 +105,6 @@ class TensorDynamicAlgo(AllPathsProblem):
 
     def solve(self):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
-
-        for label in self.grammar.nonterminals:
-            self.graph[label].clear()
 
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
@@ -159,6 +157,10 @@ class TensorDynamicAlgo(AllPathsProblem):
                 break
 
         return ResultAlgo(self.graph["S"], iter)
+
+    def prepare_for_solve(self):
+        for label in self.grammar.nonterminals:
+            self.graph[label].clear()
 
     def prepare_for_exctract_paths(self):
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size

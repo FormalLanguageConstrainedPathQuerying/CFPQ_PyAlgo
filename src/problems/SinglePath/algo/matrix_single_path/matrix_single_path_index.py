@@ -38,5 +38,8 @@ class MatrixSingleAlgo(SinglePathProblem):
             self.res_m = m
             return ResultAlgo(m["S"], iter)
 
+    def prepare_for_solve(self):
+        pass
+
     def getPath(self, v_start: int, v_finish: int, nonterminal: str):
         return MatrixSinglePath(self.res_m, self.grammar).get_path(v_start, v_finish, nonterminal)

@@ -32,3 +32,6 @@ class MatrixBaseAlgo(BaseProblem):
                 new_nnz = m[l].nvals
                 changed |= not old_nnz == new_nnz
         return ResultAlgo(m[self.grammar.start_nonterm], iter)
+
+    def prepare_for_solve(self):
+        pass
