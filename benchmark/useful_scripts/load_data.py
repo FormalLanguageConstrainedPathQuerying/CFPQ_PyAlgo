@@ -1,4 +1,4 @@
-from cfpq_data import DATASET, graph_from_dataset, cfg_to_txt, nodes_to_integers, graph_to_txt, get_labels, change_edges
+from cfpq_data import DATASET, graph_from_dataset, cfg_to_txt, nodes_to_integers, get_labels, change_edges
 
 from cfpq_data.grammars.samples.rdf import g1, g2, geo
 from cfpq_data.grammars.samples.cycle import a_star_0, a_star_1, a_star_2
@@ -48,13 +48,21 @@ CONFIG = {
 }
 
 
+def graph_to_txt(graph, path, config):
+    with open(path, "w") as fout:
+        for u, v, edge_labels in graph.edges(data=True):
+            for label in edge_labels.values():
+                fout.write(f"{u} {config[str(label)]} {v}\n")
+                fout.write(f"{v} {config[str(label)]}_r {u}\n")
+
+
 def load_graph_by_type(type):
     for name_graph in DATASET[type].keys():
         load_graph_by_name(name_graph)
 
 
 def load_graph_by_name(name_graph):
-    g = nodes_to_integers(graph_from_dataset(name_graph))
+    g = nodes_to_integers(graph_from_dataset(name_graph, verbose=False), verbose=False)
     config_cur = dict()
     for label in get_labels(g, verbose=False):
         label_str = str(label).split("#")
@@ -63,8 +71,7 @@ def load_graph_by_name(name_graph):
         else:
             l = CONFIG.get(label_str[1], "other")
             config_cur.update({str(label): l})
-    g = change_edges(g, config_cur)
-    graph_to_txt(g, DEFAULT_GRAPH_PATH.joinpath(name_graph), quoting=False)
+    graph_to_txt(g, DEFAULT_GRAPH_PATH.joinpath(name_graph), config_cur)
 
 
 def load_grammar_by_type(name_grammar):
