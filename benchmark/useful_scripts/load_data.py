@@ -61,8 +61,8 @@ def load_graph_by_name(name_graph):
         if len(label_str) < 2:
             config_cur.update({str(label): "other"})
         else:
-            l = CONFIG.get(label_str[1], default="other")
-            config_cur.update({label_str[1]: l})
+            l = CONFIG.get(label_str[1], "other")
+            config_cur.update({str(label): l})
     g = change_edges(g, config_cur)
     graph_to_txt(g, DEFAULT_GRAPH_PATH.joinpath(name_graph), quoting=False)
 
