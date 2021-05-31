@@ -71,8 +71,11 @@ def load_graph_by_name(name_graph):
         if len(label_str) < 2 and str(label) not in CONFIG:
             config_cur.update({str(label): "other"})
         else:
-            l = CONFIG.get(label_str[1], "other")
-            config_cur.update({str(label): l})
+            if str(label) in CONFIG:
+                config_cur.update({str(label): CONFIG[str(label)]})
+            else:
+                l = CONFIG.get(label_str[1], "other")
+                config_cur.update({str(label): l})
     graph_to_txt(g, DEFAULT_GRAPH_PATH.joinpath(name_graph), config_cur)
 
 
