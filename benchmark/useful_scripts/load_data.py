@@ -52,6 +52,8 @@ def graph_to_txt(graph, path, config):
     with open(path, "w") as fout:
         for u, v, edge_labels in graph.edges(data=True):
             for label in edge_labels.values():
+                if config[str(label)] == "other":
+                    continue
                 fout.write(f"{u} {config[str(label)]} {v}\n")
                 fout.write(f"{v} {config[str(label)]}_r {u}\n")
 
