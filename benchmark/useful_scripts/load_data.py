@@ -1,6 +1,4 @@
-from cfpq_data import DATASET, graph_from_dataset
-
-from cfpq_data import cfg_to_txt
+from cfpq_data import DATASET, graph_from_dataset, cfg_to_txt, nodes_to_integers
 
 from cfpq_data.grammars.samples.rdf import g1, g2, geo
 from cfpq_data.grammars.samples.cycle import a_star_0, a_star_1, a_star_2
@@ -63,11 +61,11 @@ def graph_to_txt(graph, path):
 
 def load_graph_by_type(type):
     for name_graph in DATASET[type].keys():
-        graph_to_txt(graph_from_dataset(name_graph), DEFAULT_GRAPH_PATH.joinpath(name_graph))
+        graph_to_txt(nodes_to_integers(graph_from_dataset(name_graph)), DEFAULT_GRAPH_PATH.joinpath(name_graph))
 
 
 def load_graph_by_name(name_graph):
-    graph_to_txt(graph_from_dataset(name_graph), DEFAULT_GRAPH_PATH.joinpath(name_graph))
+    graph_to_txt(nodes_to_integers(graph_from_dataset(name_graph)), DEFAULT_GRAPH_PATH.joinpath(name_graph))
 
 
 def load_grammar_by_type(name_grammar):
