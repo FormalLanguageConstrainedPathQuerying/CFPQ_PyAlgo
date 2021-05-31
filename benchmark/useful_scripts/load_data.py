@@ -1,4 +1,4 @@
-from cfpq_data import DATASET, graph_from_dataset, cfg_to_txt, nodes_to_integers
+from cfpq_data import DATASET, graph_from_dataset, cfg_to_txt, nodes_to_integers, graph_to_txt, get_labels, change_edges
 
 from cfpq_data.grammars.samples.rdf import g1, g2, geo
 from cfpq_data.grammars.samples.cycle import a_star_0, a_star_1, a_star_2
@@ -40,32 +40,31 @@ GRAMMARS_BY_NAME = {
 }
 
 CONFIG = {
-    "http://www.w3.org/2000/01/rdf-schema#subClassOf": "sco",
-    "http://www.w3.org/1999/02/22-rdf-schema#type": "t",
-    "http://www.w3.org/2004/02/skos/core#broaderTransitive": "bt",
+    "subClassOf": "sco",
+    "type": "t",
+    "broaderTransitive": "bt",
     "http://yacc/D": "d",
     "http://yacc/A": "a"
 }
 
 
-def graph_to_txt(graph, path):
-    with open(path, "w") as fout:
-        for u, v, edge_labels in graph.edges(data=True):
-            for label in edge_labels.values():
-                if label in CONFIG:
-                    fout.write(f"{u} {CONFIG[label]} {v}\n")
-                    fout.write(f"{v} {CONFIG[label]}_r {u}\n")
-                else:
-                    fout.write(f"{u} other {v}\n")
-
-
 def load_graph_by_type(type):
     for name_graph in DATASET[type].keys():
-        graph_to_txt(nodes_to_integers(graph_from_dataset(name_graph)), DEFAULT_GRAPH_PATH.joinpath(name_graph))
+        load_graph_by_name(name_graph)
 
 
 def load_graph_by_name(name_graph):
-    graph_to_txt(nodes_to_integers(graph_from_dataset(name_graph)), DEFAULT_GRAPH_PATH.joinpath(name_graph))
+    g = nodes_to_integers(graph_from_dataset(name_graph))
+    config_cur = dict()
+    for label in get_labels(g, verbose=False):
+        label_str = str(label).split("#")
+        if len(label_str) < 2:
+            config_cur.update({str(label): "other"})
+        else:
+            l = CONFIG.get(label_str[1], default="other")
+            config_cur.update({label_str[1]: l})
+    g = change_edges(g, config_cur)
+    graph_to_txt(g, DEFAULT_GRAPH_PATH.joinpath(name_graph), quoting=False)
 
 
 def load_grammar_by_type(name_grammar):
