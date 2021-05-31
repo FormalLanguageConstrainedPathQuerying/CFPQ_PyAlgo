@@ -68,7 +68,7 @@ def load_graph_by_name(name_graph):
     config_cur = dict()
     for label in get_labels(g, verbose=False):
         label_str = str(label).split("#")
-        if len(label_str) < 2:
+        if len(label_str) < 2 and str(label) not in CONFIG:
             config_cur.update({str(label): "other"})
         else:
             l = CONFIG.get(label_str[1], "other")
