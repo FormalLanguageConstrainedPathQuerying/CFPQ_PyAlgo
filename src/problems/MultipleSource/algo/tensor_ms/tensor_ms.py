@@ -28,7 +28,7 @@ class TensorMSAlgo(MultipleSourceProblem):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
 
         for v in sources:
-            self.src_for_states[self.grammar.start_state["S"]][v, v] = True
+            self.src_for_states[self.grammar.start_state[self.grammar.start_nonterminal]][v, v] = True
 
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
@@ -42,21 +42,22 @@ class TensorMSAlgo(MultipleSourceProblem):
             changed = False
             src_changed = False
 
-            for state in range(self.grammar.matrices_size):
-                out_state = self.grammar.out_states.get(state, [])
-                for out in out_state:
-                    if out[1] == "S":
-                        old_sum = self.src_for_states[self.grammar.start_state["S"]].nvals
-                        self.src_for_states[self.grammar.start_state["S"]] += self.src_for_states[state]
-                        if old_sum != self.src_for_states[self.grammar.start_state["S"]].nvals:
+            for box in self.grammar.boxes:
+                for state in self.grammar.boxes[box]:
+                    out_state = self.grammar.out_states.get(state, [])
+                    for out in out_state:
+                        if out[1] in self.grammar.nonterminals:
+                            old_sum = self.src_for_states[self.grammar.start_state[out[1]]].nvals
+                            self.src_for_states[self.grammar.start_state[out[1]]] += self.src_for_states[state]
+                            if old_sum != self.src_for_states[self.grammar.start_state[out[1]]].nvals:
+                                src_changed = True
+                        with BOOL.LOR_LAND:
+                            self.part_graph[out[1]] += self.src_for_states[state].mxm(self.graph[out[1]])
+                        old_sum = self.src_for_states[out[0]].nvals
+                        for elem in self.part_graph[out[1]].T.reduce_vector(BOOL.LAND_MONOID):
+                            self.src_for_states[out[0]][elem[0], elem[0]] = True
+                        if old_sum != self.src_for_states[out[0]].nvals:
                             src_changed = True
-                    with BOOL.LOR_LAND:
-                        self.part_graph[out[1]] += self.src_for_states[state].mxm(self.graph[out[1]])
-                    old_sum = self.src_for_states[out[0]].nvals
-                    for elem in self.part_graph[out[1]].T.reduce_vector(BOOL.LAND_MONOID):
-                        self.src_for_states[out[0]][elem[0], elem[0]] = True
-                    if old_sum != self.src_for_states[out[0]].nvals:
-                        src_changed = True
 
             for label in self.grammar.labels:
                 kron += self.grammar[label].kronecker(self.part_graph[label])

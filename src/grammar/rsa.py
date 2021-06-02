@@ -9,7 +9,7 @@ from cfpq_data import rsm_from_text
 
 class RecursiveAutomaton:
     """
-    This class representing recursive state automaton. supports only the functions necessary for the algorithms to work
+    This class representing recursive state automaton. Supports only the functions necessary for the algorithms to work
     """
     def __init__(self):
         self.labels = set()
@@ -22,6 +22,8 @@ class RecursiveAutomaton:
         self.finish_states = dict()
         self.terminals = set()
         self.out_states = dict()
+        self.start_nonterminal = ""
+        self.boxes = dict()
 
     def __getitem__(self, item: str) -> Matrix:
         if item not in self.matrices:
@@ -52,12 +54,14 @@ class RecursiveAutomaton:
         base_rsm = rsm_from_text(grammar_new)
 
         rsa = RecursiveAutomaton()
+        rsa.start_nonterminal = cfg.start_symbol
         current_state = 0
         mapping_state = dict()
         transtion_by_label = dict()
         for nonterm, dfa in base_rsm.boxes:
             rsa.nonterminals.add(nonterm.to_text())
             rsa.labels = rsa.labels.union(dfa.symbols)
+            rsa.boxes[nonterm.to_text()] = []
 
             for label in dfa.symbols:
                 if label not in transtion_by_label:
@@ -67,11 +71,13 @@ class RecursiveAutomaton:
             for state in dfa_dict:
                 if state not in mapping_state:
                     mapping_state[state] = current_state
+                    rsa.boxes[nonterm.to_text()].append(current_state)
                     current_state += 1
 
                 for trans in dfa_dict[state]:
                     if dfa_dict[state][trans] not in mapping_state:
                         mapping_state[dfa_dict[state][trans]] = current_state
+                        rsa.boxes[nonterm.to_text()].append(current_state)
                         current_state += 1
                     transtion_by_label[trans].append((mapping_state[state], mapping_state[dfa_dict[state][trans]]))
 
@@ -87,14 +93,15 @@ class RecursiveAutomaton:
                     rsa.out_states[trans[0]] = [(trans[1], label)]
 
         for nonterm, dfa in base_rsm.boxes:
-            rsa.states[nonterm] = Matrix.sparse(BOOL, rsa.matrices_size, rsa.matrices_size)
-            rsa.start_state[nonterm] = mapping_state[dfa.start_state]
-            rsa.finish_states[nonterm] = []
+            rsa.states[nonterm.to_text()] = Matrix.sparse(BOOL, rsa.matrices_size, rsa.matrices_size)
+            rsa.start_state[nonterm.to_text()] = mapping_state[dfa.start_state]
+            rsa.finish_states[nonterm.to_text()] = []
             for final_state in dfa.final_states:
-                rsa.states[nonterm][mapping_state[dfa.start_state], mapping_state[final_state]] = True
-                rsa.finish_states[nonterm].append(mapping_state[final_state])
+                rsa.states[nonterm.to_text()][mapping_state[dfa.start_state], mapping_state[final_state]] = True
+                rsa.finish_states[nonterm.to_text()].append(mapping_state[final_state])
                 if mapping_state[dfa.start_state] == mapping_state[final_state]:
-                    rsa.start_and_finish.add(nonterm)
+                    rsa.start_and_finish.add(nonterm.to_text())
+        rsa.terminals = rsa.labels.difference(rsa.nonterminals)
         return rsa
 
     @classmethod
