@@ -36,7 +36,7 @@ class MatrixSingleAlgo(SinglePathProblem):
                     if not old_nnz == new_nnz:
                         changed = True
             self.res_m = m
-            return ResultAlgo(m["S"], iter)
+            return ResultAlgo(m[self.grammar.start_nonterm], iter)
 
     def prepare_for_solve(self):
         pass

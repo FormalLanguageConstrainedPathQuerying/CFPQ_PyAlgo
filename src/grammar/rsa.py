@@ -22,7 +22,7 @@ class RecursiveAutomaton:
         self.finish_states = dict()
         self.terminals = set()
         self.out_states = dict()
-        self.start_nonterminal = ""
+        self.start_nonterm = ""
         self.boxes = dict()
 
     def __getitem__(self, item: str) -> Matrix:
@@ -54,7 +54,7 @@ class RecursiveAutomaton:
         base_rsm = rsm_from_text(grammar_new)
 
         rsa = RecursiveAutomaton()
-        rsa.start_nonterminal = cfg.start_symbol
+        rsa.start_nonterm = cfg.start_symbol
         current_state = 0
         mapping_state = dict()
         transtion_by_label = dict()

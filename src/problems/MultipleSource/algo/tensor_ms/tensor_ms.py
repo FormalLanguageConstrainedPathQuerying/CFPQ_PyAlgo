@@ -28,7 +28,7 @@ class TensorMSAlgo(MultipleSourceProblem):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
 
         for v in sources:
-            self.src_for_states[self.grammar.start_state[self.grammar.start_nonterminal]][v, v] = True
+            self.src_for_states[self.grammar.start_state[self.grammar.start_nonterm]][v, v] = True
 
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
@@ -82,4 +82,4 @@ class TensorMSAlgo(MultipleSourceProblem):
                     if new_control_sum != control_sum:
                         changed = True
 
-        return ResultAlgo(self.graph["S"], iter)
+        return ResultAlgo(self.graph[self.grammar.start_nonterm], iter)

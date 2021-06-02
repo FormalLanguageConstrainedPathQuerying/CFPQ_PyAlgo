@@ -80,7 +80,7 @@ class TensorSimpleAlgo(AllPathsProblem):
             if self.grammar.nonterminals.isdisjoint(self.grammar.labels):
                 break
 
-        return ResultAlgo(self.graph["S"], iter)
+        return ResultAlgo(self.graph[self.grammar.start_nonterm], iter)
 
     def prepare_for_solve(self):
         for label in self.grammar.nonterminals:
@@ -156,7 +156,7 @@ class TensorDynamicAlgo(AllPathsProblem):
             if self.grammar.nonterminals.isdisjoint(self.grammar.labels):
                 break
 
-        return ResultAlgo(self.graph["S"], iter)
+        return ResultAlgo(self.graph[self.grammar.start_nonterm], iter)
 
     def prepare_for_solve(self):
         for label in self.grammar.nonterminals:
