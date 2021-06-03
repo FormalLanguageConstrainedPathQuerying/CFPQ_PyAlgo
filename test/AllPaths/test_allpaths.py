@@ -86,3 +86,19 @@ def test_two_cycles(algo):
     allpath_algo.prepare_for_exctract_paths()
     paths = allpath_algo.getPaths(1, 3, "S", 3)
     assert len(paths) == 1
+
+
+@pytest.mark.CI
+def test_two_nonterm(algo):
+    test_data_path = LOCAL_CFPQ_DATA.joinpath('two_nonterm')
+    allpath_algo: AllPathsProblem = algo()
+    graph = Graph.from_txt(test_data_path.joinpath('Graphs/graph_1.txt'))
+    grammar = cfg_from_txt(test_data_path.joinpath('Grammars/g.cfg'))
+    allpath_algo.prepare(graph, grammar)
+
+    result: ResultAlgo = allpath_algo.solve()
+    assert result.matrix_S.nvals == 156
+
+    allpath_algo.prepare_for_exctract_paths()
+    paths = allpath_algo.getPaths(1, 1, "S", 3)
+    assert len(paths) == 1

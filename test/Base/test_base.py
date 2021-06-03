@@ -66,3 +66,15 @@ def test_two_cycles(algo):
 
     result: ResultAlgo = base_algo.solve()
     assert result.matrix_S.nvals == 6
+
+
+@pytest.mark.CI
+def test_two_nonterm(algo):
+    test_data_path = LOCAL_CFPQ_DATA.joinpath('two_nonterm')
+    base_algo: BaseProblem = algo()
+    graph = Graph.from_txt(test_data_path.joinpath('Graphs/graph_1.txt'))
+    grammar = cfg_from_txt(test_data_path.joinpath('Grammars/g.cfg'))
+    base_algo.prepare(graph, grammar)
+
+    result: ResultAlgo = base_algo.solve()
+    assert result.matrix_S.nvals == 156

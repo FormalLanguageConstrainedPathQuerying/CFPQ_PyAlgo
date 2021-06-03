@@ -56,9 +56,9 @@ class RecursiveAutomaton:
         rsa = RecursiveAutomaton()
         rsa.start_nonterm = cfg.start_symbol
         current_state = 0
-        mapping_state = dict()
         transtion_by_label = dict()
         for nonterm, dfa in base_rsm.boxes:
+            mapping_state = dict()
             rsa.nonterminals.add(nonterm.to_text())
             rsa.labels = rsa.labels.union(dfa.symbols)
             rsa.boxes[nonterm.to_text()] = []
@@ -80,6 +80,14 @@ class RecursiveAutomaton:
                         rsa.boxes[nonterm.to_text()].append(current_state)
                         current_state += 1
                     transtion_by_label[trans].append((mapping_state[state], mapping_state[dfa_dict[state][trans]]))
+            rsa.states[nonterm.to_text()] = []
+            rsa.start_state[nonterm.to_text()] = mapping_state[dfa.start_state]
+            rsa.finish_states[nonterm.to_text()] = []
+            for final_state in dfa.final_states:
+                rsa.states[nonterm.to_text()].append((mapping_state[dfa.start_state], mapping_state[final_state]))
+                rsa.finish_states[nonterm.to_text()].append(mapping_state[final_state])
+                if mapping_state[dfa.start_state] == mapping_state[final_state]:
+                    rsa.start_and_finish.add(nonterm.to_text())
 
         rsa.matrices_size = current_state
         for label in transtion_by_label:
@@ -92,15 +100,6 @@ class RecursiveAutomaton:
                 else:
                     rsa.out_states[trans[0]] = [(trans[1], label)]
 
-        for nonterm, dfa in base_rsm.boxes:
-            rsa.states[nonterm.to_text()] = Matrix.sparse(BOOL, rsa.matrices_size, rsa.matrices_size)
-            rsa.start_state[nonterm.to_text()] = mapping_state[dfa.start_state]
-            rsa.finish_states[nonterm.to_text()] = []
-            for final_state in dfa.final_states:
-                rsa.states[nonterm.to_text()][mapping_state[dfa.start_state], mapping_state[final_state]] = True
-                rsa.finish_states[nonterm.to_text()].append(mapping_state[final_state])
-                if mapping_state[dfa.start_state] == mapping_state[final_state]:
-                    rsa.start_and_finish.add(nonterm.to_text())
         rsa.terminals = rsa.labels.difference(rsa.nonterminals)
         return rsa
 

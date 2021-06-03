@@ -81,3 +81,18 @@ def test_two_cycles(algo):
 
     paths = singlepath_algo.getPath(1, 3, "S")
     assert paths == 2
+
+
+@pytest.mark.CI
+def test_two_nonterm(algo):
+    test_data_path = LOCAL_CFPQ_DATA.joinpath('two_nonterm')
+    singlepath_algo: SinglePathProblem = algo()
+    graph = Graph.from_txt(test_data_path.joinpath('Graphs/graph_1.txt'))
+    grammar = cfg_from_txt(test_data_path.joinpath('Grammars/g.cfg'))
+    singlepath_algo.prepare(graph, grammar)
+
+    result: ResultAlgo = singlepath_algo.solve()
+    assert result.matrix_S.nvals == 156
+
+    paths = singlepath_algo.getPath(1, 1, "S")
+    assert paths == 2
