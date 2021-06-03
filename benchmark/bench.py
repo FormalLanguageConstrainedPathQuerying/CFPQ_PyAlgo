@@ -221,9 +221,6 @@ def benchmark_ms(algo_name, data, result_dir):
 
         g = LabelGraph.from_txt(graph)
         for grammar in data[graph]:
-            algo = algo_name()
-            algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
-
             for chunk_size in chunk_sizes:
                 chunks = []
                 if chunk_size is None:
@@ -232,6 +229,8 @@ def benchmark_ms(algo_name, data, result_dir):
                     chunks = g.chunkify(chunk_size)
 
                 for chunk in tqdm(chunks, desc=f'{graph.stem}-{grammar.stem}'):
+                    algo = algo_name()
+                    algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
                     start = time()
                     res = algo.solve(chunk)
                     finish = time()
