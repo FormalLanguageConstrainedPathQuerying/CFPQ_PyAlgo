@@ -24,6 +24,13 @@ class TensorMSAlgo(MultipleSourceProblem):
         for i in range(self.grammar.matrices_size):
             self.src_for_states.update({i: Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)})
 
+    def clear_src(self):
+        for label in self.src_for_states:
+            self.src_for_states[label].clear()
+
+        for nonterm in self.grammar.nonterminals:
+            self.graph[nonterm].clear()
+
     def solve(self, sources: Iterable):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
 

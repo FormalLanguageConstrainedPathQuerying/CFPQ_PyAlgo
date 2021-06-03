@@ -19,6 +19,10 @@ class MultipleSourceProblem(ABC):
         pass
 
     @abstractmethod
+    def clear_src(self):
+        pass
+
+    @abstractmethod
     def solve(self, sources: Iterable):
         """
         Solve problem with graph and grammar

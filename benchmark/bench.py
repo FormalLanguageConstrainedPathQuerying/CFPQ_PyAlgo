@@ -9,7 +9,6 @@ from src.graph.label_graph import LabelGraph
 from src.graph.graph import Graph
 from cfpq_data import cfg_from_txt
 
-
 GRAMMAR_DIR = 'Grammars/'
 GRAPH_DIR = 'Graphs/'
 
@@ -117,7 +116,8 @@ def benchmark_index(algo_name, data, result_dir, rounds):
 
             sample_mean = get_sample_mean(times)
             variances.append(get_variance(times, sample_mean))
-            csv_writer_index.writerow([graph.stem, grammar.stem, sample_mean, count_S, get_variance(times, sample_mean)])
+            csv_writer_index.writerow(
+                [graph.stem, grammar.stem, sample_mean, count_S, get_variance(times, sample_mean)])
 
     return variances
 
@@ -221,6 +221,8 @@ def benchmark_ms(algo_name, data, result_dir):
 
         g = LabelGraph.from_txt(graph)
         for grammar in data[graph]:
+            algo = algo_name()
+            algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
             for chunk_size in chunk_sizes:
                 chunks = []
                 if chunk_size is None:
@@ -229,8 +231,7 @@ def benchmark_ms(algo_name, data, result_dir):
                     chunks = g.chunkify(chunk_size)
 
                 for chunk in tqdm(chunks, desc=f'{graph.stem}-{grammar.stem}'):
-                    algo = algo_name()
-                    algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
+                    algo.clear_src()  # Attention (TODO): remove this line if you want to cache the result !
                     start = time()
                     res = algo.solve(chunk)
                     finish = time()

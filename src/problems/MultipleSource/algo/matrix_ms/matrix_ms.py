@@ -48,6 +48,10 @@ class MatrixMSBruteAlgo(MultipleSourceProblem):
 
         self.sources = LabelGraph(self.graph.matrices_size)
 
+    def clear_src(self):
+        for label in self.sources.matrices:
+            self.sources[label].clear()
+
     def solve(self, sources: Iterable):
         # Creating new index per solve call
         # index = SingleSourceIndex(self.graph, self.grammar)
@@ -110,6 +114,10 @@ class MatrixMSSmartAlgo(MultipleSourceProblem):
 
         self.sources = LabelGraph(self.graph.matrices_size)
 
+    def clear_src(self):
+        for label in self.sources.matrices:
+            self.sources[label].clear()
+
     def solve(self, sources: Iterable):
 
         nonterminals = init_simple_rules(self.grammar.simple_rules, self.graph)
@@ -166,6 +174,10 @@ class MatrixMSOptAlgo(MultipleSourceProblem):
         self.grammar = CnfGrammar.from_cfg(grammar)
 
         self.sources = LabelGraph(self.graph.matrices_size)
+
+    def clear_src(self):
+        for label in self.sources.matrices:
+            self.sources[label].clear()
 
     def solve(self, sources: Iterable):
         new_sources = LabelGraph(self.graph.matrices_size)
