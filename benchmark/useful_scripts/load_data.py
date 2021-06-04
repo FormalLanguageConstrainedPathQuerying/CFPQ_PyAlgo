@@ -35,7 +35,6 @@ GRAMMARS_BY_NAME = {
     an_bm_cm_dn: "an_bm_cm_dn",
     sg: "sg",
     g1_ma: "g1_ma",
-    g2_ma: "g2_ma",
     brackets: "brackets"
 }
 
