@@ -8,6 +8,7 @@ There are also a number of optional parameters:
 + -config --- config file in the "graph grammar" format to indicate only certain data for measurements from a directory DATA_DIR
 + -with_paths --- indicate additionally measure the extraction of paths
 + -result_dir --- specify a directory for uploading the results
++ -max_len_paths --- Limit on the length of the retrieved paths 
 
 # Add new algorithm
 To add a new implementation of the algorithm to the list of available measurements, you must:

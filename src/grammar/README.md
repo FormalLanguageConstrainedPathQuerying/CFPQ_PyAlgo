@@ -1,3 +1,5 @@
+**For now, it is enough to have a context-free grammar. Conversion to the desired format will happen on its own inside the implementations.**
+
 # Presentation formats of grammars
 Consider presentation formats grammar CNF and RSA
 
