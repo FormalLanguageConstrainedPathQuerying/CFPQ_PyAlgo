@@ -35,7 +35,7 @@ def get_sample_mean(data):
 
 
 def get_variance(data, sample_mean):
-    return sum([(x - sample_mean) ** 2 for x in data]) / float(len(data))
+    return sum([(x - sample_mean) ** 2 for x in data]) / float(len(data) - 1)
 
 
 def benchmark(algo, data_dir, result_dir, config, with_paths, rounds, max_len_paths):
