@@ -38,7 +38,7 @@ def get_variance(data, sample_mean):
     return sum([(x - sample_mean) ** 2 for x in data]) / float(len(data))
 
 
-def benchmark(algo, data_dir, result_dir, config, with_paths, rounds):
+def benchmark(algo, data_dir, result_dir, config, with_paths, rounds, max_len_paths):
     """
     Pipeline builder function for measuring performance
     @param algo: name algorithm in string
@@ -73,7 +73,7 @@ def benchmark(algo, data_dir, result_dir, config, with_paths, rounds):
         variances = benchmark_index(impl_for_algo, graph_grammar, result_dir, rounds)
 
     if with_paths:
-        if type_problem == "AllPaths": benchmark_all_paths(impl_for_algo, graph_grammar, result_dir)
+        if type_problem == "AllPaths": benchmark_all_paths(impl_for_algo, graph_grammar, result_dir, max_len_paths)
         if type_problem == "SinglePath": benchmark_single_path(impl_for_algo, graph_grammar, result_dir)
 
 
@@ -122,7 +122,7 @@ def benchmark_index(algo_name, data, result_dir, rounds):
     return variances
 
 
-def benchmark_all_paths(algo_name, data, result_dir):
+def benchmark_all_paths(algo_name, data, result_dir, max_len_paths):
     """
     Measurement function for extract all paths
     @param algo_name: concrete implementation of the algorithm
@@ -147,11 +147,11 @@ def benchmark_all_paths(algo_name, data, result_dir):
         for grammar in data[graph]:
             algo = algo_name()
             algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
-            res = algo_name.solve()
+            res = algo.solve()
             for elem in tqdm(res.matrix_S, desc=f'{graph.stem}-{grammar.stem}-paths'):
                 algo.prepare_for_exctract_paths()
                 start = time()
-                paths = algo.getPaths(elem[0], elem[1], "S")
+                paths = algo.getPaths(elem[0], elem[1], "S", int(max_len_paths))
                 finish = time()
                 csv_writer_paths.writerow([graph.stem, grammar.stem, len(paths), finish - start])
 
@@ -184,7 +184,7 @@ def benchmark_single_path(algo_name, data, result_dir):
         for grammar in data[graph]:
             algo = algo_name()
             algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
-            res = algo_name.solve()
+            res = algo.solve()
             for elem in tqdm(res.matrix_S, desc=f'{graph.stem}-{grammar}-paths'):
                 start = time()
                 paths = algo.getPath(elem[0], elem[1], "S")

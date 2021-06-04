@@ -14,8 +14,8 @@ from src.problems.MultipleSource.algo.matrix_ms.matrix_ms import MatrixMSBruteAl
 """
 Correspondence of algo and problem it solves
 """
-ALGO_PROBLEM: Final = {'TensorSimple': 'AllPath',
-                       'TensorDynamic': 'AllPath',
+ALGO_PROBLEM: Final = {'TensorSimple': 'AllPaths',
+                       'TensorDynamic': 'AllPaths',
                        'MatrixBase': 'Base',
                        'MatrixMSBrute': 'MS',
                        'MatrixMSSmart': 'MS',

@@ -37,5 +37,13 @@ if __name__ == '__main__':
                                                                                          'the extraction of paths?')
     parser.add_argument('-round', dest='rounds', type=int, default=5, help='Number of rounds for benchmarking '
                                                                            '(Default: round = 5)')
+    parser.add_argument('-max_len_paths', dest='max_len_paths', default=5, type=int, help='Limit on the length of '
+                                                                                          'the retrieved paths')
     args = parser.parse_args()
-    benchmark(args.algo, Path(args.data_dir), Path(args.result_dir), args.config, args.with_paths, args.rounds)
+    benchmark(args.algo,
+              Path(args.data_dir),
+              Path(args.result_dir),
+              args.config,
+              args.with_paths,
+              args.rounds,
+              args.max_len_paths)
