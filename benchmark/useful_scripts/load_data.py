@@ -4,7 +4,7 @@ from cfpq_data.grammars.samples.rdf import g1, g2, geo
 from cfpq_data.grammars.samples.cycle import a_star_0, a_star_1, a_star_2
 from cfpq_data.grammars.samples.barabasi_albert import an_bm_cm_dn
 from cfpq_data.grammars.samples.binomial import sg
-from cfpq_data.grammars.samples.memory_aliases import g1 as g1_ma, g2 as g2_ma
+from cfpq_data.grammars.samples.memory_aliases import g1 as g1_ma
 from cfpq_data.grammars.samples.two_cycles import brackets
 
 from pathlib import Path
@@ -21,7 +21,7 @@ GRAMMARS_BY_TYPE = {
     "cycle": [a_star_0, a_star_1, a_star_2],
     "barabasi_albert": [an_bm_cm_dn],
     "bimomial": [sg],
-    "memory_aliases": [g1_ma, g2_ma],
+    "memory_aliases": [g1_ma],
     "two_cycles": [brackets]
 }
 
