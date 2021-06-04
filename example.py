@@ -1,56 +1,70 @@
-from src.grammar.cnf_grammar import CnfGrammar
-from src.graph.label_graph import LabelGraph
-from src.utils.time_profiler import SimpleTimer
-from src.algo.matrix_base.matrix_base import MatrixBaseAlgo
-from src.algo.single_source.single_source import SingleSourceAlgoBrute, SingleSourceAlgoSmart, SingleSourceAlgoOpt
+from src.problems.Base.algo.matrix_base.matrix_base import MatrixBaseAlgo
+from src.problems.MultipleSource.algo.matrix_ms.matrix_ms import MatrixMSBruteAlgo, MatrixMSSmartAlgo, MatrixMSOptAlgo
+from src.problems.MultipleSource.algo.tensor_ms.tensor_ms import TensorMSAlgo
+from src.problems.AllPaths.algo.tensor.tensor import TensorSimpleAlgo, TensorDynamicAlgo
+from src.problems.SinglePath.algo.matrix_single_path.matrix_single_path_index import MatrixSingleAlgo
 
-g = LabelGraph.from_txt('deps/CFPQ_Data/data/WorstCase/Matrices/worstcase_8.txt')
-gr = CnfGrammar.from_cnf('deps/CFPQ_Data/data/WorstCase/Grammars/Brackets.cnf')
+from src.graph.graph import Graph
+from cfpq_data import cfg_from_txt
 
-print('matrix_base_algo:')
+from src.problems.utils import ResultAlgo
 
-path_to_grammar = 'test/suites/data/test_case_1/Grammars/grammar'
-path_to_graph = 'test/suites/data/test_case_1/Matrices/graph_1'
+from pathlib import Path
 
-matrix_base_algo = MatrixBaseAlgo(path_to_graph, path_to_grammar)
+CASE = Path("test/data/binary_tree/")
 
-with SimpleTimer():
-    m = matrix_base_algo.solve()
+graph = Graph.from_txt(CASE.joinpath("Graphs/graph_1.txt"))
+grammar = cfg_from_txt(CASE.joinpath("Grammars/g.cfg"))
+algo = MatrixBaseAlgo()
+algo.prepare(graph, grammar)
+res:ResultAlgo = algo.solve()
+print(f'MatrixBaseAlgo: {res.matrix_S.nvals}')
 
-ss_ab = SingleSourceAlgoBrute(g, gr)
-sources_vertices = range(8)
+graph = Graph.from_txt(CASE.joinpath("Graphs/graph_1.txt"))
+grammar = cfg_from_txt(CASE.joinpath("Grammars/g.cfg"))
+algo = TensorSimpleAlgo()
+algo.prepare(graph, grammar)
+res:ResultAlgo = algo.solve()
+print(f'TensorSimpleAlgo: {res.matrix_S.nvals}')
 
-print('SingleSourceAlgoBrute:')
+graph = Graph.from_txt(CASE.joinpath("Graphs/graph_1.txt"))
+grammar = cfg_from_txt(CASE.joinpath("Grammars/g.cfg"))
+algo = TensorDynamicAlgo()
+algo.prepare(graph, grammar)
+res:ResultAlgo = algo.solve()
+print(f'TensorDynamicAlgo: {res.matrix_S.nvals}')
 
-with SimpleTimer():
-    m1 = ss_ab.solve(sources_vertices)
+graph = Graph.from_txt(CASE.joinpath("Graphs/graph_1.txt"))
+grammar = cfg_from_txt(CASE.joinpath("Grammars/g.cfg"))
+algo = MatrixSingleAlgo()
+algo.prepare(graph, grammar)
+res:ResultAlgo = algo.solve()
+print(f'MatrixSingleAlgo: {res.matrix_S.nvals}')
 
-ss_as = SingleSourceAlgoSmart(g, gr)
+graph = Graph.from_txt(CASE.joinpath("Graphs/graph_1.txt"))
+grammar = cfg_from_txt(CASE.joinpath("Grammars/g.cfg"))
+algo = MatrixMSBruteAlgo()
+algo.prepare(graph, grammar)
+res:ResultAlgo = algo.solve([0])
+print(f'MatrixMSBruteAlgo from 0: {res.matrix_S.nvals}')
 
-sum = 0
-for i in sources_vertices:
-    st = SimpleTimer()
-    st.tic()
-    m2 = ss_as.solve([i])
-    st.toc()
-    sum += st.duration
-    print(f'Smart i = {i}, time = {st.duration}')
+graph = Graph.from_txt(CASE.joinpath("Graphs/graph_1.txt"))
+grammar = cfg_from_txt(CASE.joinpath("Grammars/g.cfg"))
+algo = MatrixMSSmartAlgo()
+algo.prepare(graph, grammar)
+res:ResultAlgo = algo.solve([0])
+print(f'MatrixMSSmartAlgo from 0: {res.matrix_S.nvals}')
 
-print(f'SingleSourceAlgoSmart:\n{sum}')
+graph = Graph.from_txt(CASE.joinpath("Graphs/graph_1.txt"))
+grammar = cfg_from_txt(CASE.joinpath("Grammars/g.cfg"))
+algo = MatrixMSOptAlgo()
+algo.prepare(graph, grammar)
+res:ResultAlgo = algo.solve([0])
+print(f'MatrixMSOptAlgo from 0: {res.matrix_S.nvals}')
 
-ss_ao = SingleSourceAlgoOpt(g, gr)
-
-sum = 0
-for i in sources_vertices:
-    st = SimpleTimer()
-    st.tic()
-    m3 = ss_ao.solve([i])
-    st.toc()
-    sum += st.duration
-    print(f'Opt i = {i}, time = {st.duration}')
-
-print(f'SingleSourceAlgoOpt:\n{sum}')
-
-assert m.to_lists() == m1.to_lists(), 'Not equal!'
-assert m.to_lists() == m2.to_lists(), 'Not equal!'
-assert m.to_lists() == m3.to_lists(), 'Not equal!'
+graph = Graph.from_txt(CASE.joinpath("Graphs/graph_1.txt"))
+grammar = cfg_from_txt(CASE.joinpath("Grammars/g.cfg"))
+algo = TensorMSAlgo()
+algo.prepare(graph, grammar)
+res:ResultAlgo = algo.solve([0])
+print(f'TensorMSAlgo from 0: {res.matrix_S.nvals}')
