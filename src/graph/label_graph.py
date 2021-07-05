@@ -51,3 +51,32 @@ class LabelGraph:
 
     def chunkify(self, chunk_len) -> list:
         return list(chunkify(list(range(self.matrices_size)), chunk_len))
+
+    def __add__(self, other):
+        result = LabelGraph(self.matrices_size)
+        labels_only_in_self = set(self.matrices.keys()) - set(other.matrices.keys())
+        labels_only_in_other = set(other.matrices.keys()) - set(self.matrices.keys())
+        labels_in_both = set(self.matrices.keys()) & set(other.matrices.keys())
+        for label in labels_in_both:
+            result.matrices[label] = self.matrices[label] + other.matrices[label]
+
+        for label in labels_only_in_other:
+            result.matrices[label] = other.matrices[label]
+
+        for label in labels_only_in_self:
+            result.matrices[label] = self.matrices[label]
+
+        return result
+
+    def __iadd__(self, other):
+        for label in other.matrices:
+            if label in self.matrices:
+                self.matrices[label] = self.matrices[label] + other.matrices[label]
+            else:
+                self.matrices[label] = other.matrices[label]
+
+        return self
+
+    @property
+    def is_empty(self):
+        return False if len(self.matrices.keys()) > 0 else True

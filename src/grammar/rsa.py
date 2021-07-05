@@ -54,7 +54,7 @@ class RecursiveAutomaton:
         base_rsm = rsm_from_text(grammar_new)
 
         rsa = RecursiveAutomaton()
-        rsa.start_nonterm = cfg.start_symbol
+        rsa.start_nonterm = cfg.start_symbol.to_text()
         current_state = 0
         transtion_by_label = dict()
         for nonterm, dfa in base_rsm.boxes:

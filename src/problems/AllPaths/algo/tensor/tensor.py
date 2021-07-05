@@ -5,7 +5,8 @@ from typing import Iterable
 
 from src.grammar.rsa import RecursiveAutomaton
 from src.graph.label_graph import LabelGraph
-from src.problems.AllPaths.algo.tensor.tensor_path import TensorPaths, TensorPathsNew
+from src.problems.AllPaths.algo.tensor.tensor_path import TensorPathsNew
+from src.problems.AllPaths.algo.tensor.tensor_extract_subgraph import TensorExtractSubGraph
 
 from src.problems.AllPaths.AllPaths import AllPathsProblem
 
@@ -95,6 +96,11 @@ class TensorSimpleAlgo(AllPathsProblem):
     def getPaths(self, v_start: int, v_finish: int, nonterminal: str, max_len: int):
         return TensorPathsNew(self.graph, self.grammar, self.kron).get_paths(v_start, v_finish, nonterminal, max_len)
 
+    def get_sub_graph(self, v_start: int, v_finish: int, nonterminal: str, max_high: int):
+        return TensorExtractSubGraph(self.graph, self.grammar, self.kron, max_high).get_sub_graph(v_start,
+                                                                                                  v_finish,
+                                                                                                  nonterminal)
+
 
 class TensorDynamicAlgo(AllPathsProblem):
 
@@ -170,3 +176,8 @@ class TensorDynamicAlgo(AllPathsProblem):
 
     def getPaths(self, v_start: int, v_finish: int, nonterminal: str, max_len: int):
         return TensorPathsNew(self.graph, self.grammar, self.kron).get_paths(v_start, v_finish, nonterminal, max_len)
+
+    def get_sub_graph(self, v_start: int, v_finish: int, nonterminal: str, max_high: int):
+        return TensorExtractSubGraph(self.graph, self.grammar, self.kron, max_high).get_sub_graph(v_start,
+                                                                                                  v_finish,
+                                                                                                  nonterminal)
