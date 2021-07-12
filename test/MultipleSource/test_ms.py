@@ -17,7 +17,7 @@ def test_binary_tree(algo):
     ms_algo.prepare(graph, grammar)
 
     result: ResultAlgo = ms_algo.solve([0])
-    assert result.matrix_S.nvals == 6
+    assert result.matrix_S.nvals == 4
 
 
 @pytest.mark.CI
