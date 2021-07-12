@@ -36,7 +36,10 @@ class TensorMSAlgo(MultipleSourceProblem):
     def solve(self, sources: Iterable):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
 
+        # Initialize source matrices masks
+        m_src = Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)
         for v in sources:
+            m_src[v, v] = True
             self.src_for_states[self.grammar.start_state[self.grammar.start_nonterm]][v, v] = True
 
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
@@ -91,7 +94,7 @@ class TensorMSAlgo(MultipleSourceProblem):
                     if new_control_sum != control_sum:
                         changed = True
 
-        return ResultAlgo(self.graph[self.grammar.start_nonterm], iter)
+        return ResultAlgo(m_src.mxm(self.graph[self.grammar.start_nonterm], semiring=BOOL.LOR_LAND), iter)
 
 
 class TensorMSAllAlgo(MultipleSourceProblem):
