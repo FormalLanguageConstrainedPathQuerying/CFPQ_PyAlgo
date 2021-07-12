@@ -1,7 +1,9 @@
-from pygraphblas import Matrix, BOOL
+from pathlib import Path
+from cfpq_data import RSM
 from pyformlang.cfg import CFG
+from pygraphblas import Matrix, BOOL
 from src.graph.graph import Graph
-from typing import Iterable
+from typing import Iterable, Union
 
 from src.grammar.rsa import RecursiveAutomaton
 from src.graph.label_graph import LabelGraph
@@ -34,10 +36,10 @@ def transitive_closure(m: Matrix):
 
 class TensorSimpleAlgo(AllPathsProblem):
 
-    def prepare(self, graph: Graph, grammar: CFG):
+    def prepare(self, graph: Graph, grammar: Union[RSM, CFG, Path]):
         self.graph = graph
         self.graph.load_bool_graph()
-        self.grammar = RecursiveAutomaton.from_cfg(grammar)
+        self.grammar = RecursiveAutomaton.from_grammar_or_path(grammar)
 
     def solve(self):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
@@ -104,10 +106,10 @@ class TensorSimpleAlgo(AllPathsProblem):
 
 class TensorDynamicAlgo(AllPathsProblem):
 
-    def prepare(self, graph: Graph, grammar: CFG):
+    def prepare(self, graph: Graph, grammar: Union[RSM, CFG, Path]):
         self.graph = graph
         self.graph.load_bool_graph()
-        self.grammar = RecursiveAutomaton.from_cfg(grammar)
+        self.grammar = RecursiveAutomaton.from_grammar_or_path(grammar)
 
     def solve(self):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)

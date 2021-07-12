@@ -1,6 +1,8 @@
+from pathlib import Path
+from cfpq_data import RSM
 from pyformlang.cfg import CFG
 from src.graph.graph import Graph
-from typing import Iterable
+from typing import Iterable, Union
 
 from pygraphblas import Matrix, BOOL
 
@@ -15,10 +17,10 @@ from src.problems.utils import ResultAlgo
 
 class TensorMSAlgo(MultipleSourceProblem):
 
-    def prepare(self, graph: Graph, grammar: CFG):
+    def prepare(self, graph: Graph, grammar: Union[RSM, CFG, Path]):
         self.graph = graph
         self.graph.load_bool_graph()
-        self.grammar = RecursiveAutomaton.from_cfg(grammar)
+        self.grammar = RecursiveAutomaton.from_grammar_or_path(grammar)
         self.part_graph = LabelGraph(self.graph.matrices_size)
         self.src_for_states = dict()
         for i in range(self.grammar.matrices_size):
@@ -94,10 +96,10 @@ class TensorMSAlgo(MultipleSourceProblem):
 
 class TensorMSAllAlgo(MultipleSourceProblem):
 
-    def prepare(self, graph: Graph, grammar: CFG):
+    def prepare(self, graph: Graph, grammar: Union[RSM, CFG, Path]):
         self.graph = graph
         self.graph.load_bool_graph()
-        self.grammar = RecursiveAutomaton.from_cfg(grammar)
+        self.grammar = RecursiveAutomaton.from_grammar_or_path(grammar)
         self.part_graph = LabelGraph(self.graph.matrices_size)
         self.src_for_states = dict()
         for i in range(self.grammar.matrices_size):
