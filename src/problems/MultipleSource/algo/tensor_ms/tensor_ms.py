@@ -94,7 +94,8 @@ class TensorMSAlgo(MultipleSourceProblem):
                     if new_control_sum != control_sum:
                         changed = True
 
-        return ResultAlgo(m_src.mxm(self.graph[self.grammar.start_nonterm], semiring=BOOL.LOR_LAND), iter)
+        return ResultAlgo(m_src.mxm(self.graph[self.grammar.start_nonterm], semiring=BOOL.LOR_LAND), iter), \
+               self.graph[self.grammar.start_nonterm]
 
 
 class TensorMSAllAlgo(MultipleSourceProblem):

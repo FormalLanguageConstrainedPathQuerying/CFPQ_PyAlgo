@@ -107,7 +107,8 @@ class MatrixMSBruteAlgo(MultipleSourceProblem):
                     nnz[(l, r1, r2)] = self.sources[l].nvals, nonterminals[r1].nvals, nonterminals[r2].nvals
                     changed = True
 
-        return ResultAlgo(m_src.mxm(nonterminals[self.grammar.start_nonterm], semiring=BOOL.LOR_LAND), iter)
+        return ResultAlgo(m_src.mxm(nonterminals[self.grammar.start_nonterm], semiring=BOOL.LOR_LAND), iter), \
+               nonterminals[self.grammar.start_nonterm]
 
 
 class MatrixMSOptAlgo(MultipleSourceProblem):
@@ -174,4 +175,5 @@ class MatrixMSOptAlgo(MultipleSourceProblem):
                     changed = True
         for n in self.grammar.nonterms:
             self.sources[n] += new_sources[n]
-        return ResultAlgo(m_src.mxm(self.nonterminals[self.grammar.start_nonterm], semiring=BOOL.LOR_LAND), iter)
+        return ResultAlgo(m_src.mxm(self.nonterminals[self.grammar.start_nonterm], semiring=BOOL.LOR_LAND), iter), \
+               self.nonterminals[self.grammar.start_nonterm]

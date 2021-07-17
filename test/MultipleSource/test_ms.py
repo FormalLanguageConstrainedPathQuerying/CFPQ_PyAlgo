@@ -16,8 +16,9 @@ def test_binary_tree(algo):
     grammar = cfg_from_txt(test_data_path.joinpath('Grammars/g.cfg'))
     ms_algo.prepare(graph, grammar)
 
-    result: ResultAlgo = ms_algo.solve([0])
-    assert result.matrix_S.nvals == 4
+    result: ResultAlgo
+    result, with_cache = ms_algo.solve([0])
+    assert result.matrix_S.nvals == 4 and with_cache.nvals == 6
 
 
 @pytest.mark.CI
@@ -28,8 +29,9 @@ def test_line(algo):
     grammar = cfg_from_txt(test_data_path.joinpath('Grammars/g.cfg'))
     ms_algo.prepare(graph, grammar)
 
-    result: ResultAlgo = ms_algo.solve([1])
-    assert result.matrix_S.nvals == 1
+    result: ResultAlgo
+    result, with_cache = ms_algo.solve([1])
+    assert result.matrix_S.nvals == 1 and with_cache.nvals == 1
 
 
 @pytest.mark.CI
@@ -40,5 +42,6 @@ def test_two_nonterm(algo):
     grammar = cfg_from_txt(test_data_path.joinpath('Grammars/g.cfg'))
     ms_algo.prepare(graph, grammar)
 
-    result: ResultAlgo = ms_algo.solve([1])
-    assert result.matrix_S.nvals == 1
+    result: ResultAlgo
+    result, with_cache = ms_algo.solve([1])
+    assert result.matrix_S.nvals == 1 and with_cache.nvals == 1
