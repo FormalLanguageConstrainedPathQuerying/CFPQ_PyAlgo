@@ -65,7 +65,7 @@ class MatrixMSBruteAlgo(MultipleSourceProblem):
         # nnz: (l, r1, r2) in complex rules -> (nnz(l), nnz(r1), nnz(r2))
         nnz = {}
         for l, r1, r2 in self.grammar.complex_rules:
-            nnz[(l, r1, r2)] = (0, 0, 0)
+            nnz[(l, r1, r2)] = (0, nonterminals[r1].nvals, nonterminals[r2].nvals)
 
         # Initialize source matrices masks
         m_src = Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)
