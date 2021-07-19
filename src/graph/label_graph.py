@@ -35,6 +35,12 @@ class LabelGraph:
     def get_number_of_edges(self):
         return sum([self.matrices[label].nvals for label in self.matrices])
 
+    def clone(self):
+        obj_copy = LabelGraph(self.matrices_size)
+        for nonterm, matr in self.matrices.items():
+            obj_copy[nonterm] = matr.dup()
+        return obj_copy
+
     @classmethod
     def from_txt(cls, path, verbose=False):
         """
