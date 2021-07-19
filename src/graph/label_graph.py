@@ -15,6 +15,7 @@ class LabelGraph:
     def __init__(self, matrices_size=MAX_MATRIX_SIZE):
         self.matrices = {}
         self.matrices_size = matrices_size
+        self.is_empty = True
 
     def __getitem__(self, item: str) -> Matrix:
         if item not in self.matrices:
@@ -22,6 +23,7 @@ class LabelGraph:
         return self.matrices[item]
 
     def __setitem__(self, key, value):
+        self.is_empty = False
         self.matrices[key] = value
 
     def __iter__(self):
@@ -54,6 +56,12 @@ class LabelGraph:
 
     def __add__(self, other):
         result = LabelGraph(self.matrices_size)
+
+        if not self.is_empty and not other.is_empty:
+            result.is_empty = False
+        else:
+            return result
+
         labels_only_in_self = set(self.matrices.keys()) - set(other.matrices.keys())
         labels_only_in_other = set(other.matrices.keys()) - set(self.matrices.keys())
         labels_in_both = set(self.matrices.keys()) & set(other.matrices.keys())
@@ -69,6 +77,9 @@ class LabelGraph:
         return result
 
     def __iadd__(self, other):
+        if not other.is_empty:
+            self.is_empty = False
+
         for label in other.matrices:
             if label in self.matrices:
                 self.matrices[label] = self.matrices[label] + other.matrices[label]
@@ -76,7 +87,3 @@ class LabelGraph:
                 self.matrices[label] = other.matrices[label]
 
         return self
-
-    @property
-    def is_empty(self):
-        return False if len(self.matrices.keys()) > 0 else True
