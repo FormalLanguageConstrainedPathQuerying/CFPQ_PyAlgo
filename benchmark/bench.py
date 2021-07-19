@@ -4,30 +4,13 @@ from os.path import isfile, exists
 from tqdm import tqdm
 from time import time
 
-from benchmark.algo_impl import ALGO_PROBLEM, ALGO_IMPL
-from src.graph.label_graph import LabelGraph
+from benchmark.algo_impl import ALGO_IMPL
 from src.graph.graph import Graph
+from src.problems.Base.algo.matrix_base.matrix_base import MatrixBaseAlgo
 from cfpq_data import cfg_from_txt
 
 GRAMMAR_DIR = 'Grammars/'
 GRAPH_DIR = 'Graphs/'
-
-
-def parse_config(config):
-    """
-    Returns information about which graph with which grammar to run
-    @param config: Path to csv file with header:["Graph", "Grammar"]
-    @return: dictionary in which keys are paths to graphs and values are paths to grammars
-    """
-    graph_grammar = dict()
-    with open(config, "r") as csv_file:
-        reader = csv.DictReader(csv_file)
-        for row in reader:
-            if row['graph'] in graph_grammar:
-                graph_grammar[row['graph']].append(row['grammar'])
-            else:
-                graph_grammar[row['graph']] = [row['grammar']]
-    return graph_grammar
 
 
 def get_sample_mean(data):
@@ -38,203 +21,116 @@ def get_variance(data, sample_mean):
     return sum([(x - sample_mean) ** 2 for x in data]) / float(len(data) - 1)
 
 
-def benchmark(algo, data_dir, result_dir, config, with_paths, rounds, max_len_paths):
+def benchmark_all_pairs(graph, grammar, csv_writer, rounds):
+    algo = MatrixBaseAlgo()
+    algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
+    count_S = 0
+    times = []
+    for _ in tqdm(range(rounds), desc=f'{graph.stem}-{grammar.stem}'):
+        algo.prepare_for_solve()
+        start = time()
+        res = algo.solve()
+        finish = time()
+        times.append(finish - start)
+        count_S = res.matrix_S.nvals
+
+    sample_mean = get_sample_mean(times)
+    csv_writer.writerow(
+        [grammar.stem, sample_mean, count_S, get_variance(times, sample_mean)])
+    return res.matrix_S.dup()
+
+
+def benchmark_ms_distribution(graph, grammar, csv_writer, algo_impl_name, reachable_restriction,
+                              all_pairs_result):
+    algo = algo_impl_name()
+    algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
+    results = []
+    for vertex in tqdm(range(all_pairs_result.nrows), desc=f'{graph.stem}-{grammar.stem}'):
+        if all_pairs_result.extract_row(vertex).nvals >= reachable_restriction:
+            algo.clear_src()
+            start = time()
+            res, _ = algo.solve([vertex])
+            finish = time()
+            work_time = finish - start
+            csv_writer.writerow([vertex, work_time, res.matrix_S.nvals])
+            results.append((vertex, work_time))
+    return results
+
+
+def benchmark_ms_worst_result(graph, grammar, csv_writer, algo_impl_name, vertices, rounds):
+    algo = algo_impl_name()
+    algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
+    for vertex in tqdm(vertices, desc=f'{graph.stem}-{grammar.stem}'):
+        for iteration in range(rounds):
+            algo.clear_src()
+            start = time()
+            res, _ = algo.solve([vertex])
+            finish = time()
+            work_time = finish - start
+            csv_writer.writerow([vertex, work_time, res.matrix_S.nvals])
+
+
+def get_csv_writer(result_dir, filename, header):
+    result_file_path = result_dir.joinpath(filename)
+    append_header = False
+    if not exists(result_file_path):
+        append_header = True
+    result_csv = open(result_file_path, mode='a', newline='\n')
+    csv_writer = csv.writer(result_csv, delimiter=',', quoting=csv.QUOTE_NONNUMERIC, escapechar=' ')
+    if append_header:
+        csv_writer.writerow(header)
+    return csv_writer
+
+
+def get_all_pairs_csv_writer(graph, result_dir):
+    all_pairs_header = ['grammar', 'time', 'count_S', 'variance']
+    all_pairs_filename = f'{graph.stem}-All_pairs'
+    return get_csv_writer(result_dir, all_pairs_filename, all_pairs_header)
+
+
+def get_ms_distribution_csv_writer(graph, grammar, result_dir):
+    all_pairs_header = ['vertex', 'time', 'count_S']
+    all_pairs_filename = f'{graph.stem}-{grammar.stem}-Multiple_sources_distribution'
+    return get_csv_writer(result_dir, all_pairs_filename, all_pairs_header)
+
+
+def get_ms_worst_csv_writer(graph, grammar, result_dir):
+    all_pairs_header = ['vertex', 'time', 'count_S']
+    all_pairs_filename = f'{graph.stem}-{grammar.stem}-Multiple_sources_worst'
+    return get_csv_writer(result_dir, all_pairs_filename, all_pairs_header)
+
+
+def benchmark(all_pairs_rounds, ms_algo_name, reachable_restriction, ms_worst_rounds, worst_vertices_count, data_dir,
+              result_dir):
     """
-    Pipeline builder function for measuring performance
-    @param algo: name algorithm in string
+    Function for measuring performance for multiple sources problem
+    @param all_pairs_rounds: number of measurement rounds for all pairs problem
+    @param ms_algo_name: name multiple sources algorithm in string
+    @param reachable_restriction: minimal number of reachable vertices to measure algo
+    @param ms_worst_rounds: number of measurement rounds to measure worst case
+    @param worst_vertices_count: number of vertices to measure worst case
     @param data_dir: path to dataset
     @param result_dir: path to result directory
-    @param config: path to config file (csv)
-    @param with_paths: flag for setting measurements for fetching paths
-    @param rounds: number of measurement rounds
     """
-    type_problem = ALGO_PROBLEM[algo]
     graph_grammar = dict()
-    if config is not None:
-        name_graph_grammar = parse_config(config)
-        for graph in name_graph_grammar:
-            graph_grammar.update({data_dir.joinpath(GRAPH_DIR).joinpath(graph): []})
-            for grammar in name_graph_grammar[graph]:
-                graph_grammar[data_dir.joinpath(GRAPH_DIR).joinpath(graph)].append(
-                    data_dir.joinpath(GRAMMAR_DIR).joinpath(grammar))
-    else:
-        grammars = {data_dir.joinpath(GRAMMAR_DIR).joinpath(f) for f in listdir(data_dir.joinpath(GRAMMAR_DIR)) if
-                    isfile(data_dir.joinpath(GRAMMAR_DIR).joinpath(f))}
-        graphs = {data_dir.joinpath(GRAPH_DIR).joinpath(f) for f in listdir(data_dir.joinpath(GRAPH_DIR)) if
-                  isfile(data_dir.joinpath(GRAPH_DIR).joinpath(f))}
-        for graph in graphs:
-            graph_grammar.update({graph: grammars})
+    grammars = {data_dir.joinpath(GRAMMAR_DIR).joinpath(f) for f in listdir(data_dir.joinpath(GRAMMAR_DIR)) if
+                isfile(data_dir.joinpath(GRAMMAR_DIR).joinpath(f))}
+    graphs = {data_dir.joinpath(GRAPH_DIR).joinpath(f) for f in listdir(data_dir.joinpath(GRAPH_DIR)) if
+              isfile(data_dir.joinpath(GRAPH_DIR).joinpath(f))}
+    for graph in graphs:
+        graph_grammar.update({graph: grammars})
 
-    impl_for_algo = ALGO_IMPL[algo]
-    variances = []
-    if type_problem == "MS":
-        benchmark_ms(impl_for_algo, graph_grammar, result_dir)
-    else:
-        variances = benchmark_index(impl_for_algo, graph_grammar, result_dir, rounds)
+    ms_algo = ALGO_IMPL[ms_algo_name]
+    for graph in graph_grammar:
+        all_pairs_csv_writer = get_all_pairs_csv_writer(graph, result_dir)
+        for grammar in graph_grammar[graph]:
+            ms_distr_csv_writer = get_ms_distribution_csv_writer(graph, grammar, result_dir)
+            ms_worst_csv_writer = get_ms_worst_csv_writer(graph, grammar, result_dir)
 
-    if with_paths:
-        if type_problem == "AllPaths": benchmark_all_paths(impl_for_algo, graph_grammar, result_dir, max_len_paths)
-        if type_problem == "SinglePath": benchmark_single_path(impl_for_algo, graph_grammar, result_dir)
-
-
-def benchmark_index(algo_name, data, result_dir, rounds):
-    """
-    Measurement function for finding paths between all pairs of vertices
-    @param algo_name: concrete implementation of the algorithm
-    @param data: dictionary in format {path to graph: list of paths to grammars}
-    @param result_dir: directory for uploading results of measurement
-    @param rounds: number of measurement rounds
-    @return: variance value for each round of measurements
-    """
-    header_index = ['graph', 'grammar', 'time', 'count_S', 'variance']
-
-    variances = []
-    for graph in data:
-        result_index_file_path = result_dir.joinpath(f'{graph.stem}-{algo_name.__name__}-index')
-
-        append_header = False
-        if not exists(result_index_file_path):
-            append_header = True
-        result_csv = open(result_index_file_path, mode='a', newline='\n')
-        csv_writer_index = csv.writer(result_csv, delimiter=',', quoting=csv.QUOTE_NONNUMERIC, escapechar=' ')
-
-        if append_header:
-            csv_writer_index.writerow(header_index)
-
-        for grammar in data[graph]:
-            algo = algo_name()
-            algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
-            count_S = 0
-            times = []
-            for _ in tqdm(range(rounds), desc=f'{graph.stem}-{grammar.stem}'):
-                algo.prepare_for_solve()
-                start = time()
-                res = algo.solve()
-                finish = time()
-                times.append(finish - start)
-                count_S = res.matrix_S.nvals
-
-            sample_mean = get_sample_mean(times)
-            variances.append(get_variance(times, sample_mean))
-            csv_writer_index.writerow(
-                [graph.stem, grammar.stem, sample_mean, count_S, get_variance(times, sample_mean)])
-
-    return variances
-
-
-def benchmark_all_paths(algo_name, data, result_dir, max_len_paths):
-    """
-    Measurement function for extract all paths
-    @param algo_name: concrete implementation of the algorithm
-    @param data: dictionary in format {path to graph: list of paths to grammars}
-    @param result_dir: directory for uploading results of measurement
-    """
-    header_paths = ['graph', 'grammar', 'count_paths', 'time']
-
-    for graph in data:
-        result_paths_file_path = result_dir.joinpath(f'{graph.stem}-{algo_name.__name__}-allpaths')
-
-        append_header = False
-        if not exists(result_paths_file_path):
-            append_header = True
-
-        result_csv = open(result_paths_file_path, mode='a', newline='\n')
-        csv_writer_paths = csv.writer(result_csv, delimiter=',', quoting=csv.QUOTE_NONNUMERIC, escapechar=' ')
-
-        if append_header:
-            csv_writer_paths.writerow(header_paths)
-
-        for grammar in data[graph]:
-            algo = algo_name()
-            algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
-            res = algo.solve()
-            for elem in tqdm(res.matrix_S, desc=f'{graph.stem}-{grammar.stem}-paths'):
-                algo.prepare_for_exctract_paths()
-                start = time()
-                paths = algo.getPaths(elem[0], elem[1], "S", int(max_len_paths))
-                finish = time()
-                csv_writer_paths.writerow([graph.stem, grammar.stem, len(paths), finish - start])
-
-
-def benchmark_single_path(algo_name, data, result_dir):
-    """
-    Measurement function for extract single path
-    @param algo_name: concrete implementation of the algorithm
-    @param data: dictionary in format {path to graph: list of paths to grammars}
-    @param result_dir: directory for uploading results of measurement
-    """
-    header_paths = ['graph', 'grammar', 'len_path', 'time']
-
-    for graph in data:
-        result_paths_file_path = result_dir.joinpath(f'{graph.stem}-{algo_name.__name__}-singlepaths')
-
-        append_header = False
-        if not exists(result_paths_file_path):
-            append_header = True
-
-        result_csv = open(result_paths_file_path, mode='a', newline='\n')
-        csv_writer_paths = csv.writer(result_csv, delimiter=',', quoting=csv.QUOTE_NONNUMERIC, escapechar=' ')
-
-        if append_header:
-            csv_writer_paths.writerow(header_paths)
-
-        if not exists(result_paths_file_path):
-            csv_writer_paths.writerow(header_paths)
-
-        for grammar in data[graph]:
-            algo = algo_name()
-            algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
-            res = algo.solve()
-            for elem in tqdm(res.matrix_S, desc=f'{graph.stem}-{grammar}-paths'):
-                start = time()
-                paths = algo.getPath(elem[0], elem[1], "S")
-                finish = time()
-                csv_writer_paths.writerow([graph.stem, grammar.stem, paths, finish - start])
-
-
-def benchmark_ms(algo_name, data, result_dir):
-    """
-    Measurement function for finding paths from set of vertices
-    @param algo_name: concrete implementation of the algorithm
-    @param data: dictionary in format {path to graph: list of paths to grammars}
-    @param result_dir: directory for uploading results of measurement
-    """
-    header_index = ['graph', 'grammar', 'size_chunk', 'time', 'count_S']
-
-    chunk_sizes = [1, 2, 4, 8, 16, 32, 50, 100, 500, 1000, 5000, 10000, None]
-
-    for graph in data:
-        result_index_file_path = result_dir.joinpath(f'{graph.stem}-{algo_name.__name__}-msindex')
-
-        append_header = False
-        if not exists(result_index_file_path):
-            append_header = True
-
-        result_csv = open(result_index_file_path, mode='a', newline='\n')
-        csv_writer_index = csv.writer(result_csv, delimiter=',', quoting=csv.QUOTE_NONNUMERIC, escapechar=' ')
-
-        if append_header:
-            csv_writer_index.writerow(header_index)
-
-        if not exists(result_index_file_path):
-            csv_writer_index.writerow(header_index)
-
-        g = LabelGraph.from_txt(graph)
-        for grammar in data[graph]:
-            algo = algo_name()
-            algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
-            for chunk_size in chunk_sizes:
-                chunks = []
-                if chunk_size is None:
-                    chunks = g.chunkify(g.matrices_size)
-                else:
-                    chunks = g.chunkify(chunk_size)
-
-                for chunk in tqdm(chunks, desc=f'{graph.stem}-{grammar.stem}'):
-                    algo.clear_src()  # Attention (TODO): remove this line if you want to cache the result !
-                    start = time()
-                    res = algo.solve(chunk)
-                    finish = time()
-
-                    csv_writer_index.writerow(
-                        [graph.stem, grammar.stem, chunk_size, finish - start, res.matrix_S.nvals])
+            all_pairs_result = benchmark_all_pairs(graph, grammar, all_pairs_csv_writer, all_pairs_rounds)
+            ms_worst_results = benchmark_ms_distribution(graph, grammar, ms_distr_csv_writer, ms_algo,
+                                                         reachable_restriction,
+                                                         all_pairs_result)
+            ms_worst_results = sorted(ms_worst_results, key=lambda vertex_time: vertex_time[1], reverse=True)
+            ms_worst_results = map(lambda vertex_time: vertex_time[0], ms_worst_results[:worst_vertices_count])
+            benchmark_ms_worst_result(graph, grammar, ms_worst_csv_writer, ms_algo, ms_worst_results, ms_worst_rounds)
