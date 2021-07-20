@@ -1,7 +1,7 @@
 [![CircleCI](https://circleci.com/gh/JetBrains-Research/CFPQ_PyAlgo/tree/master.svg?style=svg)](https://circleci.com/gh/JetBrains-Research/CFPQ_PyAlgo/tree/master)
 
 # CFPQ_PyAlgo
-The CFPQ_PyAlgo is a repository for developing, testing and benchmarking algorithms that solve Formal-Language-Constrained Path Problems, such as Context-Free Path Queries and Regular Path Queries. All algorithms are based on the [GraphBLAS](http://graphblas.org/index.php?title=Graph_BLAS_Forum) framework that allows you to represent graphs as matrices and work with them in terms of linear algebra. For convenience, all the code is written in Python using [pygraphblas](https://github.com/michelp/pygraphblas) or in C/C++ using purely [SuiteSparse](https://github.com/DrTimothyAldenDavis/SuiteSparse) with a Python wrapper. 
+The CFPQ_PyAlgo is a repository for developing, testing and benchmarking algorithms that solve Formal-Language-Constrained Path Problems, such as Context-Free Path Queries and Regular Path Queries. All algorithms are based on the [GraphBLAS](http://graphblas.org/index.php?title=Graph_BLAS_Forum) framework that allows you to represent graphs as matrices and work with them in terms of linear algebra. For convenience, all the code is written in Python using [pygraphblas](https://github.com/michelp/pygraphblas) or in C/C++ using purely [SuiteSparse](https://github.com/DrTimothyAldenDavis/SuiteSparse/tree/master/GraphBLAS) with a Python wrapper. 
 
 # Installation
 First of all you need to clone repository with its submodules:
@@ -53,24 +53,23 @@ Look please [Readme](https://github.com/JetBrains-Research/CFPQ_PyAlgo/blob/mast
 
 Let's describe an example of using the implementation outside this environment.
 
-For example, you want to solve a basic problem CFPQ using the matrix algorithm. To do this, you need a grammar (**Gr**) in the CNF (you can get using the tools from *deps/CFPQ_Data*), as well as a graph (**G**) in the format of "triplets". 
+For example, you want to solve a basic problem CFPQ using the matrix algorithm. To do this, you need a context-free grammar (**Gr**), as well as a graph (**G**) in the format of "triplets". 
 
-The file containing the grammar **G** representation must be named *.cnf (for algorithms using RSA *.automat). The file containing the graph representation, the name must be *.txt.
-
-Then the matrix algorithm can be run as follows, where *PATH_TO_GRAMMAR* --- path to file *.cnf, *PATH_TO_GRAPH* --- path to file *.txt
+Then the matrix algorithm can be run as follows, where *PATH_TO_GRAMMAR* --- path to file with **Gr**, *PATH_TO_GRAPH* --- path to file with **G**
 
 ```cython
 from src.problems.Base.algo.matrix_base.matrix_base import MatrixBaseAlgo
+from cfpq_data import cfg_from_txt
+from src.graph.graph import Graph
+
 from pathlib import Path
 
 algo = MatrixBaseAlgo()
-algo.prepare(Path(PATH_TO_GRAPH), Path(PATH_TO_GRAMMAR))
+algo.prepare(Graph.from_txt(Path(PATH_TO_GRAPH)), cfg_from_txt(Path(PATH_TO_GRAMMAR)))
 res = algo.solve()
 print(res.matrix_S.nvals)
 ```
 The given fragment displays the number of pairs of vertices between which the desired path exists.
-
-**Note**: Paths to files with grammar and graph should be without extension. That is, for example, if you have a grammar *g.cnf* in the directory *Grammars* and graph *graph.txt* in *Graphs*, then in ```algo.prepare``` you need to pass arguments ```(Path("Graphs/graph"), Path("Grammars/g"))```. Thus, the implementations of the algorithms "themselves know" the file with which extension they need to choose.
 
 More examples can be found in *test*
 

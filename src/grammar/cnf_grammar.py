@@ -1,7 +1,12 @@
+from cfpq_data import cnf_from_cfg
+from pyformlang.cfg import CFG
+
+
 class CnfGrammar:
     """
     This class representing grammar in CNF. Supports only the functions necessary for the algorithms to work
     """
+
     def __init__(self):
         self.start_nonterm = None
         self.nonterms = set()
@@ -21,6 +26,20 @@ class CnfGrammar:
                     self.nonterms.add(x)
         else:
             raise Exception('value must be str, (str, str) or [str, str]')
+
+    @classmethod
+    def from_cfg(cls, cfg: CFG):
+        cnf = CnfGrammar()
+        base_cnf = cnf_from_cfg(cfg)
+        cnf.start_nonterm = base_cnf.start_symbol.to_text()
+
+        for product in base_cnf.productions:
+            if not product.body:
+                cnf[product.head.to_text().strip('"')] = ["epsilon"]
+            else:
+                cnf[product.head.to_text().strip('"')] = [x.to_text().strip('"') for x in product.body]
+
+        return cnf
 
     @classmethod
     def from_cnf(cls, path):

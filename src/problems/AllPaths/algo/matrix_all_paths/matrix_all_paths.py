@@ -37,7 +37,7 @@ class LibBuilder:
         self.lib.graphblas_init()
 
 
-class MatrixAllAlgo(AllPathsProblem):
+class MatrixAllAlgo:
 
     def prepare(self, graph: Path, grammar: Path):
         lib_builder = LibBuilder()

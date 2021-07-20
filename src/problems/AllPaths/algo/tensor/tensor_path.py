@@ -1,6 +1,6 @@
 from pygraphblas import Matrix
 
-from src.graph.label_graph import LabelGraph
+from src.graph.graph import Graph
 from src.grammar.rsa import RecursiveAutomaton
 
 
@@ -14,8 +14,71 @@ class Paths:
         self.use = False
 
 
+class TensorPathsNew:
+    def __init__(self, graph: Graph, rsa: RecursiveAutomaton, tc: Matrix):
+        self.graph = graph
+        self.rsa = rsa
+        self.tc = tc
+        self.graph_size = graph.matrices_size
+
+    def get_paths(self, start, finish, nonterm, max_len):
+        start_state = self.rsa.start_state[nonterm]
+
+        result = []
+        for finish_state in self.rsa.finish_states[nonterm]:
+            result.extend(self.bfs(start_state * self.graph_size + start, finish_state * self.graph_size + finish, max_len))
+
+        return result
+
+    def bfs(self, i, j, current_len):
+        if current_len < 1:
+            return []
+
+        result_paths = []
+        for elem in self.tc[i]:
+            graph_i = i % self.graph_size
+            graph_j = elem[0] % self.graph_size
+
+            rsa_i = i // self.graph_size
+            rsa_j = elem[0] // self.graph_size
+
+            left_paths = []
+            hasNonterm = False
+            for nonterm in self.rsa.nonterminals:
+                if self.rsa[nonterm].get(rsa_i, rsa_j, False):
+                    new_result = self.get_paths(graph_i, graph_j, nonterm, current_len - 1)
+                    left_paths.extend(new_result)
+                    if nonterm in self.rsa.start_and_finish:
+                        left_paths.append(0)
+                    hasNonterm = True
+
+            if not hasNonterm:
+                left_paths.append(1)
+
+            if len(left_paths) == 0:
+                continue
+
+            min_len = current_len
+            for path in left_paths:
+                if path < min_len:
+                    min_len = path
+
+            right_paths = []
+            if elem[0] != j:
+                right_paths = self.bfs(elem[0], j, current_len - min_len)
+            else:
+                right_paths.append(0)
+
+            for left in left_paths:
+                for right in right_paths:
+                    if left + right < current_len:
+                        result_paths.append(left + right)
+
+        return result_paths
+
+
 class TensorPaths:
-    def __init__(self, graph: LabelGraph, rsa: RecursiveAutomaton, tc: Matrix):
+    def __init__(self, graph: Graph, rsa: RecursiveAutomaton, tc: Matrix):
         self.graph = graph
         self.rsa = rsa
         self.tc = tc
@@ -60,7 +123,7 @@ class TensorPaths:
         supposed_paths = []
         for finish_state in self.rsa.finish_states[nonterm]:
             supposed_paths += self.gen_paths(self.rsa.start_state[nonterm] * self.graph_size + start,
-                                            finish_state * self.graph_size + finish, max_len)
+                                             finish_state * self.graph_size + finish, max_len)
 
         result_paths = []
         for path in supposed_paths:

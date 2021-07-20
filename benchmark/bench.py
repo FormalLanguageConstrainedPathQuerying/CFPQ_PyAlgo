@@ -3,10 +3,11 @@ from os import listdir
 from os.path import isfile, exists
 from tqdm import tqdm
 from time import time
-from pathlib import Path
 
 from benchmark.algo_impl import ALGO_PROBLEM, ALGO_IMPL
 from src.graph.label_graph import LabelGraph
+from src.graph.graph import Graph
+from cfpq_data import cfg_from_txt
 
 GRAMMAR_DIR = 'Grammars/'
 GRAPH_DIR = 'Graphs/'
@@ -34,10 +35,10 @@ def get_sample_mean(data):
 
 
 def get_variance(data, sample_mean):
-    return sum([(x - sample_mean) ** 2 for x in data]) / float(len(data))
+    return sum([(x - sample_mean) ** 2 for x in data]) / float(len(data) - 1)
 
 
-def benchmark(algo, data_dir, result_dir, config, with_paths, rounds):
+def benchmark(algo, data_dir, result_dir, config, with_paths, rounds, max_len_paths):
     """
     Pipeline builder function for measuring performance
     @param algo: name algorithm in string
@@ -54,11 +55,12 @@ def benchmark(algo, data_dir, result_dir, config, with_paths, rounds):
         for graph in name_graph_grammar:
             graph_grammar.update({data_dir.joinpath(GRAPH_DIR).joinpath(graph): []})
             for grammar in name_graph_grammar[graph]:
-                graph_grammar[data_dir.joinpath(GRAPH_DIR).joinpath(graph)].append(data_dir.joinpath(GRAMMAR_DIR).joinpath(grammar))
+                graph_grammar[data_dir.joinpath(GRAPH_DIR).joinpath(graph)].append(
+                    data_dir.joinpath(GRAMMAR_DIR).joinpath(grammar))
     else:
-        grammars = {data_dir.joinpath(GRAMMAR_DIR).joinpath(f.split(".")[0]) for f in listdir(data_dir.joinpath(GRAMMAR_DIR)) if
+        grammars = {data_dir.joinpath(GRAMMAR_DIR).joinpath(f) for f in listdir(data_dir.joinpath(GRAMMAR_DIR)) if
                     isfile(data_dir.joinpath(GRAMMAR_DIR).joinpath(f))}
-        graphs = {data_dir.joinpath(GRAPH_DIR).joinpath(f.split(".")[0]) for f in listdir(data_dir.joinpath(GRAPH_DIR)) if
+        graphs = {data_dir.joinpath(GRAPH_DIR).joinpath(f) for f in listdir(data_dir.joinpath(GRAPH_DIR)) if
                   isfile(data_dir.joinpath(GRAPH_DIR).joinpath(f))}
         for graph in graphs:
             graph_grammar.update({graph: grammars})
@@ -71,7 +73,7 @@ def benchmark(algo, data_dir, result_dir, config, with_paths, rounds):
         variances = benchmark_index(impl_for_algo, graph_grammar, result_dir, rounds)
 
     if with_paths:
-        if type_problem == "AllPaths": benchmark_all_paths(impl_for_algo, graph_grammar, result_dir)
+        if type_problem == "AllPaths": benchmark_all_paths(impl_for_algo, graph_grammar, result_dir, max_len_paths)
         if type_problem == "SinglePath": benchmark_single_path(impl_for_algo, graph_grammar, result_dir)
 
 
@@ -84,7 +86,7 @@ def benchmark_index(algo_name, data, result_dir, rounds):
     @param rounds: number of measurement rounds
     @return: variance value for each round of measurements
     """
-    header_index = ['graph', 'grammar', 'time', 'count_S']
+    header_index = ['graph', 'grammar', 'time', 'count_S', 'variance']
 
     variances = []
     for graph in data:
@@ -101,10 +103,11 @@ def benchmark_index(algo_name, data, result_dir, rounds):
 
         for grammar in data[graph]:
             algo = algo_name()
-            algo.prepare(Path(str(graph).split(".")[0]), Path(str(grammar).split(".")[0]))
+            algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
             count_S = 0
             times = []
             for _ in tqdm(range(rounds), desc=f'{graph.stem}-{grammar.stem}'):
+                algo.prepare_for_solve()
                 start = time()
                 res = algo.solve()
                 finish = time()
@@ -113,12 +116,13 @@ def benchmark_index(algo_name, data, result_dir, rounds):
 
             sample_mean = get_sample_mean(times)
             variances.append(get_variance(times, sample_mean))
-            csv_writer_index.writerow([graph.stem, grammar.stem, sample_mean, count_S])
+            csv_writer_index.writerow(
+                [graph.stem, grammar.stem, sample_mean, count_S, get_variance(times, sample_mean)])
 
     return variances
 
 
-def benchmark_all_paths(algo_name, data, result_dir):
+def benchmark_all_paths(algo_name, data, result_dir, max_len_paths):
     """
     Measurement function for extract all paths
     @param algo_name: concrete implementation of the algorithm
@@ -142,11 +146,12 @@ def benchmark_all_paths(algo_name, data, result_dir):
 
         for grammar in data[graph]:
             algo = algo_name()
-            algo.prepare(Path(str(graph).split(".")[0]), Path(str(grammar).split(".")[0]))
-            res = algo_name.solve()
+            algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
+            res = algo.solve()
             for elem in tqdm(res.matrix_S, desc=f'{graph.stem}-{grammar.stem}-paths'):
+                algo.prepare_for_exctract_paths()
                 start = time()
-                paths = algo.getPaths(elem[0], elem[1], "S")
+                paths = algo.getPaths(elem[0], elem[1], "S", int(max_len_paths))
                 finish = time()
                 csv_writer_paths.writerow([graph.stem, grammar.stem, len(paths), finish - start])
 
@@ -178,8 +183,8 @@ def benchmark_single_path(algo_name, data, result_dir):
 
         for grammar in data[graph]:
             algo = algo_name()
-            algo.prepare(Path(str(graph).split(".")[0]), Path(str(grammar).split(".")[0]))
-            res = algo_name.solve()
+            algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
+            res = algo.solve()
             for elem in tqdm(res.matrix_S, desc=f'{graph.stem}-{grammar}-paths'):
                 start = time()
                 paths = algo.getPath(elem[0], elem[1], "S")
@@ -217,8 +222,7 @@ def benchmark_ms(algo_name, data, result_dir):
         g = LabelGraph.from_txt(graph)
         for grammar in data[graph]:
             algo = algo_name()
-            algo.prepare(Path(str(graph).split(".")[0]), Path(str(grammar).split(".")[0]))
-
+            algo.prepare(Graph.from_txt(graph), cfg_from_txt(grammar))
             for chunk_size in chunk_sizes:
                 chunks = []
                 if chunk_size is None:
@@ -227,8 +231,10 @@ def benchmark_ms(algo_name, data, result_dir):
                     chunks = g.chunkify(chunk_size)
 
                 for chunk in tqdm(chunks, desc=f'{graph.stem}-{grammar.stem}'):
+                    algo.clear_src()  # Attention (TODO): remove this line if you want to cache the result !
                     start = time()
                     res = algo.solve(chunk)
                     finish = time()
 
-                    csv_writer_index.writerow([graph.stem, grammar.stem, chunk_size, finish - start, res.matrix_S.nvals])
+                    csv_writer_index.writerow(
+                        [graph.stem, grammar.stem, chunk_size, finish - start, res.matrix_S.nvals])

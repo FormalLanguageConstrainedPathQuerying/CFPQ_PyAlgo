@@ -1,5 +1,6 @@
 from pygraphblas import BOOL
-from pathlib import Path
+from pyformlang.cfg import CFG
+from src.graph.graph import Graph
 
 from src.problems.Base.Base import BaseProblem
 
@@ -10,9 +11,10 @@ from src.problems.utils import ResultAlgo
 
 class MatrixBaseAlgo(BaseProblem):
 
-    def prepare(self, graph: Path, grammar: Path):
-        self.graph = LabelGraph.from_txt(graph.with_suffix(".txt"))
-        self.grammar = CnfGrammar.from_cnf(grammar.with_suffix(".cnf"))
+    def prepare(self, graph: Graph, grammar: CFG):
+        self.graph = graph
+        self.graph.load_bool_graph()
+        self.grammar = CnfGrammar.from_cfg(grammar)
 
     def solve(self):
         m = LabelGraph(self.graph.matrices_size)
@@ -30,3 +32,6 @@ class MatrixBaseAlgo(BaseProblem):
                 new_nnz = m[l].nvals
                 changed |= not old_nnz == new_nnz
         return ResultAlgo(m[self.grammar.start_nonterm], iter)
+
+    def prepare_for_solve(self):
+        pass

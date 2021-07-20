@@ -4,7 +4,7 @@ from pygraphblas.types import Type, binop
 MAX_MATRIX_SIZE = 10000000
 
 
-class INDEXTYPE(Type):
+class SAVEMIDDLETYPE(Type):
     _base_name = "UDT"
     members = ['uint32_t left', 'uint32_t right', 'uint32_t middle', 'uint32_t height', 'uint32_t length']
     one = (0, 0, 0, 0, 0)
@@ -68,7 +68,7 @@ class IndexGraph:
 
     def __getitem__(self, item: str) -> Matrix:
         if item not in self.matrices:
-            self.matrices[item] = Matrix.sparse(INDEXTYPE, self.matrices_size, self.matrices_size)
+            self.matrices[item] = Matrix.sparse(SAVEMIDDLETYPE, self.matrices_size, self.matrices_size)
         return self.matrices[item]
 
     def __setitem__(self, key, value):
