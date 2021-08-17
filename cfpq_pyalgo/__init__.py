@@ -1,6 +1,4 @@
 __version__ = "0.0.0"
 
-__all__ = [
-    "classes",
-    "pygraphblas",
-]
+import cfpq_pyalgo.classes
+import cfpq_pyalgo.pygraphblas
