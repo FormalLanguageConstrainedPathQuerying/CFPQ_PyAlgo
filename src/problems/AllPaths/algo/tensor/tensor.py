@@ -108,7 +108,7 @@ class TensorDynamicAlgo(AllPathsProblem):
         self.graph.load_bool_graph()
         self.grammar = RecursiveAutomaton.from_grammar_or_path(grammar)
 
-        def solve(self):
+    def solve(self):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
 
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
