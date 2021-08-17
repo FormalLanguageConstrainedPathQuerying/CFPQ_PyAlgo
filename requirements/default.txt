@@ -1,3 +1,4 @@
+cfpq_data~=1.0.1
 networkx~=2.6.2
 pyformlang~=0.1.26
 pygraphblas~=4.2.2
