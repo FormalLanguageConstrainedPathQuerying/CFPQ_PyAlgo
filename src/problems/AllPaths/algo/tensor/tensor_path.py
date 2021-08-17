@@ -26,7 +26,13 @@ class TensorPathsNew:
 
         result = []
         for finish_state in self.rsa.finish_states[nonterm]:
-            result.extend(self.bfs(start_state * self.graph_size + start, finish_state * self.graph_size + finish, max_len))
+            result.extend(
+                self.bfs(
+                    start_state * self.graph_size + start,
+                    finish_state * self.graph_size + finish,
+                    max_len,
+                )
+            )
 
         return result
 
@@ -46,7 +52,9 @@ class TensorPathsNew:
             hasNonterm = False
             for nonterm in self.rsa.nonterminals:
                 if self.rsa[nonterm].get(rsa_i, rsa_j, False):
-                    new_result = self.get_paths(graph_i, graph_j, nonterm, current_len - 1)
+                    new_result = self.get_paths(
+                        graph_i, graph_j, nonterm, current_len - 1
+                    )
                     left_paths.extend(new_result)
                     if nonterm in self.rsa.start_and_finish:
                         left_paths.append(0)
@@ -122,8 +130,11 @@ class TensorPaths:
 
         supposed_paths = []
         for finish_state in self.rsa.finish_states[nonterm]:
-            supposed_paths += self.gen_paths(self.rsa.start_state[nonterm] * self.graph_size + start,
-                                             finish_state * self.graph_size + finish, max_len)
+            supposed_paths += self.gen_paths(
+                self.rsa.start_state[nonterm] * self.graph_size + start,
+                finish_state * self.graph_size + finish,
+                max_len,
+            )
 
         result_paths = []
         for path in supposed_paths:
@@ -150,7 +161,12 @@ class TensorPaths:
                 construct_paths = [current_size]
                 stop = False
                 for call in callNonterm:
-                    sub_paths = self.get_paths(call[0], call[1], call[2], max_len - min_size - len(callNonterm) + 1)
+                    sub_paths = self.get_paths(
+                        call[0],
+                        call[1],
+                        call[2],
+                        max_len - min_size - len(callNonterm) + 1,
+                    )
                     if len(sub_paths) == 0:
                         stop = True
                         break

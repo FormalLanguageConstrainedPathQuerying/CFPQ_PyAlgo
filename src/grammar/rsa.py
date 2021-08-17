@@ -14,6 +14,7 @@ class RecursiveAutomaton:
     """
     This class representing recursive state automaton. Supports only the functions necessary for the algorithms to work
     """
+
     def __init__(self):
         self.labels = set()
         self.nonterminals = set()
@@ -30,7 +31,9 @@ class RecursiveAutomaton:
 
     def __getitem__(self, item: str) -> Matrix:
         if item not in self.matrices:
-            self.matrices[item] = Matrix.sparse(BOOL, self.matrices_size, self.matrices_size)
+            self.matrices[item] = Matrix.sparse(
+                BOOL, self.matrices_size, self.matrices_size
+            )
 
         return self.matrices[item]
 
@@ -105,7 +108,9 @@ class RecursiveAutomaton:
             for i in range(count_nonterminals):
                 label = file.readline().replace("\n", "")
                 rsa.nonterminals.add(label)
-                rsa.states.update({label: Matrix.sparse(BOOL, rsa.matrices_size, rsa.matrices_size)})
+                rsa.states.update(
+                    {label: Matrix.sparse(BOOL, rsa.matrices_size, rsa.matrices_size)}
+                )
                 count_edge = int(file.readline())
                 for j in range(count_edge):
                     first, second = file.readline().split()
@@ -153,19 +158,25 @@ class RecursiveAutomaton:
                         mapping_state[dfa_dict[state][trans]] = current_state
                         rsa.boxes[nonterm.to_text()].append(current_state)
                         current_state += 1
-                    transtion_by_label[trans].append((mapping_state[state], mapping_state[dfa_dict[state][trans]]))
+                    transtion_by_label[trans].append(
+                        (mapping_state[state], mapping_state[dfa_dict[state][trans]])
+                    )
             rsa.states[nonterm.to_text()] = []
             rsa.start_state[nonterm.to_text()] = mapping_state[dfa.start_state]
             rsa.finish_states[nonterm.to_text()] = []
             for final_state in dfa.final_states:
-                rsa.states[nonterm.to_text()].append((mapping_state[dfa.start_state], mapping_state[final_state]))
+                rsa.states[nonterm.to_text()].append(
+                    (mapping_state[dfa.start_state], mapping_state[final_state])
+                )
                 rsa.finish_states[nonterm.to_text()].append(mapping_state[final_state])
                 if mapping_state[dfa.start_state] == mapping_state[final_state]:
                     rsa.start_and_finish.add(nonterm.to_text())
 
         rsa.matrices_size = current_state
         for label in transtion_by_label:
-            rsa.matrices[label] = Matrix.sparse(BOOL, rsa.matrices_size, rsa.matrices_size)
+            rsa.matrices[label] = Matrix.sparse(
+                BOOL, rsa.matrices_size, rsa.matrices_size
+            )
             for trans in transtion_by_label[label]:
                 rsa.matrices[label][trans[0], trans[1]] = True
 

@@ -6,7 +6,6 @@ from src.graph.label_graph import LabelGraph
 
 
 class TensorExtractSubGraph:
-
     def __init__(self, graph: Graph, rsa: RecursiveAutomaton, kron: Matrix):
         self.graph = graph
         self.rsa = rsa
@@ -32,7 +31,10 @@ class TensorExtractSubGraph:
         start_state = self.rsa.start_state[nonterm]
 
         for finish_state in self.rsa.finish_states[nonterm]:
-            result += self.bfs(start_state * self.graph_size + start, finish_state * self.graph_size + finish)
+            result += self.bfs(
+                start_state * self.graph_size + start,
+                finish_state * self.graph_size + finish,
+            )
 
         self.solved_triplets.remove((start, finish, nonterm))
 
@@ -64,7 +66,9 @@ class TensorExtractSubGraph:
                         left += self.get_paths(graph_i, graph_k, label)
                     else:
                         if label not in left.matrices:
-                            left[label] = Matrix.sparse(BOOL, self.graph_size, self.graph_size)
+                            left[label] = Matrix.sparse(
+                                BOOL, self.graph_size, self.graph_size
+                            )
                         left[label][graph_i, graph_k] = True
 
             if left.is_empty:

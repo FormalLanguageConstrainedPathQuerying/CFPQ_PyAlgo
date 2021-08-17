@@ -76,4 +76,3 @@ int getpaths(Grammar* grammar, int i, int j, char *S, int current_len)
 int main(int argc, char *argv[]) {
     return 0;
 }
-

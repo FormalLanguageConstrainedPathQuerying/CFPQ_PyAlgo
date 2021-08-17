@@ -1,4 +1,1 @@
-tqdm
-pytest
-pytest-benchmark
-cfpq_data
+-r requirements/default.txt

@@ -16,7 +16,9 @@ class Graph:
 
     def __getitem__(self, item: str) -> Matrix:
         if item not in self.matrices:
-            self.matrices[item] = Matrix.sparse(self.type, self.matrices_size, self.matrices_size)
+            self.matrices[item] = Matrix.sparse(
+                self.type, self.matrices_size, self.matrices_size
+            )
         return self.matrices[item]
 
     def __setitem__(self, key, value):
@@ -47,7 +49,9 @@ class Graph:
                 v, to = int(v), int(to)
 
                 if label not in self.matrices:
-                    self.matrices[label] = Matrix.sparse(self.type, self.matrices_size, self.matrices_size)
+                    self.matrices[label] = Matrix.sparse(
+                        self.type, self.matrices_size, self.matrices_size
+                    )
 
                 self.matrices[label][v, to] = True
 
@@ -61,6 +65,8 @@ class Graph:
                 v, to = int(v), int(to)
 
                 if label not in self.matrices:
-                    self.matrices[label] = Matrix.sparse(self.type, self.matrices_size, self.matrices_size)
+                    self.matrices[label] = Matrix.sparse(
+                        self.type, self.matrices_size, self.matrices_size
+                    )
 
                 self.matrices[label][v, to] = (v, to, v, 1, 1)

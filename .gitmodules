@@ -1,6 +1,0 @@
-[submodule "deps/CFPQ_Data"]
-	path = deps/CFPQ_Data
-	url = https://github.com/JetBrains-Research/CFPQ_Data.git
-[submodule "deps/pygraphblas"]
-	path = deps/pygraphblas
-	url = https://github.com/michelp/pygraphblas.git
