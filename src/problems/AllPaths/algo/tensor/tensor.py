@@ -151,14 +151,13 @@ class TensorDynamicAlgo(AllPathsProblem):
                     control_sum = self.graph[nonterminal].nvals
 
                     if first_iter:
-                        block[nonterminal] = kron[start_i:start_i + self.graph.matrices_size - 1,
+                        block[nonterminal] += kron[start_i:start_i + self.graph.matrices_size - 1,
                                                   start_j:start_j + self.graph.matrices_size - 1]
                     else:
                         new_edges = kron[start_i:start_i + self.graph.matrices_size - 1,
                                          start_j:start_j + self.graph.matrices_size - 1]
-
-                        block[nonterminal] = new_edges - block[nonterminal]
-                        block[nonterminal] = block[nonterminal].select('==', True)
+                        part = new_edges - block[nonterminal]
+                        block[nonterminal] += part.select('==', True)
 
                     self.graph[nonterminal] += block[nonterminal]
                     new_control_sum = self.graph[nonterminal].nvals
