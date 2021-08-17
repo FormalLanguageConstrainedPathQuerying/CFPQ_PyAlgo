@@ -19,7 +19,7 @@ public:
     void set_bit(unsigned int row, unsigned col);
     uint32_t get_nvals();
     char* get_elements();
- 
+
     PathIndex* get_bit(unsigned int row, unsigned col);
 
     bool add_mul(ApMatrix *A, ApMatrix *B);

@@ -23,13 +23,20 @@ class MatrixSinglePath:
             if s == l:
                 left_r1, right_r1, middle_r1, height_r1, length_r1 = 0, 0, 0, 0, 0
                 if (left, middle) in self.m[r1]:
-                    left_r1, right_r1, middle_r1, height_r1, length_r1 = self.m[r1].get(left, middle)
+                    left_r1, right_r1, middle_r1, height_r1, length_r1 = self.m[r1].get(
+                        left, middle
+                    )
                 left_r2, right_r2, middle_r2, height_r2, length_r2 = 0, 0, 0, 0, 0
                 if (middle, right) in self.m[r2]:
-                    left_r2, right_r2, middle_r2, height_r2, length_r2 = self.m[r2].get(middle, right)
+                    left_r2, right_r2, middle_r2, height_r2, length_r2 = self.m[r2].get(
+                        middle, right
+                    )
 
-                if not is_identity(left_r1, right_r1, middle_r1, height_r1, length_r1) and \
-                        not is_identity(left_r2, right_r2, middle_r2, height_r2, length_r2):
+                if not is_identity(
+                    left_r1, right_r1, middle_r1, height_r1, length_r1
+                ) and not is_identity(
+                    left_r2, right_r2, middle_r2, height_r2, length_r2
+                ):
                     max_height = height_r2 if height_r1 < height_r2 else height_r1
                     if height == max_height + 1:
                         self.get_path(left, middle, r1)

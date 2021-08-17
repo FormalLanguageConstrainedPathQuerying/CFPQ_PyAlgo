@@ -1,4 +1,4 @@
-tqdm
+cfpq_data
 pytest
 pytest-benchmark
-cfpq_data
+tqdm

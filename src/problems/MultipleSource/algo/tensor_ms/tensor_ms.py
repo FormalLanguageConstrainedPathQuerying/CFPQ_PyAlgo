@@ -11,12 +11,14 @@ from src.problems.MultipleSource.MultipleSource import MultipleSourceProblem
 from src.grammar.rsa import RecursiveAutomaton
 from src.graph.label_graph import LabelGraph
 
-from src.problems.AllPaths.algo.tensor.tensor import restore_eps_paths, transitive_closure
+from src.problems.AllPaths.algo.tensor.tensor import (
+    restore_eps_paths,
+    transitive_closure,
+)
 from src.problems.utils import ResultAlgo
 
 
 class TensorMSAlgo(MultipleSourceProblem):
-
     def prepare(self, graph: Graph, grammar: Union[RSM, CFG, Path]):
         self.graph = graph
         self.graph.load_bool_graph()
@@ -24,7 +26,13 @@ class TensorMSAlgo(MultipleSourceProblem):
         self.part_graph = LabelGraph(self.graph.matrices_size)
         self.src_for_states = dict()
         for i in range(self.grammar.matrices_size):
-            self.src_for_states.update({i: Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)})
+            self.src_for_states.update(
+                {
+                    i: Matrix.sparse(
+                        BOOL, self.graph.matrices_size, self.graph.matrices_size
+                    )
+                }
+            )
 
     def clear_src(self):
         for label in self.src_for_states:
@@ -40,7 +48,9 @@ class TensorMSAlgo(MultipleSourceProblem):
         m_src = Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)
         for v in sources:
             m_src[v, v] = True
-            self.src_for_states[self.grammar.start_state[self.grammar.start_nonterm]][v, v] = True
+            self.src_for_states[self.grammar.start_state[self.grammar.start_nonterm]][
+                v, v
+            ] = True
 
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
@@ -59,14 +69,27 @@ class TensorMSAlgo(MultipleSourceProblem):
                     out_state = self.grammar.out_states.get(state, [])
                     for out in out_state:
                         if out[1] in self.grammar.nonterminals:
-                            old_sum = self.src_for_states[self.grammar.start_state[out[1]]].nvals
-                            self.src_for_states[self.grammar.start_state[out[1]]] += self.src_for_states[state]
-                            if old_sum != self.src_for_states[self.grammar.start_state[out[1]]].nvals:
+                            old_sum = self.src_for_states[
+                                self.grammar.start_state[out[1]]
+                            ].nvals
+                            self.src_for_states[
+                                self.grammar.start_state[out[1]]
+                            ] += self.src_for_states[state]
+                            if (
+                                old_sum
+                                != self.src_for_states[
+                                    self.grammar.start_state[out[1]]
+                                ].nvals
+                            ):
                                 src_changed = True
                         with BOOL.LOR_LAND:
-                            self.part_graph[out[1]] += self.src_for_states[state].mxm(self.graph[out[1]])
+                            self.part_graph[out[1]] += self.src_for_states[state].mxm(
+                                self.graph[out[1]]
+                            )
                         old_sum = self.src_for_states[out[0]].nvals
-                        for elem in self.part_graph[out[1]].T.reduce_vector(BOOL.LAND_MONOID):
+                        for elem in self.part_graph[out[1]].T.reduce_vector(
+                            BOOL.LAND_MONOID
+                        ):
                             self.src_for_states[out[0]][elem[0], elem[0]] = True
                         if old_sum != self.src_for_states[out[0]].nvals:
                             src_changed = True
@@ -85,8 +108,10 @@ class TensorMSAlgo(MultipleSourceProblem):
                     start_j = j * self.graph.matrices_size
 
                     control_sum = self.graph[start].nvals
-                    block = kron[start_i:start_i + self.graph.matrices_size - 1,
-                                 start_j: start_j + self.graph.matrices_size - 1]
+                    block = kron[
+                        start_i : start_i + self.graph.matrices_size - 1,
+                        start_j : start_j + self.graph.matrices_size - 1,
+                    ]
 
                     self.graph[start] += block
                     new_control_sum = self.graph[start].nvals
@@ -94,12 +119,18 @@ class TensorMSAlgo(MultipleSourceProblem):
                     if new_control_sum != control_sum:
                         changed = True
 
-        return ResultAlgo(m_src.mxm(self.graph[self.grammar.start_nonterm], semiring=BOOL.LOR_LAND), iter), \
-               self.graph[self.grammar.start_nonterm]
+        return (
+            ResultAlgo(
+                m_src.mxm(
+                    self.graph[self.grammar.start_nonterm], semiring=BOOL.LOR_LAND
+                ),
+                iter,
+            ),
+            self.graph[self.grammar.start_nonterm],
+        )
 
 
 class TensorMSAllAlgo(MultipleSourceProblem):
-
     def prepare(self, graph: Graph, grammar: Union[RSM, CFG, Path]):
         self.graph = graph
         self.graph.load_bool_graph()
@@ -107,7 +138,13 @@ class TensorMSAllAlgo(MultipleSourceProblem):
         self.part_graph = LabelGraph(self.graph.matrices_size)
         self.src_for_states = dict()
         for i in range(self.grammar.matrices_size):
-            self.src_for_states.update({i: Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)})
+            self.src_for_states.update(
+                {
+                    i: Matrix.sparse(
+                        BOOL, self.graph.matrices_size, self.graph.matrices_size
+                    )
+                }
+            )
 
     def clear_src(self):
         for label in self.src_for_states:
@@ -120,7 +157,9 @@ class TensorMSAllAlgo(MultipleSourceProblem):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
 
         for v in sources:
-            self.src_for_states[self.grammar.start_state[self.grammar.start_nonterm]][v, v] = True
+            self.src_for_states[self.grammar.start_state[self.grammar.start_nonterm]][
+                v, v
+            ] = True
 
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
@@ -139,14 +178,27 @@ class TensorMSAllAlgo(MultipleSourceProblem):
                         out_state = self.grammar.out_states.get(state, [])
                         for out in out_state:
                             if out[1] in self.grammar.nonterminals:
-                                old_sum = self.src_for_states[self.grammar.start_state[out[1]]].nvals
-                                self.src_for_states[self.grammar.start_state[out[1]]] += self.src_for_states[state]
-                                if old_sum != self.src_for_states[self.grammar.start_state[out[1]]].nvals:
+                                old_sum = self.src_for_states[
+                                    self.grammar.start_state[out[1]]
+                                ].nvals
+                                self.src_for_states[
+                                    self.grammar.start_state[out[1]]
+                                ] += self.src_for_states[state]
+                                if (
+                                    old_sum
+                                    != self.src_for_states[
+                                        self.grammar.start_state[out[1]]
+                                    ].nvals
+                                ):
                                     src_changed = True
                             with BOOL.LOR_LAND:
-                                self.part_graph[out[1]] += self.src_for_states[state].mxm(self.graph[out[1]])
+                                self.part_graph[out[1]] += self.src_for_states[
+                                    state
+                                ].mxm(self.graph[out[1]])
                             old_sum = self.src_for_states[out[0]].nvals
-                            for elem in self.part_graph[out[1]].T.reduce_vector(BOOL.LAND_MONOID):
+                            for elem in self.part_graph[out[1]].T.reduce_vector(
+                                BOOL.LAND_MONOID
+                            ):
                                 self.src_for_states[out[0]][elem[0], elem[0]] = True
                             if old_sum != self.src_for_states[out[0]].nvals:
                                 src_changed = True
@@ -165,8 +217,10 @@ class TensorMSAllAlgo(MultipleSourceProblem):
                     start_j = j * self.graph.matrices_size
 
                     control_sum = self.graph[start].nvals
-                    block = kron[start_i:start_i + self.graph.matrices_size - 1,
-                                 start_j: start_j + self.graph.matrices_size - 1]
+                    block = kron[
+                        start_i : start_i + self.graph.matrices_size - 1,
+                        start_j : start_j + self.graph.matrices_size - 1,
+                    ]
 
                     self.graph[start] += block
                     new_control_sum = self.graph[start].nvals

@@ -72,4 +72,3 @@ void Grammar::print_results(const string &output_filename, int time) {
     }
     out_stream.close();
 }
-

@@ -106,7 +106,7 @@ public:
                                     B_name = nonterm.first;
                                 }
                             }
-                            
+
                             std::vector<int> left_paths = get_paths(i, k, A_name, current_len - 1);
                             if(left_paths.size() > 0)
                             {
@@ -118,7 +118,7 @@ public:
                                         min_len = p;
                                     }
                                 }
-                                
+
                                 std::vector<int> right_paths = get_paths(k, j, B_name, current_len - min_len);
                                 for(auto p1 : left_paths)
                                 {
@@ -159,4 +159,3 @@ public:
 };
 
 #endif //CFPQ_CFPQ_H
-
