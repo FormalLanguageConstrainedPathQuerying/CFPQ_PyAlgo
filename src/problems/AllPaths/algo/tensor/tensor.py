@@ -47,18 +47,15 @@ class TensorSimpleAlgo(AllPathsProblem):
 
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
-        kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
-        for label in self.grammar.labels:
-            kron += self.grammar[label].kronecker(self.graph[label])
-
         iter = 0
         changed = True
         while changed:
             iter += 1
             changed = False
 
-            for nonterminal in self.grammar.nonterminals:
-                kron += self.grammar[nonterminal].kronecker(self.graph[nonterminal])
+            kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
+            for label in self.grammar.labels:
+                kron += self.grammar[label].kronecker(self.graph[label])
 
             transitive_closure(kron)
 
@@ -122,10 +119,6 @@ class TensorDynamicAlgo(AllPathsProblem):
 
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
-        kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
-        for label in self.grammar.labels:
-            kron += self.grammar[label].kronecker(self.graph[label])
-
         prev_kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
         iter = 0
         block = LabelGraph(self.graph.matrices_size)
@@ -134,11 +127,18 @@ class TensorDynamicAlgo(AllPathsProblem):
         while changed:
             changed = False
             iter += 1
-            for nonterminal in block.matrices:
-                kron += self.grammar[nonterminal].kronecker(block[nonterminal])
-                block[nonterminal] = Matrix.sparse(
-                    BOOL, self.graph.matrices_size, self.graph.matrices_size
-                )
+
+            kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
+
+            if first_iter:
+                for label in self.grammar.labels:
+                    kron += self.grammar[label].kronecker(self.graph[label])
+            else:
+                for nonterminal in block.matrices:
+                    kron += self.grammar[nonterminal].kronecker(block[nonterminal])
+                    block[nonterminal] = Matrix.sparse(
+                        BOOL, self.graph.matrices_size, self.graph.matrices_size
+                    )
 
             transitive_closure(kron)
 
@@ -146,8 +146,6 @@ class TensorDynamicAlgo(AllPathsProblem):
                 part = prev_kron.mxm(kron, semiring=BOOL.LOR_LAND)
                 with BOOL.LOR_LAND:
                     kron += prev_kron + part @ prev_kron + part + kron @ prev_kron
-            else:
-                first_iter = False
 
             prev_kron = kron
 
@@ -160,16 +158,27 @@ class TensorDynamicAlgo(AllPathsProblem):
                     start_j = j * self.graph.matrices_size
 
                     control_sum = self.graph[nonterminal].nvals
-                    block[nonterminal] += kron[
-                        start_i : start_i + self.graph.matrices_size - 1,
-                        start_j : start_j + self.graph.matrices_size - 1,
-                    ]
+
+                    if first_iter:
+                        block[nonterminal] += kron[
+                            start_i : start_i + self.graph.matrices_size - 1,
+                            start_j : start_j + self.graph.matrices_size - 1,
+                        ]
+                    else:
+                        new_edges = kron[
+                            start_i : start_i + self.graph.matrices_size - 1,
+                            start_j : start_j + self.graph.matrices_size - 1,
+                        ]
+                        part = new_edges - block[nonterminal]
+                        block[nonterminal] += part.select("==", True)
 
                     self.graph[nonterminal] += block[nonterminal]
                     new_control_sum = self.graph[nonterminal].nvals
 
                     if new_control_sum != control_sum:
                         changed = True
+
+            first_iter = False
 
             if self.grammar.nonterminals.isdisjoint(self.grammar.labels):
                 break
