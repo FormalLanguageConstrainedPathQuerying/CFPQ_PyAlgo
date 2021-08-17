@@ -130,6 +130,7 @@ class TensorDynamicAlgo(AllPathsProblem):
             else:
                 for nonterminal in block.matrices:
                     kron += self.grammar[nonterminal].kronecker(block[nonterminal])
+                    block[nonterminal] = Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)
 
             transitive_closure(kron)
 
