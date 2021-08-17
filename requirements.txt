@@ -1,5 +1,1 @@
-networkx~=2.6.2
-pyformlang~=0.1.26
-pygraphblas~=4.2.2
-pytest~=6.2.4
-tqdm~=4.62.1
+-r requirements/default.txt
