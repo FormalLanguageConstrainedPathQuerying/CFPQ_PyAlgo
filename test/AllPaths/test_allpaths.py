@@ -33,7 +33,6 @@ def test_cycle(algo):
     allpath_algo.prepare(graph, grammar)
 
     result: ResultAlgo = allpath_algo.solve()
-    print(result.matrix_S)
     assert result.matrix_S.nvals == 9
 
     allpath_algo.prepare_for_exctract_paths()
