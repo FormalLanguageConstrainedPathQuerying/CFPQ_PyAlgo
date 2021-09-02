@@ -24,12 +24,12 @@ def restore_eps_paths(nonterminals: Iterable, graph: Graph):
 def transitive_closure(m: Matrix):
     prev = m.nvals
     degree = m
-    with BOOL.LOR_LAND:
+    with BOOL.ANY_PAIR:
         degree = degree @ m
         m += degree
     while prev != m.nvals:
         prev = m.nvals
-        with BOOL.LOR_LAND:
+        with BOOL.ANY_PAIR:
             degree = degree @ m
             m += degree
 
@@ -135,8 +135,8 @@ class TensorDynamicAlgo(AllPathsProblem):
             transitive_closure(kron)
 
             if not first_iter:
-                part = prev_kron.mxm(kron, semiring=BOOL.LOR_LAND)
-                with BOOL.LOR_LAND:
+                part = prev_kron.mxm(kron, semiring=BOOL.ANY_PAIR)
+                with BOOL.ANY_PAIR:
                     kron += prev_kron + part @ prev_kron + part + kron @ prev_kron
 
             prev_kron = kron

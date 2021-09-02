@@ -15,7 +15,7 @@ def update_sources(m: Matrix, dst: Matrix):
     """ dst += {(j, j) : (i, j) in m} by GrB_reduce src to a vector """
 
     # Transpose src and reduce to a vector
-    J, V = m.T.reduce_vector(BOOL.LAND_MONOID).to_lists()
+    J, V = m.T.reduce_vector(BOOL.ANY_MONOID).to_lists()
 
     # If j-th column of src contains True then add (j, j) to dst
     for k in range(len(J)):
@@ -25,7 +25,7 @@ def update_sources(m: Matrix, dst: Matrix):
 
 def update_sources_opt(m: Matrix, mask: Matrix, res: Matrix):
     """ res += {(j, j): (i, j) in m and (j, j) not in mask}"""
-    src_vec = m.reduce_vector(BOOL.LAND_MONOID, desc=descriptor.T0)
+    src_vec = m.reduce_vector(BOOL.ANY_MONOID, desc=descriptor.T0)
     for i, _ in src_vec:
         if (i, i) not in mask:
             res[i, i] = 1
@@ -95,19 +95,19 @@ class MatrixMSBruteAlgo(MultipleSourceProblem):
                     update_sources(self.sources[l], self.sources[r1])
 
                     # 2) tmp = l_src * r1
-                    tmp = self.sources[l].mxm(nonterminals[r1], semiring=BOOL.LOR_LAND)
+                    tmp = self.sources[l].mxm(nonterminals[r1], semiring=BOOL.ANY_PAIR)
 
                     # 3) r2_src += {(j, j) : (i, j) \in tmp}
                     update_sources(tmp, self.sources[r2])
 
                     # 4) l += tmp * r2
-                    nonterminals[l] += tmp.mxm(nonterminals[r2], semiring=BOOL.LOR_LAND)
+                    nonterminals[l] += tmp.mxm(nonterminals[r2], semiring=BOOL.ANY_PAIR)
 
                     # update nnz
                     nnz[(l, r1, r2)] = self.sources[l].nvals, nonterminals[r1].nvals, nonterminals[r2].nvals
                     changed = True
 
-        return ResultAlgo(m_src.mxm(nonterminals[self.grammar.start_nonterm], semiring=BOOL.LOR_LAND), iter), \
+        return ResultAlgo(m_src.mxm(nonterminals[self.grammar.start_nonterm], semiring=BOOL.ANY_PAIR), iter), \
                nonterminals[self.grammar.start_nonterm]
 
 
@@ -162,18 +162,18 @@ class MatrixMSOptAlgo(MultipleSourceProblem):
                             new_sources[r1][i, i] = True
 
                     # 2) tmp = new[l_src] * index[r1]
-                    new_sources[l].mxm(self.nonterminals[r1], out=tmp, semiring=BOOL.LOR_LAND)
+                    new_sources[l].mxm(self.nonterminals[r1], out=tmp, semiring=BOOL.ANY_PAIR)
 
                     # 3) new[r2_src] += {(j, j) : (i, j) in tmp and not in index[r2_src]}
                     update_sources_opt(tmp, self.sources[r2], new_sources[r2])
 
                     # 4) index[l] += tmp * index[r2]
-                    self.nonterminals[l] += tmp.mxm(self.nonterminals[r2], semiring=BOOL.LOR_LAND)
+                    self.nonterminals[l] += tmp.mxm(self.nonterminals[r2], semiring=BOOL.ANY_PAIR)
 
                     # update nnz
                     nnz[(l, r1, r2)] = new_sources[l].nvals, self.nonterminals[r1].nvals, self.nonterminals[r2].nvals
                     changed = True
         for n in self.grammar.nonterms:
             self.sources[n] += new_sources[n]
-        return ResultAlgo(m_src.mxm(self.nonterminals[self.grammar.start_nonterm], semiring=BOOL.LOR_LAND), iter), \
+        return ResultAlgo(m_src.mxm(self.nonterminals[self.grammar.start_nonterm], semiring=BOOL.ANY_PAIR), iter), \
                self.nonterminals[self.grammar.start_nonterm]

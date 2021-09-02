@@ -28,7 +28,7 @@ class MatrixBaseAlgo(BaseProblem):
             changed = False
             for l, r1, r2 in self.grammar.complex_rules:
                 old_nnz = m[l].nvals
-                m[l] += m[r1].mxm(m[r2], semiring=BOOL.LOR_LAND)
+                m[l] += m[r1].mxm(m[r2], semiring=BOOL.ANY_PAIR)
                 new_nnz = m[l].nvals
                 changed |= not old_nnz == new_nnz
         return ResultAlgo(m[self.grammar.start_nonterm], iter)
