@@ -63,10 +63,10 @@ class TensorMSAlgo(MultipleSourceProblem):
                             self.src_for_states[self.grammar.start_state[out[1]]] += self.src_for_states[state]
                             if old_sum != self.src_for_states[self.grammar.start_state[out[1]]].nvals:
                                 src_changed = True
-                        with BOOL.LOR_LAND:
+                        with BOOL.ANY_PAIR:
                             self.part_graph[out[1]] += self.src_for_states[state].mxm(self.graph[out[1]])
                         old_sum = self.src_for_states[out[0]].nvals
-                        for elem in self.part_graph[out[1]].T.reduce_vector(BOOL.LAND_MONOID):
+                        for elem in self.part_graph[out[1]].T.reduce_vector(BOOL.ANY_MONOID):
                             self.src_for_states[out[0]][elem[0], elem[0]] = True
                         if old_sum != self.src_for_states[out[0]].nvals:
                             src_changed = True
@@ -94,7 +94,7 @@ class TensorMSAlgo(MultipleSourceProblem):
                     if new_control_sum != control_sum:
                         changed = True
 
-        return ResultAlgo(m_src.mxm(self.graph[self.grammar.start_nonterm], semiring=BOOL.LOR_LAND), iter), \
+        return ResultAlgo(m_src.mxm(self.graph[self.grammar.start_nonterm], semiring=BOOL.ANY_PAIR), iter), \
                self.graph[self.grammar.start_nonterm]
 
 
@@ -143,10 +143,10 @@ class TensorMSAllAlgo(MultipleSourceProblem):
                                 self.src_for_states[self.grammar.start_state[out[1]]] += self.src_for_states[state]
                                 if old_sum != self.src_for_states[self.grammar.start_state[out[1]]].nvals:
                                     src_changed = True
-                            with BOOL.LOR_LAND:
+                            with BOOL.ANY_PAIR:
                                 self.part_graph[out[1]] += self.src_for_states[state].mxm(self.graph[out[1]])
                             old_sum = self.src_for_states[out[0]].nvals
-                            for elem in self.part_graph[out[1]].T.reduce_vector(BOOL.LAND_MONOID):
+                            for elem in self.part_graph[out[1]].T.reduce_vector(BOOL.ANY_MONOID):
                                 self.src_for_states[out[0]][elem[0], elem[0]] = True
                             if old_sum != self.src_for_states[out[0]].nvals:
                                 src_changed = True
