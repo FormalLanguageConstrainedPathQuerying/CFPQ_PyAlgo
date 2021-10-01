@@ -13,6 +13,7 @@ class CnfGrammar:
         self.terms = set()
         self.simple_rules = []
         self.complex_rules = []
+        self.eps_rules = []
 
     def __setitem__(self, key, value):
         if (isinstance(value, tuple) or isinstance(value, list)) and 1 <= len(value) <= 2:
@@ -35,7 +36,7 @@ class CnfGrammar:
 
         for product in base_cnf.productions:
             if not product.body:
-                cnf[product.head.to_text().strip('"')] = ["epsilon"]
+                cnf.eps_rules.append(product.head.to_text().strip('"'))
             else:
                 cnf[product.head.to_text().strip('"')] = [x.to_text().strip('"') for x in product.body]
 
