@@ -18,6 +18,11 @@ class MatrixBaseAlgo(BaseProblem):
 
     def solve(self):
         m = LabelGraph(self.graph.matrices_size)
+        
+        for l in self.grammar.eps_rules:
+            for i in range(m.matrices_size):
+                m[l][i, i] = True
+        
         for l, r in self.grammar.simple_rules:
             m[l] += self.graph[r]
 
