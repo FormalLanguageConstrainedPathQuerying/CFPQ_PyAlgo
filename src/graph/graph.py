@@ -3,6 +3,7 @@ from tqdm import tqdm
 
 from pygraphblas import Matrix, BOOL
 from src.graph.index_graph import SAVEMIDDLETYPE
+from src.graph.length_graph import SAVELENGTHTYPE
 
 from src.utils.graph_size import get_graph_size
 
@@ -64,3 +65,17 @@ class Graph:
                     self.matrices[label] = Matrix.sparse(self.type, self.matrices_size, self.matrices_size)
 
                 self.matrices[label][v, to] = (v, to, v, 1, 1)
+
+    def load_save_length_graph(self, verbose=False):
+        self.type = SAVELENGTHTYPE
+        self.matrices_size = get_graph_size(self.path)
+
+        with open(self.path, "r") as f:
+            for line in tqdm(f.readlines()) if verbose else f.readlines():
+                v, label, to = line.split()
+                v, to = int(v), int(to)
+
+                if label not in self.matrices:
+                    self.matrices[label] = Matrix.sparse(self.type, self.matrices_size, self.matrices_size)
+
+                self.matrices[label][v, to] = (v, to, v, 1)
