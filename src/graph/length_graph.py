@@ -1,15 +1,18 @@
+from pygraphblas import *
 from pygraphblas import Matrix
 from pygraphblas.types import Type, binop
 from pygraphblas.types import BOOL
+import numpy as np
 
 MAX_MATRIX_SIZE = 10000000
+UINT32_MAX = np.iinfo(np.uint32).max
 
 
 class SAVELENGTHTYPE(Type):
     _base_name = "UDT"
     _numpy_t = None
     members = ['uint32_t left', 'uint32_t right', 'uint32_t middle', 'uint32_t length']
-    one = (0, 0, 0, MAX_MATRIX_SIZE)
+    one = (0, 0, 0, UINT32_MAX)
 
     @binop(boolean=True)
     def EQ(z, x, y):
@@ -21,7 +24,7 @@ class SAVELENGTHTYPE(Type):
     @binop()
     def PLUS(z, x, y):
         def is_eq_to_one(ind):
-            return ind.left == 0 and ind.right == 0 and ind.middle == 0 and ind.length == MAX_MATRIX_SIZE
+            return ind.left == 0 and ind.right == 0 and ind.middle == 0 and ind.length == UINT32_MAX
 
         if not is_eq_to_one(x) and not is_eq_to_one(y):
             min_length_index = x if x.length < y.length else y
@@ -43,7 +46,7 @@ class SAVELENGTHTYPE(Type):
     @binop()
     def TIMES(z, x, y):
         def is_eq_to_one(ind):
-            return ind.left == 0 and ind.right == 0 and ind.middle == 0 and ind.length == MAX_MATRIX_SIZE
+            return ind.left == 0 and ind.right == 0 and ind.middle == 0 and ind.length == UINT32_MAX
 
         if not is_eq_to_one(x) and not is_eq_to_one(y):
             z.left = x.left
@@ -58,19 +61,16 @@ class SAVELENGTHTYPE(Type):
 
     @binop()
     def SUBTRACTION(z, x, y):
-        def is_eq_to_one(ind):
-            return ind.left == 0 and ind.right == 0 and ind.middle == 0 and ind.length == MAX_MATRIX_SIZE
-
         if x.left == y.left and x.right == y.right and x.middle == y.middle and x.length == y.length:
             z.left = 0
             z.right = 0
             z.middle = 0
-            z.length = MAX_MATRIX_SIZE
+            z.length = 0   # for nonzero() function and GxB_NONZERO select operator
         else:
-            z.left = 0
-            z.right = 0
-            z.middle = 0
-            z.length = 0
+            z.left = UINT32_MAX
+            z.right = UINT32_MAX
+            z.middle = UINT32_MAX
+            z.length = UINT32_MAX
 
 
 class LengthGraph:

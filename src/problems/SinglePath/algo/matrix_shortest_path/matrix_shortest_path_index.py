@@ -1,7 +1,7 @@
 from pyformlang.cfg import CFG
 from src.graph.graph import Graph
 
-from pygraphblas import types
+from pygraphblas import Matrix
 
 from src.problems.SinglePath.SinglePath import SinglePathProblem
 from src.problems.SinglePath.algo.matrix_shortest_path.matrix_shortest_path import MatrixShortestPath
@@ -40,12 +40,14 @@ class MatrixShortestAlgo(SinglePathProblem):
                         if not old_nnz == new_nnz:
                             new_changes.add(l)
                         elif new_nnz > 0:
-                            for (i, j, l) in m[l]:
-                                if old_m.get(i, j) != l:
-                                    new_changes.add(l)
+                            C = m[l].emult(old_m, SAVELENGTHTYPE.SUBTRACTION)
+                            if C.nonzero().nvals > 0:
+                                new_changes.add(l)
+                            #for (i, j, l) in m[l]:
+                                #if old_m.get(i, j) != l:
+                                    #new_changes.add(l)
                             #if not m[l].iseq(old_m):
-                                #changed = True
-                                #new_changes.add(l)
+                                #new_changes.add(l)t
                 changed_nonterms = new_changes
             self.res_m = m
             return ResultAlgo(m[self.grammar.start_nonterm], iter)
