@@ -7,7 +7,8 @@ The CFPQ_PyAlgo is a repository for developing, testing and benchmarking algorit
 First of all you need to clone repository with its submodules:
 
 ```bash
-git clone --recurse-submodules https://github.com/simpletonDL/CFPQ_PyAlgo.git 
+git clone --recurse-submodules https://github.com/JetBrains-Research/CFPQ_PyAlgo.git
+cd CFPQ_PyAlgo/ 
 git submodule init
 git submodule update
 ```
