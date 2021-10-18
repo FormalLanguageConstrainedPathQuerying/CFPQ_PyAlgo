@@ -43,11 +43,6 @@ class MatrixShortestAlgo(SinglePathProblem):
                             C = m[l].emult(old_m, SAVELENGTHTYPE.SUBTRACTION)
                             if C.nonzero().nvals > 0:
                                 new_changes.add(l)
-                            #for (i, j, l) in m[l]:
-                                #if old_m.get(i, j) != l:
-                                    #new_changes.add(l)
-                            #if not m[l].iseq(old_m):
-                                #new_changes.add(l)t
                 changed_nonterms = new_changes
             self.res_m = m
             return ResultAlgo(m[self.grammar.start_nonterm], iter)
