@@ -1,4 +1,0 @@
-tqdm
-pytest
-pytest-benchmark
-cfpq_data
