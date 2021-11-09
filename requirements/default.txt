@@ -1,0 +1,3 @@
+networkx==2.6.2
+pyformlang==0.1.26
+pygraphblas==5.1.8.0
