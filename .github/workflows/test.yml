@@ -28,4 +28,4 @@ jobs:
 
       - name: Test CFPQ_PyAlgo
         run: |
-          PYTHONPATH=. pytest --doctest-modules -vv -s cfpq_pyalgo
+          PYTHONPATH=. pytest -vv -s cfpq_pyalgo
