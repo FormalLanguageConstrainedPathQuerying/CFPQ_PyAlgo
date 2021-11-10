@@ -28,7 +28,7 @@ class WCNF:
         self._cfg: CFG = cfg
         self.start_symbol: Variable = cfg.start_symbol
 
-        if not _check_form(cfg):
+        if not _is_in_wcnf(cfg):
             cnf = cfg.to_normal_form()
         else:
             cnf = cfg
@@ -81,7 +81,7 @@ class WCNF:
         return self._cfg.contains(word)
 
 
-def _check_form(cfg: CFG) -> bool:
+def _is_in_wcnf(cfg: CFG) -> bool:
     for production in cfg.productions:
         if len(production.body) > 2:
             return False
