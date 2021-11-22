@@ -60,6 +60,46 @@ def test_two_edges():
     }
 
 
+def test_vertices_numbering():
+    g = nx.MultiDiGraph()
+    g.add_edge(5, 1, label="A")
+    g.add_edge(1, 9, label="B")
+    g.add_edge(9, 5, label="A")
+
+    bmg = algo.BooleanMatrixGraph.from_nx_graph(g)
+
+    assert bmg._matrices_size == 3
+    assert bmg._matrices == {
+        "A": Matrix.from_lists(
+            I=[0, 2],
+            J=[1, 0],
+            nrows=3,
+            ncols=3,
+            typ=BOOL,
+        ),
+        "B": Matrix.from_lists(
+            I=[1],
+            J=[2],
+            nrows=3,
+            ncols=3,
+            typ=BOOL,
+        ),
+    }
+
+
+def test_vertices_numbers_conversion():
+    g = nx.MultiDiGraph()
+    g.add_edge(5, 1, label="A")
+    g.add_edge(1, 9, label="B")
+    g.add_edge(9, 5, label="A")
+
+    bmg = algo.BooleanMatrixGraph.from_nx_graph(g)
+
+    assert bmg.get_graph_vertex(0) == 5
+    assert bmg.get_graph_vertex(1) == 1
+    assert bmg.get_graph_vertex(2) == 9
+
+
 def test_KeyError():
     g = nx.MultiDiGraph()
 

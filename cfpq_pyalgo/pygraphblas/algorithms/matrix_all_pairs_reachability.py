@@ -43,7 +43,10 @@ def matrix_all_pairs_reachability(
 
     # convert transitive closure for start nonterminal to list of pairs
     res_lists = res[wcnf.start_symbol.to_text()].to_lists()
-    return [(int(v), int(to)) for v, to in zip(res_lists[0], res_lists[1])]
+    return [
+        (matrix_graph.get_graph_vertex(int(v)), matrix_graph.get_graph_vertex(int(to)))
+        for v, to in zip(res_lists[0], res_lists[1])
+    ]
 
 
 def _matrix_all_pairs_reachability(
