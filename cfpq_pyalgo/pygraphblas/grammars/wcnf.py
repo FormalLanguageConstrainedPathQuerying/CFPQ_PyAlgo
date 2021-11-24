@@ -79,6 +79,11 @@ class WCNF:
     def contains(self, word: str):
         return self._cfg.contains(word)
 
+    @classmethod
+    def from_text(cls, text: str, start_variable: Variable = Variable("S")):
+        cfg = CFG.from_text(text, start_variable)
+        return cls(cfg)
+
 
 def _is_in_wcnf(cfg: CFG) -> bool:
     for production in cfg.productions:
