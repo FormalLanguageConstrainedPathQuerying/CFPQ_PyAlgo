@@ -110,3 +110,26 @@ def test_from_text():
     assert wcnf.binary_productions == [
         Production(Variable("S"), [Variable("A"), Variable("B")]),
     ]
+
+
+def test_SSaa():
+    cfg = CFG.from_text("S -> S a | a")
+
+    wcnf = algo.WCNF(cfg)
+
+    assert wcnf.start_variable == Variable("S")
+    assert wcnf.variables == [Variable("S"), Variable("a#CNF#")]
+    assert wcnf.terminals == [Terminal("a")]
+    assert wcnf.productions == [
+        Production(Variable("S"), [Variable("S"), Variable("a#CNF#")]),
+        Production(Variable("S"), [Terminal("a")]),
+        Production(Variable("a#CNF#"), [Terminal("a")]),
+    ]
+    assert wcnf.epsilon_productions == []
+    assert wcnf.unary_productions == [
+        Production(Variable("S"), [Terminal("a")]),
+        Production(Variable("a#CNF#"), [Terminal("a")]),
+    ]
+    assert wcnf.binary_productions == [
+        Production(Variable("S"), [Variable("S"), Variable("a#CNF#")]),
+    ]

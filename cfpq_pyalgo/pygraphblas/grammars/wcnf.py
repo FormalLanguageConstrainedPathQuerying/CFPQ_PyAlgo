@@ -72,7 +72,6 @@ class WCNF:
         self.terminals.sort(key=str)
         self.epsilon_productions.sort(key=str)
         self.unary_productions.sort(key=str)
-        self.unary_productions.sort(key=str)
         self.binary_productions.sort(key=str)
         self.productions.sort(key=str)
 
@@ -98,4 +97,4 @@ def _is_in_wcnf(cfg: CFG) -> bool:
         elif len(production.body) == 1:
             if not isinstance(production.body[0], Terminal):
                 return False
-        return True
+    return True
