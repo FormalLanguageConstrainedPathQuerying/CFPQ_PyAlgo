@@ -13,7 +13,7 @@ class WCNF:
     - A -> B C
     - A -> a
     - A -> epsilon
-    where A, B and C are nonterminals, a is an arbitrary terminal
+    where `A`, `B` and `C` are variables; `a` is an arbitrary terminal
 
     Also known as Weak Chomsky Normal Form
 
@@ -21,12 +21,11 @@ class WCNF:
     ----------
     cfg: CFG
         Context-Free Grammar
-
     """
 
     def __init__(self, cfg: CFG):
         self._cfg: CFG = cfg
-        self.start_symbol: Variable = cfg.start_symbol
+        self.start_variable: Variable = cfg.start_symbol
 
         if not _is_in_wcnf(cfg):
             cnf = cfg.to_normal_form()
