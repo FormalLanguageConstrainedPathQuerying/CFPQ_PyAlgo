@@ -8,7 +8,7 @@ def test_empty():
 
     wcnf = algo.WCNF(cfg)
 
-    assert wcnf.start_symbol == Variable("S")
+    assert wcnf.start_variable == Variable("S")
     assert wcnf.variables == [Variable("S")]
     assert wcnf.terminals == []
     assert wcnf.productions == [Production(Variable("S"), [])]
@@ -22,7 +22,7 @@ def test_a():
 
     wcnf = algo.WCNF(cfg)
 
-    assert wcnf.start_symbol == Variable("S")
+    assert wcnf.start_variable == Variable("S")
     assert wcnf.variables == [Variable("S")]
     assert wcnf.terminals == [Terminal("a")]
     assert wcnf.productions == [Production(Variable("S"), [Terminal("a")])]
@@ -36,7 +36,7 @@ def test_ab():
 
     wcnf = algo.WCNF(cfg)
 
-    assert wcnf.start_symbol == Variable("S")
+    assert wcnf.start_variable == Variable("S")
     assert wcnf.variables == [Variable("S"), Variable("a#CNF#"), Variable("b#CNF#")]
     assert wcnf.terminals == [Terminal("a"), Terminal("b")]
     assert wcnf.productions == [
@@ -59,7 +59,7 @@ def test_AB():
 
     wcnf = algo.WCNF(cfg)
 
-    assert wcnf.start_symbol == Variable("S")
+    assert wcnf.start_variable == Variable("S")
     assert wcnf.variables == [Variable("A"), Variable("B"), Variable("S")]
     assert wcnf.terminals == [Terminal("a"), Terminal("b")]
     assert wcnf.productions == [
