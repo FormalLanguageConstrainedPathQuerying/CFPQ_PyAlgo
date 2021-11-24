@@ -8,28 +8,72 @@ pip install -r requirements.txt
 
 ## Examples
 
+### All-Pairs CFL-reachability
+
+```python
+import cfpq_data
+import networkx as nx
+from pyformlang.cfg import CFG
+
+import cfpq_pyalgo.pygraphblas as algo
+
+graph_path = cfpq_data.download("skos")
+graph: nx.MultiDiGraph = cfpq_data.graph_from_csv(graph_path)
+
+grammar = CFG.from_text(
+    "S -> S subClassOf | subClassOf"
+)
+
+pairs = algo.matrix_all_pairs_reachability(graph, grammar)  # [(79, 35)]
+```
+
+#### With edge reversal
+
+```python
+import cfpq_data
+import networkx as nx
+from pyformlang.cfg import CFG
+
+import cfpq_pyalgo.pygraphblas as algo
+
+graph_path = cfpq_data.download("skos")
+graph: nx.MultiDiGraph = cfpq_data.graph_from_csv(graph_path)
+
+reversed_edges = [
+    (v, u, {"label": edge_data["label"] + "_r"})
+    for u, v, edge_data in graph.edges(data=True)
+]
+graph.add_edges_from(reversed_edges)
+
+grammar = CFG.from_text(
+    "S -> subClassOf_r S subClassOf | subClassOf_r subClassOf"
+)
+
+pairs = algo.matrix_all_pairs_reachability(graph, grammar)  # [(35, 35)]
+```
+
 ### BooleanMatrixGraph
 
 ```python
-import networkx as nx
-import cfpq_pyalgo.pygraphblas as algo
 import cfpq_data
 
-bzip_path = cfpq_data.download("bzip")
-bzip = cfpq_data.graph_from_csv(bzip_path)
+import cfpq_pyalgo.pygraphblas as algo
 
-bmg = algo.BooleanMatrixGraph.from_nx_graph(bzip)
+skos_path = cfpq_data.download("skos")
+skos = cfpq_data.graph_from_csv(skos_path)
+
+bmg = algo.bmg_from_nx_graph(skos)
+
 ```
 
 ### WCNF
 
 ```python
-from pyformlang.cfg import CFG
 import cfpq_pyalgo.pygraphblas as algo
 
-cfg = CFG.from_text("S -> a S b S | a b")
-
-wcnf = algo.WCNF(cfg)
+grammar = algo.WCNF.from_text(
+    "S -> subClassOf_r S subClassOf | subClassOf_r subClassOf"
+)
 ```
 
 ## pre-commit
