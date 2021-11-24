@@ -82,3 +82,31 @@ def test_AB():
     assert wcnf.binary_productions == [
         Production(Variable("S"), [Variable("A"), Variable("B")]),
     ]
+
+
+def test_from_text():
+    wcnf = algo.WCNF.from_text("S -> A B | epsilon\nA -> a | epsilon\nB -> b | epsilon")
+
+    assert wcnf.start_variable == Variable("S")
+    assert wcnf.variables == [Variable("A"), Variable("B"), Variable("S")]
+    assert wcnf.terminals == [Terminal("a"), Terminal("b")]
+    assert wcnf.productions == [
+        Production(Variable("A"), []),
+        Production(Variable("A"), [Terminal("a")]),
+        Production(Variable("B"), []),
+        Production(Variable("B"), [Terminal("b")]),
+        Production(Variable("S"), []),
+        Production(Variable("S"), [Variable("A"), Variable("B")]),
+    ]
+    assert wcnf.epsilon_productions == [
+        Production(Variable("A"), []),
+        Production(Variable("B"), []),
+        Production(Variable("S"), []),
+    ]
+    assert wcnf.unary_productions == [
+        Production(Variable("A"), [Terminal("a")]),
+        Production(Variable("B"), [Terminal("b")]),
+    ]
+    assert wcnf.binary_productions == [
+        Production(Variable("S"), [Variable("A"), Variable("B")]),
+    ]
