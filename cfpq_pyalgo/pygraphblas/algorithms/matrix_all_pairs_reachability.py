@@ -88,13 +88,11 @@ def _matrix_all_pairs_reachability(
                 rule.body[1].to_text(),
             )
 
-            old_nnz = nnz[l]
-
             t[l] += t[r1].mxm(t[r2], semiring=BOOL.ANY_PAIR)
 
             new_nnz = t[l].nvals
 
-            changed |= old_nnz != new_nnz
+            changed |= nnz[l] != new_nnz
 
             nnz[l] = new_nnz
 
