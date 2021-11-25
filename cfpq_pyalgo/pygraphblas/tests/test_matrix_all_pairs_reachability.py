@@ -1,4 +1,6 @@
+import cfpq_data
 import networkx as nx
+import pytest
 from pyformlang.cfg import CFG
 
 import cfpq_pyalgo.pygraphblas as algo
@@ -85,3 +87,45 @@ def test_full_graph_result():
     assert set(reachable_vertices) == {
         (v, to) for v in range(g.number_of_nodes()) for to in range(g.number_of_nodes())
     }
+
+
+@pytest.mark.parametrize(
+    "graph_name, pairs",
+    [
+        ("skos", 30),
+        ("generations", 12),
+        ("travel", 52),
+        ("univ", 25),
+        ("atom", 6),
+        ("biomedical", 47),
+        ("foaf", 36),
+        ("people", 51),
+        ("funding", 58),
+        ("wine", 565),
+        ("pizza", 1356),
+        ("core", 204),
+        ("pathways", 884),
+        ("enzyme", 396),
+        ("eclass", 90994),
+    ],
+)
+def test_dataset(graph_name, pairs):
+    g1 = CFG.from_text(
+        """
+        S -> subClassOf_r S subClassOf | subClassOf_r subClassOf
+        S -> type_r S type | type_r type
+        """
+    )
+
+    path = cfpq_data.download(graph_name)
+    graph = cfpq_data.graph_from_csv(path)
+
+    reversed_edges = [
+        (v, u, {"label": edge_data["label"] + "_r"})
+        for u, v, edge_data in graph.edges(data=True)
+    ]
+    graph.add_edges_from(reversed_edges)
+
+    res = algo.matrix_all_pairs_reachability(graph, g1)
+
+    assert len(res) == pairs
