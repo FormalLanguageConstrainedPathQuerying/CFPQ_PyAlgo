@@ -80,6 +80,7 @@ def test_case_regular_loop():
     assert intersect_kron.is_equivalent_to(intersect_bfs)
 
 
+@pytest.mark.CI
 def test_case_regular_midsymbol():
     test_data_path = LOCAL_CFPQ_DATA.joinpath("regular/midsymbol")
 
@@ -103,6 +104,7 @@ def test_case_regular_midsymbol():
     assert intersect_kron.is_equivalent_to(intersect_bfs)
 
 
+@pytest.mark.CI
 def test_case_regular_two_cycles():
     test_data_path = LOCAL_CFPQ_DATA.joinpath("regular/two_cycles")
 
