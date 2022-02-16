@@ -4,22 +4,8 @@ from pygraphblas import binary_op, types, select_op, Matrix
 from src.grammar.one_term_rsa import OneTerminalOneNonterminalRSA, TemplateRSA, OneTerminalRSA
 import re
 
-NONTERMINAL_MASK_INT32 = 0x80000000
-MAX_TERMINALS_COUNT_INT32 = 0x7fffffff
-
-NONTERMINAL_MASK_INT64 = 0x8000000000000000
-MAX_TERMINALS_COUNT_INT64 = 0x7fffffffffffff
-
-
-# PointsTo   -> (assign | load_[f] Alias store_[f]) alloc
-# PointsTo_r -> alloc_r (assign_r | store_[f]_r A load_[f]_r)
-# Alias      -> PointsTo PointsTo_r
-
 
 class OneTerminalOneNonterminalGraph:
-    """
-    TODO: Add description for this graph labels representation
-    """
 
     def __init__(self, graph_path, templ_rsa: TemplateRSA, with_back_edges: bool = True) -> None:
         """
@@ -37,16 +23,15 @@ class OneTerminalOneNonterminalGraph:
         terms_num = set()
         edges = []
         with open(graph_path, 'r') as f:
-            # for line in tqdm(f.readlines()) if verbose else f.readlines():
             for line in f.readlines():
-                v_from, term, v_to = line.split(', ')
+                v_from, term, v_to = line.split(' ')
                 v_from, v_to = int(v_from), int(v_to)
                 num_in_term = re.findall(r'\d+', term)
                 count_num_in_term = len(num_in_term)
                 if count_num_in_term == 1:
                     terms_num.add(int(num_in_term[0]))
                 elif count_num_in_term > 1:
-                    pass  # TODO raise error
+                    raise Exception("Incorrect terminal format")
                 vertices.add(v_from)
                 vertices.add(v_to)
                 edges.append((v_from, term, v_to))
@@ -105,9 +90,7 @@ class OneTerminalOneNonterminalGraph:
             self.element_times = self.JAVATIMES64
             self.nonterm_selector = self.JAVASELECTOR64
         else:
-            # TODO Raise exception: too many terminals
-            pass
-            # raise
+            raise Exception("Too many different labels in a graph ")
 
         self.adjacency_matrix = Matrix.sparse(
             element_type, vertices_count, vertices_count)
@@ -168,9 +151,6 @@ class OneTerminalOneNonterminalGraph:
 
 
 class OneTerminalGraph:
-    """
-    TODO: Add description for this graph labels representation
-    """
 
     def __init__(self, graph_path, templ_rsa: TemplateRSA, with_back_edges: bool = True) -> None:
         """
@@ -185,16 +165,15 @@ class OneTerminalGraph:
         terms_num = set()
         edges = []
         with open(graph_path, 'r') as f:
-            # for line in tqdm(f.readlines()) if verbose else f.readlines():
             for line in f.readlines():
-                v_from, term, v_to = line.split(', ')
+                v_from, term, v_to = line.split(' ')
                 v_from, v_to = int(v_from), int(v_to)
                 num_in_term = re.findall(r'\d+', term)
                 count_num_in_term = len(num_in_term)
                 if count_num_in_term == 1:
                     terms_num.add(int(num_in_term[0]))
                 elif count_num_in_term > 1:
-                    pass  # TODO raise error
+                    raise Exception("Incorrect terminal format")
                 vertices.add(v_from)
                 vertices.add(v_to)
                 edges.append((v_from, term, v_to))
@@ -233,9 +212,7 @@ class OneTerminalGraph:
             self.element_times = self.JAVATIMES64
             self.nonterm_selector = self.JAVASELECTOR64
         else:
-            # TODO Raise exception: too many terminals
-            pass
-            # raise
+            raise Exception("Too many different labels in a graph ")
 
         self.adjacency_matrix = Matrix.sparse(
             element_type, vertices_count, vertices_count)
