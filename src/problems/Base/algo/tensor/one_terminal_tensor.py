@@ -27,12 +27,10 @@ class OneTerminalOneNonterminalTensorAlgo:
     def prepare(self, graph: Path, templ_rsa_path: Path):
         templ_rsa = TemplateRSA.from_file(templ_rsa_path)
         self.graph = OneTerminalOneNonterminalGraph(graph, templ_rsa, with_back_edges=True)
-        # self.graph = OneTerminalGraph(graph, templ_rsa, with_back_edges=False)
 
-    def solve(self):
+    def solve(self, start_nonterm: str):
         element_type = self.graph.adjacency_matrix.type
         graph_size = self.graph.adjacency_matrix.nrows
-        sizeKron = graph_size * self.graph.rsa.matrix.nrows
 
         iter = 0
         control_sum = self.graph.adjacency_matrix.select('>=', 1 << (self.graph.type_size - 2)).nonzero().nvals
@@ -68,13 +66,10 @@ class OneTerminalOneNonterminalTensorAlgo:
                     if new_control_sum != control_sum:
                         control_sum = new_control_sum
                         changed = True
-
-            # if self.grammar.nonterminals.isdisjoint(self.grammar.labels):
-            #     break
+            del kron
 
         thunk: Scalar = Scalar.from_type(self.graph.adjacency_matrix.type)
-        thunk[0] = self.graph.rsa.nonterm_to_num['PointsTo'] << (self.graph.type_size - 2)
-        # thunk[0] = self.graph.rsa.nonterm_to_num['S'] << (self.graph.type_size - 2)
+        thunk[0] = self.graph.rsa.nonterm_to_num[start_nonterm] << (self.graph.type_size - 2)
         return ResultAlgo(self.graph.adjacency_matrix
                           .extract_matrix(slice(0, self.graph.base_graph_size - 1), slice(0, self.graph.base_graph_size - 1))
                           .select(self.graph.nonterm_selector, thunk)
@@ -87,13 +82,11 @@ class OneTerminalTensorAlgo:
 
     def prepare(self, graph: Path, templ_rsa_path: Path):
         templ_rsa = TemplateRSA.from_file(templ_rsa_path)
-        self.graph = OneTerminalGraph(graph, templ_rsa, with_back_edges=True)
-        # self.graph = OneTerminalGraph(graph, templ_rsa, with_back_edges=False)
+        self.graph = OneTerminalGraph(graph, templ_rsa, with_back_edges=False)
 
     def solve(self, start_nonterm: str):
         element_type = self.graph.adjacency_matrix.type
         graph_size = self.graph.adjacency_matrix.nrows
-        sizeKron = graph_size * self.graph.rsa.matrix.nrows
 
         self.graph.set_epsilon_nonterms()
         iter = 0
@@ -127,10 +120,8 @@ class OneTerminalTensorAlgo:
                         self.graph.adjacency_matrix = new_graph
                         changed = True
 
-                    new_graph = None
-
-            # if self.grammar.nonterminals.isdisjoint(self.grammar.labels):
-            #     break
+                    del new_graph
+            del kron
 
         thunk: Scalar = Scalar.from_type(self.graph.adjacency_matrix.type)
         thunk[0] = 1 << (self.graph.type_size - 3 + self.graph.rsa.nonterm_to_num[start_nonterm] - 1)
@@ -144,7 +135,7 @@ class OneTerminalOneNonterminalDynamicTensorAlgo:
         templ_rsa = TemplateRSA.from_file(templ_rsa_path)
         self.graph = OneTerminalOneNonterminalGraph(graph, templ_rsa, with_back_edges=True)
 
-    def solve(self):
+    def solve(self, start_nonterm: str):
         element_type = self.graph.adjacency_matrix.type
         graph_size = self.graph.adjacency_matrix.nrows
         sizeKron = graph_size * self.graph.rsa.matrix.nrows
@@ -211,8 +202,7 @@ class OneTerminalOneNonterminalDynamicTensorAlgo:
                 changed = True
 
         thunk: Scalar = Scalar.from_type(self.graph.adjacency_matrix.type)
-        thunk[0] = self.graph.rsa.nonterm_to_num['PointsTo'] << (self.graph.type_size - 2)
-        # return ResultAlgo(self.graph.adjacency_matrix.select(self.graph.nonterm_selector, thunk).pattern(), iter)
+        thunk[0] = self.graph.rsa.nonterm_to_num[start_nonterm] << (self.graph.type_size - 2)
         return ResultAlgo(self.graph.adjacency_matrix
                           .extract_matrix(slice(self.graph.base_graph_size), slice(self.graph.base_graph_size))
                           .select(self.graph.nonterm_selector, thunk)
