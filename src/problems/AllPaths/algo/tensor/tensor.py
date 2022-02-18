@@ -21,6 +21,13 @@ def restore_eps_paths(nonterminals: Iterable, graph: Graph):
             graph[label][i, i] = True
 
 
+# def transitive_closure(m: Matrix):
+#     prev = -1
+#     while prev != m.nvals:
+#         prev = m.nvals
+#         with BOOL.ANY_PAIR, Accum(BOOL.ANY):
+#             m @= m
+
 def transitive_closure(m: Matrix):
     prev = m.nvals
     degree = m
@@ -60,6 +67,7 @@ class TensorSimpleAlgo(AllPathsProblem):
 
             # update
             for nonterminal in self.grammar.nonterminals:
+                control_sum = self.graph[nonterminal].nvals
                 for element in self.grammar.states[nonterminal]:
                     i = element[0]
                     j = element[1]
@@ -67,15 +75,13 @@ class TensorSimpleAlgo(AllPathsProblem):
                     start_i = i * self.graph.matrices_size
                     start_j = j * self.graph.matrices_size
 
-                    control_sum = self.graph[nonterminal].nvals
-                    block = kron[start_i:start_i + self.graph.matrices_size - 1,
-                                 start_j:start_j + self.graph.matrices_size - 1]
+                    self.graph[nonterminal] += kron[start_i:start_i + self.graph.matrices_size - 1,
+                            start_j:start_j + self.graph.matrices_size - 1]
 
-                    self.graph[nonterminal] += block
-                    new_control_sum = self.graph[nonterminal].nvals
+                new_control_sum = self.graph[nonterminal].nvals
 
-                    if new_control_sum != control_sum:
-                        changed = True
+                if new_control_sum != control_sum:
+                    changed = True
 
             if self.grammar.nonterminals.isdisjoint(self.grammar.labels):
                 break
@@ -142,6 +148,7 @@ class TensorDynamicAlgo(AllPathsProblem):
             prev_kron = kron
 
             for nonterminal in self.grammar.nonterminals:
+                control_sum = self.graph[nonterminal].nvals
                 for element in self.grammar.states[nonterminal]:
                     i = element[0]
                     j = element[1]
@@ -149,8 +156,8 @@ class TensorDynamicAlgo(AllPathsProblem):
                     start_i = i * self.graph.matrices_size
                     start_j = j * self.graph.matrices_size
 
-                    control_sum = self.graph[nonterminal].nvals
-
+                    # block[nonterminal] += kron[start_i:start_i + self.graph.matrices_size - 1,
+                    #                       start_j:start_j + self.graph.matrices_size - 1]
                     if first_iter:
                         block[nonterminal] += kron[start_i:start_i + self.graph.matrices_size - 1,
                                                   start_j:start_j + self.graph.matrices_size - 1]
@@ -160,11 +167,11 @@ class TensorDynamicAlgo(AllPathsProblem):
                         part = new_edges - block[nonterminal]
                         block[nonterminal] += part.select('==', True)
 
-                    self.graph[nonterminal] += block[nonterminal]
-                    new_control_sum = self.graph[nonterminal].nvals
+                self.graph[nonterminal] += block[nonterminal]
+                new_control_sum = self.graph[nonterminal].nvals
 
-                    if new_control_sum != control_sum:
-                        changed = True
+                if new_control_sum != control_sum:
+                    changed = True
 
             first_iter = False
 
