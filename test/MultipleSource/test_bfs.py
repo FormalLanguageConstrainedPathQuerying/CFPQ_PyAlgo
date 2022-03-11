@@ -2,8 +2,8 @@ import pytest
 
 from src.graph.graph import Graph
 
-from src.problems.AllPaths.algo.matrix_bfs.intersection import Intersection
-from src.problems.AllPaths.algo.matrix_bfs.reg_automaton import RegAutomaton
+from src.problems.MultipleSource.algo.matrix_bfs.intersection import Intersection
+from src.problems.MultipleSource.algo.matrix_bfs.reg_automaton import RegAutomaton
 
 from src.utils.useful_paths import LOCAL_CFPQ_DATA
 
@@ -18,8 +18,8 @@ def test_case_regular_cycle():
     )
 
     intersection = Intersection(graph, grammar)
-    intersect_kron = intersection.intersect_kron()
     intersect_bfs = intersection.intersect_bfs()
+    intersect_kron = intersection.intersect_kron()
 
     assert intersect_bfs.accepts(["a", "a"])
     assert intersect_bfs.accepts(["a", "a", "a"])
@@ -40,8 +40,8 @@ def test_case_regular_disconnected():
     )
 
     intersection = Intersection(graph, grammar)
-    intersect_kron = intersection.intersect_kron()
     intersect_bfs = intersection.intersect_bfs()
+    intersect_kron = intersection.intersect_kron()
 
     assert intersect_bfs.accepts(["a", "b"])
     assert intersect_bfs.accepts(["b", "a"])
@@ -67,8 +67,8 @@ def test_case_regular_loop():
     )
 
     intersection = Intersection(graph, grammar)
-    intersect_kron = intersection.intersect_kron()
     intersect_bfs = intersection.intersect_bfs()
+    intersect_kron = intersection.intersect_kron()
 
     assert intersect_bfs.accepts(["a"])
     assert intersect_bfs.accepts(["a" for _ in range(10)])
@@ -90,8 +90,8 @@ def test_case_regular_midsymbol():
     )
 
     intersection = Intersection(graph, grammar)
-    intersect_kron = intersection.intersect_kron()
     intersect_bfs = intersection.intersect_bfs()
+    intersect_kron = intersection.intersect_kron()
 
     assert intersect_bfs.accepts(["b"])
     assert intersect_bfs.accepts(["a", "b", "c"])
@@ -114,8 +114,8 @@ def test_case_regular_two_cycles():
     )
 
     intersection = Intersection(graph, grammar)
-    intersect_kron = intersection.intersect_kron()
     intersect_bfs = intersection.intersect_bfs()
+    intersect_kron = intersection.intersect_kron()
 
     assert intersect_bfs.accepts(["a"])
     assert intersect_bfs.accepts(["a", "a"])

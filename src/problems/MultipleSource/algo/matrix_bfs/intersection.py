@@ -8,10 +8,10 @@ from pyformlang.finite_automaton.symbol import Symbol
 from pygraphblas.types import BOOL
 from pygraphblas.matrix import Matrix
 from pygraphblas.vector import Vector
-from pygraphblas import semiring
+from pygraphblas import semiring, descriptor
 
 from src.graph.graph import Graph
-from src.problems.AllPaths.algo.matrix_bfs.reg_automaton import RegAutomaton
+from src.problems.MultipleSource.algo.matrix_bfs.reg_automaton import RegAutomaton
 
 
 class Intersection:
@@ -123,52 +123,60 @@ class Intersection:
         regex_start_states = self.regular_automaton.start_states
 
         diag_matrices = self.create_diag_matrices()
+        graph_start_states = [0]  # should be an argument
 
-        found = Vector.sparse(BOOL, num_verts_diag)
-        vect = Vector.sparse(BOOL, num_verts_diag)
+        # initialize matrices for multiple source bfs
+        found = Matrix.sparse(BOOL, len(regex_start_states), num_verts_diag)
+        vect = Matrix.sparse(BOOL, len(regex_start_states), num_verts_diag)
 
-        # vectors of found nodes
-        # should be done with mask probably, not a queue
-        curr_front = list()
-        visited = Vector.sparse(BOOL, num_verts_inter)
+        # fill start states
+        for start_state in self.regular_automaton.start_states:
+            found[
+                start_state % len(regex_start_states),
+                start_state,
+            ] = True
+        for start_state in graph_start_states:
+            found[
+                len(regex_start_states) - 1 + start_state,
+                num_vert_regex + start_state,
+            ] = True
 
-        for regex_start_st in regex_start_states:
-            for gr_start_st in range(num_vert_regex, num_verts_diag):
-                vect[regex_start_st] = True
-                vect[gr_start_st] = True
+        # initialize matrix which stores front nodes found on each iteration for every symbol
+        iter_found = found.dup()
 
-                curr_front.append(vect)
+        not_empty = True
+        level = 0
 
-                while len(curr_front) > 0:
-                    vect = curr_front.pop(0)
+        while not_empty and level < num_verts_inter:
+            # for each symbol we are going to store if any new nodes were found during traversal
+            # if none are found, then 'not_empty' flag turns False, which means that no matrices change anymore
+            # and we can stop the traversal
+            not_empty_for_at_least_one_symbol = False
 
-                    for symbol in regex:
-                        if symbol in graph:
-                            with semiring.LOR_LAND_BOOL:
-                                found = vect.vxm(diag_matrices[symbol])
+            vect.assign_scalar(True, mask=iter_found)
 
-                            reg_vert, grph_vert = tuple(vect.I)
-                            prev_vert_index = self.to_inter_coord(
-                                grph_vert - num_vert_regex, reg_vert
-                            )
-                            next_vert_index = prev_vert_index
+            for symbol in regex:
+                if symbol in graph:
+                    with semiring.ANY_PAIR_BOOL:
+                        found = vect.mxm(
+                            diag_matrices[symbol], mask=vect, desc=descriptor.RC
+                        )
 
-                            visited[prev_vert_index] = True
+                    # append newly found nodes
+                    iter_found.assign_scalar(True, mask=found, desc=descriptor.S)
 
-                            if not found.iseq(vect) and len(list(found.I)) == 2:
-                                reg_vert, grph_vert = tuple(found.I)
+                    # the problem now is that I'm not sure how to store bfs' front edges
+                    # of intersection automata, since 'found' matrix doesn't store
+                    # information about which pair of nodes is in front at the moment
 
-                                next_vert_index = self.to_inter_coord(
-                                    grph_vert - num_vert_regex, reg_vert
-                                )
+                    # TODO: then here I should assign matrix elements to True
 
-                                if next_vert_index not in list(visited.I):
-                                    curr_front.append(found)
+                    # check if new nodes were found. if positive, switch the flag
+                    if found.reduce_bool():
+                        not_empty_for_at_least_one_symbol = True
 
-                                matrix = self.intersection_matrices[symbol]
-                                matrix[prev_vert_index, next_vert_index] = True
-
-                vect.clear()
+            not_empty = not_empty_for_at_least_one_symbol
+            level += 1
 
         return self.__to_automaton__()
 
