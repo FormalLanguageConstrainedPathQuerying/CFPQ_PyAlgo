@@ -38,6 +38,10 @@ class MatrixBaseAlgo(MatrixBaseSolver):
 
 class MatrixBaseAlgoCuBool(MatrixBaseSolver):
 
+    def __init__(self, path_to_graph: Path, path_to_grammar: Path):
+        super().__init__(path_to_graph, path_to_grammar)
+        self.graph.to_cubool()
+
     def solve(self):
         m = LabelGraph(self.graph.matrices_size)
         m.to_cubool()
