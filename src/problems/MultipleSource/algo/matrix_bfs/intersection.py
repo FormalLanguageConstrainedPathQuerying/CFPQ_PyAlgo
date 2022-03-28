@@ -1,4 +1,5 @@
 from itertools import product
+from os import access
 from typing import Dict
 
 from pyformlang.finite_automaton.state import State
@@ -9,6 +10,7 @@ from pygraphblas.types import BOOL
 from pygraphblas.matrix import Matrix
 from pygraphblas.vector import Vector
 from pygraphblas import semiring, descriptor
+from pygraphblas import Accum, binaryop
 
 from src.graph.graph import Graph
 from src.problems.MultipleSource.algo.matrix_bfs.reg_automaton import RegAutomaton
@@ -106,6 +108,16 @@ class Intersection:
 
         return diag_matrices
 
+    def create_masks_matrix(self) -> Matrix:
+        num_vert_graph = self.graph.get_number_of_vertices()
+        num_vert_regex = self.regular_automaton.num_states
+        num_verts_diag = num_vert_graph + num_vert_regex
+
+        mask_matrix = Matrix.identity(BOOL, num_vert_regex, value=True)
+        mask_matrix.resize(num_vert_regex, num_verts_diag)
+
+        return mask_matrix
+
     def intersect_bfs(self) -> EpsilonNFA:
         """
         Intersection implementation with synchronous breadth first traversal
@@ -126,26 +138,23 @@ class Intersection:
         graph_start_states = [0]  # should be an argument
 
         # initialize matrices for multiple source bfs
-        found = Matrix.sparse(BOOL, len(regex_start_states), num_verts_diag)
-        vect = Matrix.sparse(BOOL, len(regex_start_states), num_verts_diag)
+        ident = self.create_masks_matrix()
+        vect = ident.dup()
+        found = ident.dup()
 
         # fill start states
-        for start_state in self.regular_automaton.start_states:
-            found[
-                start_state % len(regex_start_states),
-                start_state,
-            ] = True
-        for start_state in graph_start_states:
-            found[
-                len(regex_start_states) - 1 + start_state,
-                num_vert_regex + start_state,
-            ] = True
-
-        # initialize matrix which stores front nodes found on each iteration for every symbol
-        iter_found = found.dup()
+        for reg_start_state in regex_start_states:
+            for gr_start_state in graph_start_states:
+                found[
+                    reg_start_state,
+                    num_vert_regex + gr_start_state,
+                ] = True
 
         not_empty = True
         level = 0
+
+        # matrix which contains newly found nodes on each iteration
+        found_on_iter = found.dup()
 
         while not_empty and level < num_verts_inter:
             # for each symbol we are going to store if any new nodes were found during traversal
@@ -153,26 +162,26 @@ class Intersection:
             # and we can stop the traversal
             not_empty_for_at_least_one_symbol = False
 
-            vect.assign_scalar(True, mask=iter_found)
+            vect.assign_matrix(found_on_iter, mask=vect, desc=descriptor.RC)
+            vect.assign_scalar(True, mask=ident)
+
+            found_on_iter.assign_matrix(ident)
 
             for symbol in regex:
                 if symbol in graph:
                     with semiring.ANY_PAIR_BOOL:
-                        found = vect.mxm(
-                            diag_matrices[symbol], mask=vect, desc=descriptor.RC
-                        )
+                        found = vect.mxm(diag_matrices[symbol])
 
-                    # append newly found nodes
-                    iter_found.assign_scalar(True, mask=found, desc=descriptor.S)
+                    with semiring.ANY_PAIR_BOOL, Accum(binaryop.MAX_BOOL):
+                        for i in range(num_vert_regex):
+                            for j in range(num_vert_regex):
+                                if found.get(i, j) == True:
+                                    found_on_iter.assign_row(j, found.extract_row(i))
 
-                    # the problem now is that I'm not sure how to store bfs' front edges
-                    # of intersection automata, since 'found' matrix doesn't store
-                    # information about which pair of nodes is in front at the moment
-
-                    # TODO: then here I should assign matrix elements to True
+                    # TODO: assign reachability matrix here
 
                     # check if new nodes were found. if positive, switch the flag
-                    if found.reduce_bool():
+                    if not found_on_iter.iseq(ident):
                         not_empty_for_at_least_one_symbol = True
 
             not_empty = not_empty_for_at_least_one_symbol
