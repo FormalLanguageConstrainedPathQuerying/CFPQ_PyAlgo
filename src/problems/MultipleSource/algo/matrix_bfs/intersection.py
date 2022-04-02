@@ -7,6 +7,7 @@ from pyformlang.finite_automaton.symbol import Symbol
 
 from pygraphblas.types import BOOL
 from pygraphblas.matrix import Matrix
+from pygraphblas.vector import Vector
 from pygraphblas import descriptor
 from pygraphblas import Accum, binaryop
 
@@ -134,6 +135,11 @@ class Intersection:
 
         diag_matrices = self.create_diag_matrices()
 
+        result = Matrix.sparse(BOOL, num_vert_graph, num_vert_graph)
+
+        # create a mask of source vertices vector
+        m_src_v = Vector.from_lists(src_verts, [True for _ in range(len(src_verts))], size=num_vert_graph)
+
         # initialize matrices for multiple source bfs
         ident = self.create_masks_matrix()
         vect = ident.dup()
@@ -173,34 +179,22 @@ class Intersection:
                         for i in range(len(i_y)):
                             found_on_iter.assign_row(i_y[i], found.extract_row(i_x[i]))
 
-                        # extract right (graph) part of the masks matrix and get a row of reachable nodes in a graph
-                        reachable = found.extract_matrix(
-                            col_index=slice(num_vert_regex, num_verts_diag - 1)
-                        ).T.reduce_vector(BOOL.ANY_MONOID) # reduce by columns
-
-                        # update graph boolean matrix for every source vertex
-                        for st_v in src_verts:
-                            graph[symbol].assign_row(st_v, reachable)
-
                     # check if new nodes were found. if positive, switch the flag
                     if not found_on_iter.iseq(vect):
                         not_empty_for_at_least_one_symbol = True
 
+            # extract right (graph) part of the masks matrix and get a row of reachable nodes in a graph
+            reachable = found_on_iter.extract_matrix(
+                col_index=slice(num_vert_regex, num_verts_diag - 1)
+            ).T.reduce_vector(BOOL.ANY_MONOID) # reduce by columns
+
+            # update graph boolean matrix for every source vertex
+            # result matrix contains reachability for every symbol combined
+            with Accum(binaryop.MAX_BOOL):
+                for st_v in src_verts:
+                    result.assign_row(st_v, reachable, mask=m_src_v, desc=descriptor.C)
+
             not_empty = not_empty_for_at_least_one_symbol
             level += 1
 
-        return graph
-
-    # For testing purposes
-    def intersect_kron(self) -> EpsilonNFA:
-        """
-        Intersection implementation with kronecker product
-        """
-        regex = self.regular_automaton.matrices
-        graph = self.graph
-
-        for symbol in regex:
-            if symbol in graph:
-                self.intersection_matrices[symbol] = regex[symbol].kronecker(graph[symbol])
-
-        return self.__to_automaton__()
+        return result

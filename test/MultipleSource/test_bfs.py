@@ -18,16 +18,11 @@ def test_case_regular_cycle():
     )
 
     intersection = Intersection(graph, grammar)
-    intersect_bfs = intersection.intersect_bfs()
-    intersect_kron = intersection.intersect_kron()
+    
+    source_verts = [0]
+    result = intersection.intersect_bfs(source_verts)
 
-    assert intersect_bfs.accepts(["a", "a"])
-    assert intersect_bfs.accepts(["a", "a", "a"])
-
-    assert not intersect_bfs.accepts(["a", "b"])
-    assert not intersect_bfs.accepts(["b"])
-
-    assert intersect_kron.is_equivalent_to(intersect_bfs)
+    assert result.nvals == 2 * len(source_verts)
 
 
 @pytest.mark.CI
@@ -40,21 +35,11 @@ def test_case_regular_disconnected():
     )
 
     intersection = Intersection(graph, grammar)
-    intersect_bfs = intersection.intersect_bfs()
-    intersect_kron = intersection.intersect_kron()
+    
+    source_verts = [0, 3]
+    result = intersection.intersect_bfs(source_verts)
 
-    assert intersect_bfs.accepts(["a", "b"])
-    assert intersect_bfs.accepts(["b", "a"])
-    assert intersect_bfs.accepts(["a", "a", "b"])
-    assert intersect_bfs.accepts(["a", "b", "a"])
-    assert intersect_bfs.accepts(["b", "a", "b"])
-
-    assert not intersect_bfs.accepts(["a"])
-    assert not intersect_bfs.accepts(["c"])
-    assert not intersect_bfs.accepts(["c", "b"])
-    assert not intersect_bfs.accepts(["c", "a"])
-
-    assert intersect_kron.is_equivalent_to(intersect_bfs)
+    assert result.nvals == 2 * len(source_verts)
 
 
 @pytest.mark.CI
@@ -67,17 +52,11 @@ def test_case_regular_loop():
     )
 
     intersection = Intersection(graph, grammar)
-    intersect_bfs = intersection.intersect_bfs()
-    intersect_kron = intersection.intersect_kron()
+    
+    source_verts = [0, 2]
+    result = intersection.intersect_bfs(source_verts)
 
-    assert intersect_bfs.accepts(["a"])
-    assert intersect_bfs.accepts(["a" for _ in range(10)])
-
-    assert not intersect_bfs.accepts(["b"])
-    assert not intersect_bfs.accepts(["c"])
-    assert not intersect_bfs.accepts(["epsilon"])
-
-    assert intersect_kron.is_equivalent_to(intersect_bfs)
+    assert result.nvals == 0 * len(source_verts)
 
 
 @pytest.mark.CI
@@ -90,18 +69,11 @@ def test_case_regular_midsymbol():
     )
 
     intersection = Intersection(graph, grammar)
-    intersect_bfs = intersection.intersect_bfs()
-    intersect_kron = intersection.intersect_kron()
+    
+    source_verts = [0]
+    result = intersection.intersect_bfs(source_verts)
 
-    assert intersect_bfs.accepts(["b"])
-    assert intersect_bfs.accepts(["a", "b", "c"])
-    assert intersect_bfs.accepts(["a", "a", "b", "c", "c"])
-
-    assert not intersect_bfs.accepts(["a"])
-    assert not intersect_bfs.accepts(["c"])
-    assert not intersect_bfs.accepts(["b", "b"])
-
-    assert intersect_kron.is_equivalent_to(intersect_bfs)
+    assert result.nvals == 1 * len(source_verts)
 
 
 @pytest.mark.CI
@@ -114,13 +86,8 @@ def test_case_regular_two_cycles():
     )
 
     intersection = Intersection(graph, grammar)
-    intersect_bfs = intersection.intersect_bfs()
-    intersect_kron = intersection.intersect_kron()
+    
+    source_verts = [0, 3]
+    result = intersection.intersect_bfs(source_verts)
 
-    assert intersect_bfs.accepts(["a"])
-    assert intersect_bfs.accepts(["a", "a"])
-
-    assert not intersect_bfs.accepts(["b"])
-    assert not intersect_bfs.accepts(["c"])
-
-    assert intersect_kron.is_equivalent_to(intersect_bfs)
+    assert result.nvals == 2 * len(source_verts)
