@@ -1,5 +1,4 @@
 from itertools import product
-from os import access
 from typing import Dict
 
 from pyformlang.finite_automaton.state import State
@@ -8,8 +7,7 @@ from pyformlang.finite_automaton.symbol import Symbol
 
 from pygraphblas.types import BOOL
 from pygraphblas.matrix import Matrix
-from pygraphblas.vector import Vector
-from pygraphblas import semiring, descriptor
+from pygraphblas import descriptor
 from pygraphblas import Accum, binaryop
 
 from src.graph.graph import Graph
@@ -118,7 +116,7 @@ class Intersection:
 
         return mask_matrix
 
-    def intersect_bfs(self) -> EpsilonNFA:
+    def intersect_bfs(self, src_verts) -> EpsilonNFA:
         """
         Intersection implementation with synchronous breadth first traversal
         of a graph and regular grammar represented in automata
@@ -135,7 +133,6 @@ class Intersection:
         regex_start_states = self.regular_automaton.start_states
 
         diag_matrices = self.create_diag_matrices()
-        graph_start_states = [0]  # should be an argument
 
         # initialize matrices for multiple source bfs
         ident = self.create_masks_matrix()
@@ -144,20 +141,17 @@ class Intersection:
 
         # fill start states
         for reg_start_state in regex_start_states:
-            for gr_start_state in graph_start_states:
-                found[
-                    reg_start_state,
-                    num_vert_regex + gr_start_state,
-                ] = True
-
-        not_empty = True
-        level = 0
+            for gr_start_state in src_verts:
+                found[reg_start_state, num_vert_regex + gr_start_state] = True
 
         # matrix which contains newly found nodes on each iteration
         found_on_iter = found.dup()
 
+        # Algo's body
+        not_empty = True
+        level = 0
         while not_empty and level < num_verts_inter:
-            # for each symbol we are going to store if any new nodes were found during traversal
+            # for each symbol we are going to store if any new nodes were found during traversal.
             # if none are found, then 'not_empty' flag turns False, which means that no matrices change anymore
             # and we can stop the traversal
             not_empty_for_at_least_one_symbol = False
@@ -165,29 +159,37 @@ class Intersection:
             vect.assign_matrix(found_on_iter, mask=vect, desc=descriptor.RC)
             vect.assign_scalar(True, mask=ident)
 
+            # stores found nodes for each symbol
             found_on_iter.assign_matrix(ident)
 
             for symbol in regex:
                 if symbol in graph:
-                    with semiring.ANY_PAIR_BOOL:
+                    with BOOL.ANY_PAIR:
                         found = vect.mxm(diag_matrices[symbol])
 
-                    with semiring.ANY_PAIR_BOOL, Accum(binaryop.MAX_BOOL):
-                        for i in range(num_vert_regex):
-                            for j in range(num_vert_regex):
-                                if found.get(i, j) == True:
-                                    found_on_iter.assign_row(j, found.extract_row(i))
+                    with Accum(binaryop.MAX_BOOL):
+                        # extract left (grammar) part of the masks matrix and rearrange rows
+                        i_x, i_y, _ = found.extract_matrix(col_index=slice(0, num_vert_regex - 1)).to_lists()
+                        for i in range(len(i_y)):
+                            found_on_iter.assign_row(i_y[i], found.extract_row(i_x[i]))
 
-                    # TODO: assign reachability matrix here
+                        # extract right (graph) part of the masks matrix and get a row of reachable nodes in a graph
+                        reachable = found.extract_matrix(
+                            col_index=slice(num_vert_regex, num_verts_diag - 1)
+                        ).T.reduce_vector(BOOL.ANY_MONOID) # reduce by columns
+
+                        # update graph boolean matrix for every source vertex
+                        for st_v in src_verts:
+                            graph[symbol].assign_row(st_v, reachable)
 
                     # check if new nodes were found. if positive, switch the flag
-                    if not found_on_iter.iseq(ident):
+                    if not found_on_iter.iseq(vect):
                         not_empty_for_at_least_one_symbol = True
 
             not_empty = not_empty_for_at_least_one_symbol
             level += 1
 
-        return self.__to_automaton__()
+        return graph
 
     # For testing purposes
     def intersect_kron(self) -> EpsilonNFA:
@@ -199,8 +201,6 @@ class Intersection:
 
         for symbol in regex:
             if symbol in graph:
-                self.intersection_matrices[symbol] = regex[symbol].kronecker(
-                    graph[symbol]
-                )
+                self.intersection_matrices[symbol] = regex[symbol].kronecker(graph[symbol])
 
         return self.__to_automaton__()
