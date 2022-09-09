@@ -77,6 +77,52 @@ class TensorAlgoSimple(TensorSolver):
         return self.graph
 
 
+class TensorAlgoSimpleCuBool(TensorSolver):
+    def __init__(self, path_to_graph: Path, path_to_grammar: Path):
+        super().__init__(path_to_graph, path_to_grammar)
+        self.graph.to_cubool()
+        self.grammar.to_cubool()
+
+    def solve(self):
+        for label in self.grammar.start_and_finish():
+            for i in range(self.graph.matrices_size):
+                self.graph[label][i, i] = True
+        size_kron = self.graph.matrices_size * self.grammar.matrices_size()
+        kron = pycubool.Matrix.empty([size_kron, size_kron])
+        changed = True
+        while changed:
+            changed = False
+            # calculate kronecker
+            for label in self.grammar.labels():
+                kron = kron.ewiseadd(self.grammar.automaton()[label].kronecker(self.graph[label]))
+            # transitive closure
+            prev = kron.nvals
+            transitive_changed = True
+            while transitive_changed:
+                transitive_changed = False
+                kron.mxm(kron, out=kron, accumulate=True)
+                cur = kron.nvals
+                if prev != cur:
+                    prev = cur
+                    transitive_changed = True
+            # update
+            for start in self.grammar.S():
+                for element in self.grammar.states()[start]:
+                    i = element[0]
+                    j = element[1]
+                    start_i = i * self.graph.matrices_size
+                    start_j = j * self.graph.matrices_size
+                    control_sum = self.graph[start].nvals
+                    block = kron.extract_matrix(start_i, start_j, [self.graph.matrices_size, self.graph.matrices_size])
+                    self.graph[start] = self.graph[start].ewiseadd(block)
+                    new_control_sum = self.graph[start].nvals
+                    if new_control_sum != control_sum:
+                        changed = True
+            if self.grammar.S().isdisjoint(self.grammar.labels()):
+                break
+        return self.graph
+
+
 class TensorAlgoDynamic(TensorSolver):
 
     def solve(self):
