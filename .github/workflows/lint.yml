@@ -29,18 +29,18 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Set up Git repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Setup Python with version from matrix
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
       # Install pre-commit
       - name: Install pre-commit
         run: |
-          python -m pip install pre-commit==2.15.0
+          python -m pip install pre-commit==2.20.0
           pre-commit install
 
       # Run pre-commit on all the files in the repo
