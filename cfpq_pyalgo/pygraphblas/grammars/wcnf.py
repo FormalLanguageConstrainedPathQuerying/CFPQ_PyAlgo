@@ -79,7 +79,7 @@ class WCNF:
         return self._cfg.contains(word)
 
     @classmethod
-    def from_text(cls, text: str, start_variable: Variable = Variable("S")):
+    def from_text(cls, text: str, start_variable: Variable = Variable("S")) -> "WCNF":
         cfg = CFG.from_text(text, start_variable)
         return cls(cfg)
 
