@@ -40,7 +40,7 @@ class BooleanMatrixGraph:
         return self._matrices_size
 
     def add_edge(self, u: int, v: int, label: str):
-        """Add an edge between `u` and `v` with label `label.
+        """Add an edge between `u` and `v` with label `label`.
 
         The nodes u and v will be automatically added if they are
         not already in the graph.
