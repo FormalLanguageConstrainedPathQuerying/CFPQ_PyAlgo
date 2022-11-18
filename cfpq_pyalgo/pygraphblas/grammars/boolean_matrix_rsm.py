@@ -167,15 +167,15 @@ class BooleanMatrixRsm:
             for label in box_symbols:
                 if label not in transition_by_label:
                     transition_by_label.update({label: []})
-            dfa_dict = box.dfa.to_dict()
             # Map pyformlang states to numbers 0..states_count
             # and transitions between that states
             mapping_state: Dict[State, int] = dict()
-            for state in dfa_dict:
+            for state in box.dfa.states:
                 if state not in mapping_state:
                     mapping_state[state] = current_state
                     current_state += 1
-                for transition in dfa_dict[state]:
+                dfa_dict: Dict[State, Dict[Symbol, State]] = box.dfa.to_dict()
+                for transition in dfa_dict.get(state, dict()):
                     if dfa_dict[state][transition] not in mapping_state:
                         mapping_state[dfa_dict[state][transition]] = current_state
                         current_state += 1
