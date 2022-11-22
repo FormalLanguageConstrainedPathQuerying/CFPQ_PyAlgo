@@ -1,17 +1,17 @@
-"""Base class for a Labeled Graph decomposed into Boolean Matrices"""
-from typing import Dict, Any, List, Tuple
+"""Base class for a Labeled Graph decomposed into Boolean Matrices."""
+from typing import Dict, Hashable, List, Tuple
 
 import networkx as nx
 from pygraphblas import Matrix, BOOL
 
 __all__ = [
-    "BooleanMatrixGraph",
-    "bmg_from_nx_graph",
+    "GraphBooleanDecomposition",
+    "gbd_from_nx_graph",
 ]
 
 
-class BooleanMatrixGraph:
-    """A Labeled Graph decomposed into Boolean Matrices class"""
+class GraphBooleanDecomposition:
+    """A Labeled Graph decomposed into Boolean Matrices class."""
 
     def __init__(self, number_of_nodes: int = 0):
         self._matrices: Dict[str, Matrix] = dict()
@@ -30,7 +30,7 @@ class BooleanMatrixGraph:
 
     @property
     def matrices_size(self) -> int:
-        """The number of vertices in the graph
+        """The number of vertices in the graph.
 
         Returns
         -------
@@ -69,8 +69,10 @@ class BooleanMatrixGraph:
         self._matrices[label][u, v] = True
 
 
-def bmg_from_nx_graph(graph: nx.MultiDiGraph) -> Tuple[BooleanMatrixGraph, List[Any]]:
-    """Create a BooleanMatrixGraph from NetworkX MultiDiGraph
+def gbd_from_nx_graph(
+    graph: nx.MultiDiGraph,
+) -> Tuple[GraphBooleanDecomposition, List[Hashable]]:
+    """Create a GraphBooleanDecomposition from NetworkX MultiDiGraph.
 
     Parameters
     ----------
@@ -79,15 +81,15 @@ def bmg_from_nx_graph(graph: nx.MultiDiGraph) -> Tuple[BooleanMatrixGraph, List[
 
     Returns
     -------
-    (nodes_mapping, g): Tuple[List[Any], BooleanMatrixGraph]
-        `g` - BooleanMatrixGraph constructed according to `graph`
+    (nodes_mapping, g): Tuple[List[Hashable], GraphBooleanDecomposition]
+        `g` - GraphBooleanDecomposition constructed according to `graph`
         `nodes_mapping` - mapping a number to a `graph` node
 
     Notes
     -----
     Each edge of the `graph` is expected to have a "label" attribute
     """
-    g = BooleanMatrixGraph(graph.number_of_nodes())
+    g = GraphBooleanDecomposition(graph.number_of_nodes())
 
     nodes_dict = dict()
     nodes_list = []

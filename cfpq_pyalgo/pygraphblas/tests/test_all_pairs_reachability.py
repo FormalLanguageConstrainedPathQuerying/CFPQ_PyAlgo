@@ -24,7 +24,7 @@ def test_empty_graph(param_algo):
 
     reachable_vertices = param_algo(g, cfg)
 
-    assert reachable_vertices == []
+    assert reachable_vertices == set()
 
 
 def test_no_reachable_vertices(param_algo):
@@ -37,7 +37,7 @@ def test_no_reachable_vertices(param_algo):
 
     reachable_vertices = param_algo(g, cfg)
 
-    assert reachable_vertices == []
+    assert reachable_vertices == set()
 
 
 def test_worst_case(param_algo):
@@ -55,7 +55,7 @@ def test_worst_case(param_algo):
 
     reachable_vertices = param_algo(g, cfg)
 
-    assert set(reachable_vertices) == {(0, 0), (1, 0), (0, 3), (1, 3), (2, 0), (2, 3)}
+    assert reachable_vertices == {(0, 0), (1, 0), (0, 3), (1, 3), (2, 0), (2, 3)}
 
 
 def test_worst_case_with_graph_vertices_numbering(param_algo):
@@ -73,7 +73,7 @@ def test_worst_case_with_graph_vertices_numbering(param_algo):
 
     reachable_vertices = param_algo(g, cfg)
 
-    assert set(reachable_vertices) == {
+    assert reachable_vertices == {
         (-1, -1),
         (7, -1),
         (-1, "A"),
@@ -96,7 +96,7 @@ def test_full_graph_result(param_algo):
 
     reachable_vertices = param_algo(g, cfg)
 
-    assert set(reachable_vertices) == {
+    assert reachable_vertices == {
         (v, to) for v in range(g.number_of_nodes()) for to in range(g.number_of_nodes())
     }
 

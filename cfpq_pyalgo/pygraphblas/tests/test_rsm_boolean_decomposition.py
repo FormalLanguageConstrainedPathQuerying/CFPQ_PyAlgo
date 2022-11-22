@@ -5,7 +5,7 @@ import cfpq_pyalgo.pygraphblas as algo
 
 def test_empty():
     rsa = RecursiveAutomaton.from_text("S -> epsilon")
-    rsm = algo.BooleanMatrixRsm.from_rsa(rsa)
+    rsm = algo.RSMBooleanDecomposition.from_rsa(rsa)
 
     assert rsm.nonterminals == {"S"}
     assert rsm.get_start_state("S") == 0
@@ -15,7 +15,7 @@ def test_empty():
 
 def test_a():
     rsa = RecursiveAutomaton.from_text("S -> a")
-    rsm = algo.BooleanMatrixRsm.from_rsa(rsa)
+    rsm = algo.RSMBooleanDecomposition.from_rsa(rsa)
 
     assert rsm.nonterminals == {"S"}
     assert rsm.labels == {"a"}
@@ -30,7 +30,7 @@ def test_a():
 
 def test_ab():
     rsa = RecursiveAutomaton.from_text("S -> a b")
-    rsm = algo.BooleanMatrixRsm.from_rsa(rsa)
+    rsm = algo.RSMBooleanDecomposition.from_rsa(rsa)
 
     assert rsm.nonterminals == {"S"}
     assert rsm.labels == {"a", "b"}
@@ -51,7 +51,7 @@ def test_AB():
     rsa = RecursiveAutomaton.from_text(
         "S -> A B | epsilon\nA -> a | epsilon\nB -> b | epsilon"
     )
-    rsm = algo.BooleanMatrixRsm.from_rsa(rsa)
+    rsm = algo.RSMBooleanDecomposition.from_rsa(rsa)
 
     assert rsm.nonterminals == {"S", "A", "B"}
     assert rsm.labels == {"a", "b", "A", "B"}
@@ -90,7 +90,7 @@ def test_AB():
 
 def test_SSaa():
     rsa = RecursiveAutomaton.from_text("S -> S a | a")
-    rsm = algo.BooleanMatrixRsm.from_rsa(rsa)
+    rsm = algo.RSMBooleanDecomposition.from_rsa(rsa)
 
     assert rsm.nonterminals == {"S"}
     assert rsm.labels == {"S", "a"}

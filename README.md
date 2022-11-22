@@ -53,7 +53,7 @@ grammar = CFG.from_text(
 pairs = algo.matrix_all_pairs_reachability(graph, grammar)  # [(35, 35)]
 ```
 
-### BooleanMatrixGraph
+### GraphBooleanDecomposition
 
 ```python
 import cfpq_data
@@ -63,7 +63,7 @@ import cfpq_pyalgo.pygraphblas as algo
 skos_path = cfpq_data.download("skos")
 skos = cfpq_data.graph_from_csv(skos_path)
 
-bmg = algo.bmg_from_nx_graph(skos)
+bmg = algo.gbd_from_nx_graph(skos)
 
 ```
 
@@ -77,14 +77,14 @@ grammar = algo.WCNF.from_text(
 )
 ```
 
-### BooleanMatrixRsm
+### RSMBooleanDecomposition
 
 ```python
 from pyformlang.rsa import RecursiveAutomaton as RSA
 
 import cfpq_pyalgo.pygraphblas as algo
 
-rsm = algo.BooleanMatrixRsm.from_rsa(RSA.from_text(
+rsm = algo.RSMBooleanDecomposition.from_rsa(RSA.from_text(
     "S -> subClassOf_r S subClassOf | subClassOf_r subClassOf"
 ))
 ```

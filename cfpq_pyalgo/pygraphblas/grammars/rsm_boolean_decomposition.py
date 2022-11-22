@@ -1,20 +1,20 @@
-"""Base class for Recursive State Machine decomposed into Boolean Matrices"""
+"""Base class for Recursive State Machine decomposed into Boolean Matrices."""
 
 from typing import Dict, List, Set, Tuple
 
 from pyformlang.finite_automaton import State, Symbol
-from pyformlang.rsa import Box, RecursiveAutomaton
+from pyformlang.rsa import RecursiveAutomaton
 from pygraphblas import Matrix
 
-from cfpq_pyalgo.pygraphblas import BooleanMatrixGraph
+from cfpq_pyalgo.pygraphblas import GraphBooleanDecomposition
 
 
-class BooleanMatrixRsm:
-    """A Recursive State Machine decomposed into Boolean Matrices class"""
+class RSMBooleanDecomposition:
+    """A Recursive State Machine decomposed into Boolean Matrices class."""
 
     def __init__(
         self,
-        transitions: BooleanMatrixGraph,
+        transitions: GraphBooleanDecomposition,
         labels: Set[str],
         nonterminals: Set[str],
         start_states: Dict[str, int],
@@ -22,7 +22,7 @@ class BooleanMatrixRsm:
     ):
         self._labels: Set[str] = labels
         self._nonterminals: Set[str] = nonterminals
-        self._transitions: BooleanMatrixGraph = transitions
+        self._transitions: GraphBooleanDecomposition = transitions
         self._start_states: Dict[str, int] = start_states
         self._final_states: Dict[str, List[int]] = final_states
 
@@ -37,7 +37,7 @@ class BooleanMatrixRsm:
 
     @property
     def matrices_size(self) -> int:
-        """The number of states in RSM
+        """The number of states in RSM.
 
         Returns
         -------
@@ -48,16 +48,16 @@ class BooleanMatrixRsm:
 
     @property
     def labels(self) -> Set[str]:
-        """All RSM labels"""
+        """All RSM labels."""
         return self._labels
 
     @property
     def nonterminals(self) -> Set[str]:
-        """Labels of boxes"""
+        """Labels of boxes."""
         return self._nonterminals
 
     def add_edge(self, u: int, v: int, label: str) -> None:
-        """Add an edge between `u` and `v` states with label `label.
+        """Add an edge between `u` and `v` states with label `label`.
 
         The states `u` and `v` will be automatically added if they are
         not already in the RSM.
@@ -76,7 +76,7 @@ class BooleanMatrixRsm:
         self._transitions.add_edge(u, v, label)
 
     def get_start_state(self, label: str) -> int:
-        """Get start vertex for RSM box with label `label`
+        """Get start vertex for RSM box with label `label`.
 
         Parameters
         ----------
@@ -93,7 +93,7 @@ class BooleanMatrixRsm:
         return self._start_states[label]
 
     def set_start_vertex(self, label: str, v: int) -> None:
-        """Set start vertex `v` for RSM box with label `label`
+        """Set start vertex `v` for RSM box with label `label`.
 
         Parameters
         ----------
@@ -106,7 +106,7 @@ class BooleanMatrixRsm:
         self._start_states[label] = v
 
     def get_final_states(self, label: str) -> List[int]:
-        """Get list of final vertices for RSM box with label `label`
+        """Get list of final vertices for RSM box with label `label`.
 
         Parameters
         ----------
@@ -123,7 +123,7 @@ class BooleanMatrixRsm:
         return self._final_states[label]
 
     def add_final_vertex(self, label: str, v: int):
-        """Add final vertex `v` for RSM box with label `label`
+        """Add final vertex `v` for RSM box with label `label`.
 
         Parameters
         ----------
@@ -138,8 +138,8 @@ class BooleanMatrixRsm:
         self._final_states[label].append(v)
 
     @classmethod
-    def from_rsa(cls, rsa: RecursiveAutomaton) -> "BooleanMatrixRsm":
-        """Create a BooleanMatrixRsa from RecursiveAutomaton `rsa`
+    def from_rsa(cls, rsa: RecursiveAutomaton) -> "RSMBooleanDecomposition":
+        """Create a BooleanMatrixRsa from RecursiveAutomaton `rsa`.
 
         Parameters
         ----------
@@ -148,8 +148,8 @@ class BooleanMatrixRsm:
 
         Returns
         -------
-        boolean_matrix_rsa: BooleanMatrixRsm
-            BooleanMatrixRsa constructed according to rsa
+        boolean_matrix_rsa: RSMBooleanDecomposition
+            RSMBooleanDecomposition constructed according to rsa
         """
         nonterminals: Set[str] = set()
         labels: Set[str] = set()
@@ -191,7 +191,9 @@ class BooleanMatrixRsm:
             for final_state in box.final_states:
                 final_states[nonterminal_str].append(mapping_state[final_state])
         # Fill rsm transitions
-        rsm_transitions: BooleanMatrixGraph = BooleanMatrixGraph(current_state)
+        rsm_transitions: GraphBooleanDecomposition = GraphBooleanDecomposition(
+            current_state
+        )
         for label in transition_by_label:
             for transition in transition_by_label[label]:
                 rsm_transitions.add_edge(transition[0], transition[1], label)
