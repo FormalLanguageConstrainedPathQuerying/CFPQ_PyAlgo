@@ -1,5 +1,5 @@
 """Function that solves the All-Pairs CFL-reachability problem
-using boolean matrix multiplication."""
+using Boolean matrix multiplication."""
 from collections import defaultdict
 from typing import Set, Tuple, Hashable
 

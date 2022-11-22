@@ -148,7 +148,7 @@ class RSMBooleanDecomposition:
 
         Returns
         -------
-        boolean_matrix_rsa: RSMBooleanDecomposition
+        rsm_boolean_decomposition: RSMBooleanDecomposition
             RSMBooleanDecomposition constructed according to rsa
         """
         nonterminals: Set[str] = set()
