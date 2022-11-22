@@ -1,1 +1,1 @@
-from cfpq_pyalgo.pygraphblas.graphs.boolean_matrix_graph import *
+from cfpq_pyalgo.pygraphblas.graphs.graph_boolean_decomposition import *

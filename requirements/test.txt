@@ -1,2 +1,2 @@
-cfpq-data==4.0.0
+cfpq-data==4.0.1
 pytest==6.2.5

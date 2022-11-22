@@ -8,7 +8,7 @@ import cfpq_pyalgo.pygraphblas as algo
 def test_empty():
     g = nx.MultiDiGraph()
 
-    bmg, _ = algo.bmg_from_nx_graph(g)
+    bmg, _ = algo.gbd_from_nx_graph(g)
 
     assert bmg._matrices_size == 0
     assert bmg._matrices == dict()
@@ -18,7 +18,7 @@ def test_one_edge():
     g = nx.MultiDiGraph()
     g.add_edge(0, 1, label="label")
 
-    bmg, _ = algo.bmg_from_nx_graph(g)
+    bmg, _ = algo.gbd_from_nx_graph(g)
 
     assert bmg._matrices_size == 2
     assert bmg._matrices == {
@@ -38,7 +38,7 @@ def test_two_edges():
     g.add_edge(0, 1, label="A")
     g.add_edge(1, 2, label="B")
 
-    bmg, _ = algo.bmg_from_nx_graph(g)
+    bmg, _ = algo.gbd_from_nx_graph(g)
 
     assert bmg._matrices_size == 3
     assert bmg._matrices == {
@@ -67,7 +67,7 @@ def test_vertices_numbering():
     g.add_edge(1, 9, label="B")
     g.add_edge(9, 5, label="A")
 
-    bmg, _ = algo.bmg_from_nx_graph(g)
+    bmg, _ = algo.gbd_from_nx_graph(g)
 
     assert bmg._matrices_size == 3
     assert bmg._matrices == {
@@ -96,7 +96,7 @@ def test_vertices_numbers_conversion():
     g.add_edge(1, 9, label="B")
     g.add_edge(9, 5, label="A")
 
-    bmg, nodes_mapping = algo.bmg_from_nx_graph(g)
+    bmg, nodes_mapping = algo.gbd_from_nx_graph(g)
 
     assert set(nodes_mapping) == {1, 5, 9}
 
@@ -104,7 +104,7 @@ def test_vertices_numbers_conversion():
 def test_key_error():
     g = nx.MultiDiGraph()
 
-    bmg, _ = algo.bmg_from_nx_graph(g)
+    bmg, _ = algo.gbd_from_nx_graph(g)
 
     with pytest.raises(KeyError):
         print(bmg["KeyError"])

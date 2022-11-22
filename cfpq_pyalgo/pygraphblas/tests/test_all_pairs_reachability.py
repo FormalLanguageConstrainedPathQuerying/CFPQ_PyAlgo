@@ -6,16 +6,28 @@ from pyformlang.cfg import CFG
 import cfpq_pyalgo.pygraphblas as algo
 
 
-def test_empty_graph():
+@pytest.fixture(
+    scope="function",
+    params=[
+        algo.matrix_all_pairs_reachability,
+        algo.tensor_all_pairs_reachability,
+    ],
+    ids=lambda a: a.__name__,
+)
+def param_algo(request):
+    return request.param
+
+
+def test_empty_graph(param_algo):
     g = nx.MultiDiGraph()
     cfg = CFG.from_text("S -> a")
 
-    reachable_vertices = algo.matrix_all_pairs_reachability(g, cfg)
+    reachable_vertices = param_algo(g, cfg)
 
-    assert reachable_vertices == []
+    assert reachable_vertices == set()
 
 
-def test_no_reachable_vertices():
+def test_no_reachable_vertices(param_algo):
     g = nx.MultiDiGraph()
     g.add_edge(0, 1, label="b")
     g.add_edge(1, 2, label="c")
@@ -23,12 +35,12 @@ def test_no_reachable_vertices():
 
     cfg = CFG.from_text("S -> S S | a")
 
-    reachable_vertices = algo.matrix_all_pairs_reachability(g, cfg)
+    reachable_vertices = param_algo(g, cfg)
 
-    assert reachable_vertices == []
+    assert reachable_vertices == set()
 
 
-def test_worst_case():
+def test_worst_case(param_algo):
     # The graph is two cycles of coprime lengths with a single common vertex
     # The first cycle is labeled by the open bracket
     # The second cycle is labeled by the close bracket
@@ -41,12 +53,12 @@ def test_worst_case():
 
     cfg = CFG.from_text("S -> a S b | a b")
 
-    reachable_vertices = algo.matrix_all_pairs_reachability(g, cfg)
+    reachable_vertices = param_algo(g, cfg)
 
-    assert set(reachable_vertices) == {(0, 0), (1, 0), (0, 3), (1, 3), (2, 0), (2, 3)}
+    assert reachable_vertices == {(0, 0), (1, 0), (0, 3), (1, 3), (2, 0), (2, 3)}
 
 
-def test_worst_case_with_graph_vertices_numbering():
+def test_worst_case_with_graph_vertices_numbering(param_algo):
     # The graph is two cycles of coprime lengths with a single common vertex
     # The first cycle is labeled by the open bracket
     # The second cycle is labeled by the close bracket
@@ -59,9 +71,9 @@ def test_worst_case_with_graph_vertices_numbering():
 
     cfg = CFG.from_text("S -> a S b | a b")
 
-    reachable_vertices = algo.matrix_all_pairs_reachability(g, cfg)
+    reachable_vertices = param_algo(g, cfg)
 
-    assert set(reachable_vertices) == {
+    assert reachable_vertices == {
         (-1, -1),
         (7, -1),
         (-1, "A"),
@@ -71,7 +83,7 @@ def test_worst_case_with_graph_vertices_numbering():
     }
 
 
-def test_full_graph_result():
+def test_full_graph_result(param_algo):
     # The case when the input graph is sparse, but the result is a full graph.
     # Input graph is a cycle, all edges of which are labeled by the same token
     g = nx.MultiDiGraph()
@@ -82,9 +94,9 @@ def test_full_graph_result():
 
     cfg = CFG.from_text("S -> S S | a")
 
-    reachable_vertices = algo.matrix_all_pairs_reachability(g, cfg)
+    reachable_vertices = param_algo(g, cfg)
 
-    assert set(reachable_vertices) == {
+    assert reachable_vertices == {
         (v, to) for v in range(g.number_of_nodes()) for to in range(g.number_of_nodes())
     }
 
@@ -109,7 +121,7 @@ def test_full_graph_result():
         ("eclass", 90994),
     ],
 )
-def test_dataset(graph_name, pairs):
+def test_dataset(graph_name, pairs, param_algo):
     g1 = CFG.from_text(
         """
         S -> subClassOf_r S subClassOf | subClassOf_r subClassOf
@@ -126,6 +138,6 @@ def test_dataset(graph_name, pairs):
     ]
     graph.add_edges_from(reversed_edges)
 
-    res = algo.matrix_all_pairs_reachability(graph, g1)
+    res = param_algo(graph, g1)
 
     assert len(res) == pairs

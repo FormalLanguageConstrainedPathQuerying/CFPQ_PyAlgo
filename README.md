@@ -24,7 +24,8 @@ grammar = CFG.from_text(
     "S -> S subClassOf | subClassOf"
 )
 
-pairs = algo.matrix_all_pairs_reachability(graph, grammar)  # [(79, 35)]
+pairs_by_matrix_algo = algo.matrix_all_pairs_reachability(graph, grammar)  # [(79, 35)]
+pairs_by_tensor_algo = algo.tensor_all_pairs_reachability(graph, grammar)  # [(79, 35)]
 ```
 
 #### With edge reversal
@@ -52,7 +53,7 @@ grammar = CFG.from_text(
 pairs = algo.matrix_all_pairs_reachability(graph, grammar)  # [(35, 35)]
 ```
 
-### BooleanMatrixGraph
+### GraphBooleanDecomposition
 
 ```python
 import cfpq_data
@@ -62,7 +63,7 @@ import cfpq_pyalgo.pygraphblas as algo
 skos_path = cfpq_data.download("skos")
 skos = cfpq_data.graph_from_csv(skos_path)
 
-bmg = algo.bmg_from_nx_graph(skos)
+bmg = algo.gbd_from_nx_graph(skos)
 
 ```
 
@@ -74,6 +75,18 @@ import cfpq_pyalgo.pygraphblas as algo
 grammar = algo.WCNF.from_text(
     "S -> subClassOf_r S subClassOf | subClassOf_r subClassOf"
 )
+```
+
+### RSMBooleanDecomposition
+
+```python
+from pyformlang.rsa import RecursiveAutomaton as RSA
+
+import cfpq_pyalgo.pygraphblas as algo
+
+rsm = algo.RSMBooleanDecomposition.from_rsa(RSA.from_text(
+    "S -> subClassOf_r S subClassOf | subClassOf_r subClassOf"
+))
 ```
 
 ## pre-commit
