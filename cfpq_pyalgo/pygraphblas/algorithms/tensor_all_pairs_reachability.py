@@ -1,4 +1,4 @@
-"""Function that solves the All-Pairs CFL-reachability problem
+"""Module contains functions that solves the All-Pairs CFL-reachability problem
 using the Kronecker product of Boolean matrices."""
 from typing import Tuple, Set, Hashable
 
@@ -16,7 +16,7 @@ from cfpq_pyalgo.pygraphblas import (
 
 __all__ = [
     "tensor_all_pairs_reachability",
-    "_build_tensor_index",
+    "build_tensor_index",
     "_transitive_closure",
 ]
 
@@ -53,7 +53,7 @@ def tensor_all_pairs_reachability(
     matrix_graph, nodes_mapping = gbd_from_nx_graph(graph)
 
     # find transitive closure for each nonterminal of `rsm`
-    res, _ = _build_tensor_index(matrix_graph, rsm)
+    res, _ = build_tensor_index(matrix_graph, rsm)
 
     # convert transitive closure for `wcnf.start_variable`
     # to set of pairs of nodes of `graph`
@@ -61,9 +61,28 @@ def tensor_all_pairs_reachability(
     return set((nodes_mapping[u], nodes_mapping[v]) for u, v in zip(I, J))
 
 
-def _build_tensor_index(
+def build_tensor_index(
     graph: GraphBooleanDecomposition, rsm: RSMBooleanDecomposition
 ) -> Tuple[GraphBooleanDecomposition, Matrix]:
+    """Add edges labeled with nonterminal between CFL-reachable vertices and build index for path extraction
+
+    Build the intersection of the `rsm` and the `graph` the Kronecker product of Boolean matrices.
+    Based on this matrix, adds the edges marked by non-terminals to the graph.
+
+    Parameters
+    ----------
+    graph: `GraphBooleanDecomposition`
+        Graph decomposed into Boolean matrices
+
+    rsm: `RSMBooleanDecomposition`
+        A Recursive State Machine defines context-free language
+
+    Returns
+    -------
+    (updated_graph, tensor_index): `Tuple[GraphBooleanDecomposition, Matrix]`
+        `updated_graph` - Graph with added edges labeled with nonterminal between CFL-reachable vertices
+        `tensor_index` - Matrix containing the intersection of a `graph` and `rsm`, allowing you to extract paths
+    """
     graph_size = graph.matrices_size
     # Initialize matrices for all labels
     t = GraphBooleanDecomposition(graph.matrices_size)
