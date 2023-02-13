@@ -52,11 +52,11 @@ def tensor_all_pairs_reachability(
     # prepare GraphBooleanDecomposition from nx.MultiDiGraph
     matrix_graph, nodes_mapping = gbd_from_nx_graph(graph)
 
-    # find transitive closure for each nonterminal of `rsm`
+    # find transitive closure for each non-terminal of `rsm`
     res, _ = build_tensor_index(matrix_graph, rsm)
 
     # convert transitive closure for `wcnf.start_variable`
-    # to set of pairs of nodes of `graph`
+    # to set of pairs of `graph` nodes
     I, J, _ = res[grammar.start_symbol.to_text()].to_lists()
     return set((nodes_mapping[u], nodes_mapping[v]) for u, v in zip(I, J))
 
@@ -64,10 +64,10 @@ def tensor_all_pairs_reachability(
 def build_tensor_index(
     graph: GraphBooleanDecomposition, rsm: RSMBooleanDecomposition
 ) -> Tuple[GraphBooleanDecomposition, Matrix]:
-    """Add edges labeled with nonterminal between CFL-reachable vertices and build index for path extraction
+    """Add edges labeled with non-terminal between CFL-reachable vertices and build index for path extraction
 
-    Build the intersection of the `rsm` and the `graph` the Kronecker product of Boolean matrices.
-    Based on this matrix, adds the edges marked by non-terminals to the graph.
+    Build the intersection of the `rsm` and the `graph` using the Kronecker product of Boolean matrices.
+    Based on this matrix, adds the edges labeled by non-terminals to the graph.
 
     Parameters
     ----------
@@ -75,12 +75,12 @@ def build_tensor_index(
         Graph decomposed into Boolean matrices
 
     rsm: `RSMBooleanDecomposition`
-        A Recursive State Machine defines context-free language
+        A Recursive State Machine defining path constraints
 
     Returns
     -------
     (updated_graph, tensor_index): `Tuple[GraphBooleanDecomposition, Matrix]`
-        `updated_graph` - Graph with added edges labeled with nonterminal between CFL-reachable vertices
+        `updated_graph` - Graph with added edges labeled with non-terminal between CFL-reachable vertices
         `tensor_index` - Matrix containing the intersection of a `graph` and `rsm`, allowing you to extract paths
     """
     graph_size = graph.matrices_size

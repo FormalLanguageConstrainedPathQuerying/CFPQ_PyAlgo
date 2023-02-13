@@ -94,7 +94,7 @@ class TensorPathsExtractor:
         finish_vertex: Hashable
             The final vertex of the extracting paths
         nonterminal: str
-            Nonterminal from which the grammar derives the words formed by the extracting paths
+            Non-terminal from which the grammar derives the words formed by the extracting paths
         max_length: Optional[int]
             Restriction on the length of the extracted paths. If `max_length` is None,
             paths of any length are extracted
