@@ -45,7 +45,7 @@ def matrix_all_pairs_reachability(
     # prepare GraphBooleanDecomposition from nx.MultiDiGraph
     matrix_graph, nodes_mapping = gbd_from_nx_graph(graph)
 
-    # find transitive closure for each nonterminal of `wcnf`
+    # find transitive closure for each non-terminal of `wcnf`
     res = _matrix_all_pairs_reachability(matrix_graph, wcnf)
 
     # convert transitive closure for `wcnf.start_variable`

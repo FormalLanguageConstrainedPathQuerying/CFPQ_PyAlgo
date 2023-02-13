@@ -53,6 +53,27 @@ grammar = CFG.from_text(
 pairs = algo.matrix_all_pairs_reachability(graph, grammar)  # [(35, 35)]
 ```
 
+### Tensor all paths extraction
+
+```python
+import cfpq_data
+import networkx as nx
+from pyformlang.cfg import CFG
+
+import cfpq_pyalgo.pygraphblas as algo
+
+graph_path = cfpq_data.download("skos")
+graph: nx.MultiDiGraph = cfpq_data.graph_from_csv(graph_path)
+
+grammar = CFG.from_text(
+    "S -> S subClassOf | subClassOf"
+)
+graph_extractor: algo.TensorPathsExtractor = algo.TensorPathsExtractor.build_path_extractor(
+    graph, grammar
+)
+all_paths = list(graph_extractor.get_paths(79, 35, "S")) # [[((79, "subClassOf", 35))]]
+```
+
 ### GraphBooleanDecomposition
 
 ```python
