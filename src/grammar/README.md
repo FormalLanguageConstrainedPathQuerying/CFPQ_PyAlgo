@@ -47,3 +47,29 @@ Where
 # Format for grammar CNF
 
 This format is the same as the format in *deps/CFPQ_Data*
+
+# Format for template RSA
+
+```
+3 # Number of non-terminals (boxes)
+PointsTo # Non-terminal (box label)
+0 # Start state of the box
+1 # List of final states of the box
+FlowsTo
+2
+3
+Alias
+4
+6
+6 # Number of edges in the RSA
+0 alloc 1
+0 assign 0
+2 alloc_r 3
+3 assign_r 3
+4 PointsTo 5
+5 FlowsTo 6
+2 # Number of template paths
+0 load_[] [] Alias [] store_[] 0 # Template path
+3 store_[]_r [] Alias [] load_[]_r 3
+
+```

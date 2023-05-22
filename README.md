@@ -36,11 +36,22 @@ pip3 install pygraphblas
 Secondly you need to install cfpq_data_devtools package and other requirements:
 
 ```bash
-cd deps/CFPQ_Data
-pip3 install -r requirements.txt
-python3 setup.py install --user
+# GraphBLAS
+pushd deps/GraphBLAS/build
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+make -j$(nproc)
+make install
+popd
 
-cd ../../
+export GraphBLAS_ROOT="/usr"
+pip install --no-binary suitesparse-graphblas suitesparse-graphblas
+
+# CFPQ_Data devtools
+pushd deps/CFPQ_Data
+pip3 install -r requirements.txt
+python3 setup.py install
+popd
+
 pip3 install -r requirements.txt
 ```
 To check if the installation was successful you can run simple tests

@@ -5,9 +5,12 @@ from tqdm import tqdm
 from time import time
 
 from benchmark.algo_impl import ALGO_PROBLEM, ALGO_IMPL
+from src.grammar.one_term_rsa import TemplateRSA
 from src.graph.label_graph import LabelGraph
 from src.graph.graph import Graph
 from cfpq_data import cfg_from_txt
+
+from src.graph.one_terminal_graph import OneTerminalGraph
 
 GRAMMAR_DIR = 'Grammars/'
 GRAPH_DIR = 'Graphs/'
@@ -67,7 +70,9 @@ def benchmark(algo, data_dir, result_dir, config, with_paths, rounds, max_len_pa
 
     impl_for_algo = ALGO_IMPL[algo]
     variances = []
-    if type_problem == "MS":
+    if type_problem == "OneTerminalReachability":
+        benchmark_one_terminal_tensor(impl_for_algo, graph_grammar, result_dir, rounds)
+    elif type_problem == "MS":
         benchmark_ms(impl_for_algo, graph_grammar, result_dir)
     else:
         variances = benchmark_index(impl_for_algo, graph_grammar, result_dir, rounds)
@@ -75,6 +80,57 @@ def benchmark(algo, data_dir, result_dir, config, with_paths, rounds, max_len_pa
     if with_paths:
         if type_problem == "AllPaths": benchmark_all_paths(impl_for_algo, graph_grammar, result_dir, max_len_paths)
         if type_problem == "SinglePath": benchmark_single_path(impl_for_algo, graph_grammar, result_dir)
+
+
+def benchmark_one_terminal_tensor(algo_prepare, data, result_dir, rounds):
+    """
+    Measurement function for finding paths between all pairs of vertices
+    @param algo_prepare: concrete implementation of the algorithm and function for prepare graph
+    @param data: dictionary in format {path to graph: list of paths to grammars}
+    @param result_dir: directory for uploading results of measurement
+    @param rounds: number of measurement rounds
+    @return: variance value for each round of measurements
+    """
+    header_index = ['graph', 'grammar', 'time', 'count_S', 'variance']
+
+    variances = []
+    for graph in data:
+        result_index_file_path = result_dir.joinpath(f'{graph.stem}-{algo_prepare[0].__name__}-index')
+
+        append_header = False
+        if not exists(result_index_file_path):
+            append_header = True
+        result_csv = open(result_index_file_path, mode='a', newline='\n')
+        csv_writer_index = csv.writer(result_csv, delimiter=',', quoting=csv.QUOTE_NONNUMERIC, escapechar=' ')
+
+        if append_header:
+            csv_writer_index.writerow(header_index)
+
+        for grammar in data[graph]:
+            algo = algo_prepare[0]
+            template_rsa = TemplateRSA.from_file(grammar)
+            process_multiedge = algo_prepare[1]
+            count_S = 0
+            times = []
+            for _ in tqdm(range(rounds), desc=f'{graph.stem}-{grammar.stem}'):
+                graph = OneTerminalGraph.from_file(
+                    graph,
+                    template_rsa,
+                    process_multiedge
+                )
+                algo.prepare_for_solve()
+                start = time()
+                res = algo.solve()
+                finish = time()
+                times.append(finish - start)
+                count_S = res.matrix_S.nvals
+
+            sample_mean = get_sample_mean(times)
+            variances.append(get_variance(times, sample_mean))
+            csv_writer_index.writerow(
+                [graph.stem, grammar.stem, sample_mean, count_S, get_variance(times, sample_mean)])
+
+    return variances
 
 
 def benchmark_index(algo_name, data, result_dir, rounds):

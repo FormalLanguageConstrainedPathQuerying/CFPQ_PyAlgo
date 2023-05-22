@@ -1,271 +1,142 @@
-from pathlib import Path
-
 from pygraphblas import Matrix, BOOL, Scalar
 
-from src.grammar.one_term_rsa import TemplateRSA
-from src.graph.label_graph import LabelGraph
-from src.graph.one_terminal_graph import OneTerminalOneNonterminalGraph, OneTerminalGraph
+from src.graph.one_terminal_graph import OneTerminalGraph
 from src.problems.utils import ResultAlgo
-
-
-def transitive_closure(m: Matrix):
-    prev = m.nvals
-    degree = m
-    with BOOL.ANY_PAIR:
-        degree = degree @ m
-        m += degree
-    while prev != m.nvals:
-        prev = m.nvals
-        with BOOL.ANY_PAIR:
-            degree = degree @ m
-            m += degree
-
-
-class OneTerminalOneNonterminalTensorAlgo:
-    graph: OneTerminalOneNonterminalGraph
-
-    def prepare(self, graph: Path, templ_rsa_path: Path):
-        templ_rsa = TemplateRSA.from_file(templ_rsa_path)
-        self.graph = OneTerminalOneNonterminalGraph(graph, templ_rsa, with_back_edges=True)
-
-    def solve(self, start_nonterm: str):
-        element_type = self.graph.adjacency_matrix.type
-        graph_size = self.graph.adjacency_matrix.nrows
-
-        iter = 0
-        control_sum = self.graph.adjacency_matrix.select('>=', 1 << (self.graph.type_size - 2)).nonzero().nvals
-        changed = True
-        while changed:
-            iter += 1
-            changed = False
-
-            kron = self.graph.rsa.matrix.kronecker(self.graph.adjacency_matrix, op=self.graph.element_times,
-                                                   cast=BOOL).nonzero()
-
-            transitive_closure(kron)
-
-            # update
-            for nonterminal, num in self.graph.rsa.nonterm_to_num.items():
-                start = self.graph.rsa.start_state[nonterminal]
-                block = Matrix.sparse(BOOL, graph_size, graph_size)
-                for finish in self.graph.rsa.finish_states[nonterminal]:
-                    start_i = start * graph_size
-                    start_j = finish * graph_size
-
-                    block += kron[start_i:start_i + graph_size - 1, start_j:start_j + graph_size - 1]
-
-                new_block = Matrix.sparse(element_type, graph_size, graph_size)
-                block.cast(element_type).apply_first(num << (self.graph.type_size - 2), element_type.TIMES,
-                                                     out=new_block)
-
-                with element_type.BOR:
-                    self.graph.adjacency_matrix += new_block
-
-                new_control_sum = self.graph.adjacency_matrix.select('>=', 1 << (
-                        self.graph.type_size - 2)).nonzero().nvals
-
-                if new_control_sum != control_sum:
-                    control_sum = new_control_sum
-                    changed = True
-            del kron
-
-        thunk: Scalar = Scalar.from_type(self.graph.adjacency_matrix.type)
-        thunk[0] = self.graph.rsa.nonterm_to_num[start_nonterm] << (self.graph.type_size - 2)
-        return ResultAlgo(self.graph.adjacency_matrix
-                          .extract_matrix(slice(0, self.graph.base_graph_size - 1),
-                                          slice(0, self.graph.base_graph_size - 1))
-                          .select(self.graph.nonterm_selector, thunk)
-                          .pattern(),
-                          iter)
+from src.problems.AllPaths.algo.tensor.tensor import transitive_closure
 
 
 class OneTerminalTensorAlgo:
-    graph: OneTerminalGraph
 
-    def prepare(self, graph: Path, templ_rsa_path: Path):
-        templ_rsa = TemplateRSA.from_file(templ_rsa_path)
-        self.graph = OneTerminalGraph(graph, templ_rsa, with_back_edges=False)
+    def solve(self, start_nonterm: str, graph: OneTerminalGraph):
+        """
+        Solve reachability problem for start_nonterm with tensor algorithm
 
-    def solve(self, start_nonterm: str):
-        element_type = self.graph.adjacency_matrix.type
-        graph_size = self.graph.adjacency_matrix.nrows
+        @param start_nonterm: Start nonterminal in RSA
+        @param graph: OneTerminalGraph for which it is necessary to solve reachability problem
 
-        self.graph.set_epsilon_nonterms()
+        @return: matrix with information about reachable vertices and the number of iterations of the algorithm,
+        packed in ResultAlgo
+        """
+        rsa = graph.rsa
+
+        element_type = graph.adjacency_matrix.type
+        graph_size = graph.adjacency_matrix.nrows
+
+        graph.set_epsilon_nonterms()
         iter = 0
         changed = True
         while changed:
             iter += 1
             changed = False
 
-            kron = self.graph.rsa.matrix.kronecker(self.graph.adjacency_matrix, op=self.graph.element_times,
-                                                   cast=BOOL).nonzero()
+            kron = rsa.matrix.kronecker(graph.adjacency_matrix,
+                                        op=rsa.times_op,
+                                        cast=BOOL)
 
             transitive_closure(kron)
-
+            
             # update
-            for nonterminal, num in self.graph.rsa.nonterm_to_num.items():
-                start = self.graph.rsa.start_state[nonterminal]
+            for nonterm in rsa.nonterm_to_num:
+                start = rsa.start_state[nonterm]
                 block = Matrix.sparse(BOOL, graph_size, graph_size)
-                for finish in self.graph.rsa.finish_states[nonterminal]:
+                for finish in rsa.finish_states[nonterm]:
                     start_i = start * graph_size
                     start_j = finish * graph_size
 
                     block += kron[start_i:start_i + graph_size - 1, start_j:start_j + graph_size - 1]
 
                 new_block = Matrix.sparse(element_type, graph_size, graph_size)
-                block.cast(element_type).apply_first(1 << (self.graph.type_size - 3 + num - 1), element_type.TIMES,
+                block.cast(element_type).apply_first(rsa.nonterm_to_matrix(nonterm),
+                                                     element_type.TIMES,
                                                      out=new_block)
 
                 with element_type.BOR:
-                    new_graph: Matrix = self.graph.adjacency_matrix + new_block
+                    new_graph: Matrix = graph.adjacency_matrix + new_block
 
-                if new_graph.isne(self.graph.adjacency_matrix):
-                    self.graph.adjacency_matrix = new_graph
+                if new_graph.isne(graph.adjacency_matrix):
+                    graph.adjacency_matrix = new_graph
                     changed = True
 
-            del kron
-
-        thunk: Scalar = Scalar.from_type(self.graph.adjacency_matrix.type)
-        thunk[0] = 1 << (self.graph.type_size - 3 + self.graph.rsa.nonterm_to_num[start_nonterm] - 1)
-        return ResultAlgo(self.graph.adjacency_matrix.select(self.graph.nonterm_selector, thunk).pattern(), iter)
-
-
-class OneTerminalOneNonterminalDynamicTensorAlgo:
-    graph: OneTerminalOneNonterminalGraph
-
-    def prepare(self, graph: Path, templ_rsa_path: Path):
-        templ_rsa = TemplateRSA.from_file(templ_rsa_path)
-        self.graph = OneTerminalOneNonterminalGraph(graph, templ_rsa, with_back_edges=True)
-
-    def solve(self, start_nonterm: str):
-        element_type = self.graph.adjacency_matrix.type
-        graph_size = self.graph.adjacency_matrix.nrows
-        sizeKron = graph_size * self.graph.rsa.matrix.nrows
-        part = Matrix.sparse(BOOL, sizeKron, sizeKron)
-        block = LabelGraph(graph_size)
-
-        changed = True
-        iter = 0
-        control_sum = self.graph.adjacency_matrix.select('>=', 1 << (self.graph.type_size - 2)).nonzero().nvals
-        first_iter = True
-        updates = Matrix.sparse(element_type, graph_size, graph_size)
-        while changed:
-            changed = False
-            iter += 1
-
-            if first_iter:
-                kron = self.graph.rsa.matrix.kronecker(self.graph.adjacency_matrix, op=self.graph.element_times,
-                                                       cast=BOOL).nonzero()
-            else:
-                kron = self.graph.rsa.matrix.kronecker(updates, op=self.graph.element_times,
-                                                       cast=BOOL).nonzero()
-                updates = Matrix.sparse(element_type, graph_size, graph_size)
-
-            transitive_closure(kron)
-
-            if not first_iter:
-                part = prev_kron.mxm(kron, semiring=BOOL.ANY_PAIR)
-                with BOOL.ANY_PAIR:
-                    kron += prev_kron + part @ prev_kron + part + kron @ prev_kron
-
-            prev_kron = kron
-
-            # update
-            for nonterminal, num in self.graph.rsa.nonterm_to_num.items():
-                block[nonterminal] = Matrix.sparse(BOOL, graph_size, graph_size)
-                start = self.graph.rsa.start_state[nonterminal]
-                for finish in self.graph.rsa.finish_states[nonterminal]:
-                    start_i = start * graph_size
-                    start_j = finish * graph_size
-
-                    block[nonterminal] += kron[start_i:start_i + graph_size - 1, start_j:start_j + graph_size - 1]
-
-                with element_type.BOR:
-                    updates += block[nonterminal].cast(element_type).apply_first(num << (self.graph.type_size - 2),
-                                                                                 element_type.TIMES)
-            with element_type.BOR:
-                self.graph.adjacency_matrix += updates
-
-            new_control_sum = self.graph.adjacency_matrix.select('>=', 1 << (
-                    self.graph.type_size - 2)).nonzero().nvals
-
-            if new_control_sum != control_sum:
-                control_sum = new_control_sum
-                changed = True
-
-            first_iter = False
-
-        thunk: Scalar = Scalar.from_type(self.graph.adjacency_matrix.type)
-        thunk[0] = self.graph.rsa.nonterm_to_num[start_nonterm] << (self.graph.type_size - 2)
-        return ResultAlgo(self.graph.adjacency_matrix
-                          .extract_matrix(slice(self.graph.base_graph_size), slice(self.graph.base_graph_size))
-                          .select(self.graph.nonterm_selector, thunk)
+        thunk: Scalar = Scalar.from_type(element_type)
+        thunk[0] = rsa.nonterm_to_matrix(start_nonterm)
+        return ResultAlgo(graph.adjacency_matrix
+                          .extract_matrix(slice(0, graph.vertices_count - 1),
+                                          slice(0, graph.vertices_count - 1))
+                          .select(rsa.select_op, thunk)
                           .pattern(),
                           iter)
 
 
-class OneTerminalDynamicTensorAlgo:
-    graph: OneTerminalGraph
+class OneTerminalDynamicTensorAlgo(OneTerminalTensorAlgo):
 
-    def prepare(self, graph: Path, templ_rsa_path: Path):
-        templ_rsa = TemplateRSA.from_file(templ_rsa_path)
-        self.graph = OneTerminalGraph(graph, templ_rsa, with_back_edges=False)
+    def solve(self, start_nonterm: str, graph: OneTerminalGraph):
+        """
+        Solve reachability problem for start_nonterm with incremental tensor algorithm
 
-    def solve(self, start_nonterm: str):
-        element_type = self.graph.adjacency_matrix.type
-        graph_size = self.graph.adjacency_matrix.nrows
-        sizeKron = graph_size * self.graph.rsa.matrix.nrows
-        part = Matrix.sparse(BOOL, sizeKron, sizeKron)
-        block = LabelGraph(graph_size)
+        @param start_nonterm: Start nonterminal in RSA
+        @param graph: OneTerminalGraph for which it is necessary to solve reachability problem
 
-        self.graph.set_epsilon_nonterms()
+        @return: matrix with information about reachable vertices and the number of iterations of the algorithm,
+        packed in ResultAlgo
+        """
+        rsa = graph.rsa
+        element_type = graph.adjacency_matrix.type
+        graph_size = graph.adjacency_matrix.nrows
+
+        graph.set_epsilon_nonterms()
+
         changed = True
         iter = 0
         first_iter = True
+
         updates = Matrix.sparse(element_type, graph_size, graph_size)
         while changed:
             changed = False
             iter += 1
 
             if first_iter:
-                kron = self.graph.rsa.matrix.kronecker(self.graph.adjacency_matrix, op=self.graph.element_times,
-                                                       cast=BOOL).nonzero()
+                kron = rsa.matrix.kronecker(graph.adjacency_matrix,
+                                            op=rsa.times_op,
+                                            cast=BOOL)
+                transitive_closure(kron)
+                prev_kron = kron
+                kron_updates = kron
             else:
-                kron = self.graph.rsa.matrix.kronecker(updates, op=self.graph.element_times,
-                                                       cast=BOOL).nonzero()
+                kron = rsa.matrix.kronecker(updates,
+                                            op=rsa.times_op,
+                                            cast=BOOL)
                 updates = Matrix.sparse(element_type, graph_size, graph_size)
-
-            transitive_closure(kron)
-
-            if not first_iter:
-                part = prev_kron.mxm(kron, semiring=BOOL.ANY_PAIR)
                 with BOOL.ANY_PAIR:
-                    kron += prev_kron + part @ prev_kron + part + kron @ prev_kron
-
-            prev_kron = kron
+                    kron = prev_kron + kron
+                transitive_closure(kron)
+                kron_updates = (kron - prev_kron).nonzero()
+                prev_kron = kron
 
             # update
-            for nonterminal, num in self.graph.rsa.nonterm_to_num.items():
-                block[nonterminal] = Matrix.sparse(BOOL, graph_size, graph_size)
-                start = self.graph.rsa.start_state[nonterminal]
-                for finish in self.graph.rsa.finish_states[nonterminal]:
+            for nonterm in rsa.nonterm_to_num:
+                block = Matrix.sparse(BOOL, graph_size, graph_size)
+                start = rsa.start_state[nonterm]
+                for finish in rsa.finish_states[nonterm]:
                     start_i = start * graph_size
                     start_j = finish * graph_size
 
-                    block[nonterminal] += kron[start_i:start_i + graph_size - 1, start_j:start_j + graph_size - 1]
+                    block += kron_updates[start_i:start_i + graph_size - 1, start_j:start_j + graph_size - 1]
 
                 with element_type.BOR:
-                    updates += block[nonterminal].cast(element_type).apply_first(
-                        1 << (self.graph.type_size - 3 + num - 1), element_type.TIMES)
-            with element_type.BOR:
-                new_graph: Matrix = self.graph.adjacency_matrix + updates
-
-            if new_graph.isne(self.graph.adjacency_matrix):
-                self.graph.adjacency_matrix = new_graph
+                    updates += block.cast(element_type).apply_first(
+                        rsa.nonterm_to_matrix(nonterm), element_type.TIMES)
+            if updates.nvals > 0:
+                with element_type.BOR:
+                    graph.adjacency_matrix = graph.adjacency_matrix + updates
                 changed = True
 
             first_iter = False
 
-        thunk: Scalar = Scalar.from_type(self.graph.adjacency_matrix.type)
-        thunk[0] = 1 << (self.graph.type_size - 3 + self.graph.rsa.nonterm_to_num[start_nonterm] - 1)
-        return ResultAlgo(self.graph.adjacency_matrix.select(self.graph.nonterm_selector, thunk).pattern(), iter)
+        thunk: Scalar = Scalar.from_type(graph.adjacency_matrix.type)
+        thunk[0] = rsa.nonterm_to_matrix(start_nonterm)
+        return ResultAlgo(graph.adjacency_matrix
+                          .extract_matrix(slice(graph.vertices_count - 1),
+                                          slice(graph.vertices_count - 1))
+                          .select(rsa.select_op, thunk)
+                          .pattern(),
+                          iter)

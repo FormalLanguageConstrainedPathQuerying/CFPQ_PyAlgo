@@ -1,0 +1,16 @@
+15 alloc 0
+15 store_1 15
+14 store_2 15
+14 alloc 1
+13 load_2 14
+12 store_3 14
+12 alloc 3
+11 assign 12
+11 assign 10
+10 alloc 2
+9 load_3 11
+7 load_3 10
+8 load_2 9
+5 assign 8
+6 load_2 7
+6 load_1 6

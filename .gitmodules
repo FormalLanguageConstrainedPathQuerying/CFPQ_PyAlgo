@@ -4,3 +4,7 @@
 [submodule "deps/pygraphblas"]
 	path = deps/pygraphblas
 	url = https://github.com/michelp/pygraphblas.git
+[submodule "deps/GraphBLAS"]
+	path = deps/GraphBLAS
+	url = https://github.com/vkutuev/GraphBLAS.git
+	branch = vkutuev/kron
