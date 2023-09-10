@@ -1,4 +1,5 @@
 tqdm
 pytest
 pytest-benchmark
-cfpq_data
+cfpq_data==1.0.2
+pygraphblas==5.1.8.0
