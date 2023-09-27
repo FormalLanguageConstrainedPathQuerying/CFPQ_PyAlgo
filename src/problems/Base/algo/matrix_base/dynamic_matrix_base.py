@@ -27,6 +27,33 @@ class DynamicMatrixBaseAlgo(BaseProblem):
 
         front = LabelGraph(self.graph.matrices_size)
 
+        # self.grammar.complex_rules = [
+        #     ("PTh", "ld", "Al_st_PTh"),
+        #     ("FTh", "st_r", "Al_ld_r_FTh"),
+        #     ("Al_st_PTh", "Al", "st_PTh"),
+        #     ("Al_ld_r_FTh", "Al", "ld_r_FTh"),
+        #     ("st_PTh", "st", "PTh"),
+        #     ("ld_r_FTh", "ld_r", "FTh"),
+        #     ("S", "PTh", "Alloc"),
+        #     ("PTh", "Assign", "PTh"),
+        #     ("FT", "Alloc_r", "FTh"),
+        #     ("FTh", "Assign_r", "FTh"),
+        #     ("Al", "S", "FT"),
+        # ]
+        #
+        # hyper_vars = [
+        #     "Al_st_PTh", "Al_ld_r_FTh", "st_PTh", "ld_r_FTh", "ld", "ld_r", "st", "st_r"
+        # ]
+        #
+        # self.grammar.eps_rules = ["PTh", "FTh"]
+        #
+        # self.grammar.simple_rules = [
+        #     ("Alloc", "alloc"),
+        #     ("Alloc_r", "alloc_r"),
+        #     ("Assign", "assign"),
+        #     ("Assign_r", "assign_r"),
+        # ]
+
         for l in self.grammar.eps_rules:
             for i in range(front.matrices_size):
                 front[l][i, i] = True
