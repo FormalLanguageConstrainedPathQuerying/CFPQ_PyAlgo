@@ -1,9 +1,17 @@
 from abc import ABC, abstractmethod
 from typing import Tuple
 
-from pygraphblas import Matrix
+from graphblas.core.dtypes import DataType
+from graphblas.core.matrix import Matrix
 
 from src.matrix.enhanced_matrix import EnhancedMatrix, MatrixForm
+
+# EnhancedMatrix
+# - MatrixToEnhancedAdapter
+# - AbstractEnhancedMatrixDecorator
+# - IAddOptimizedMatrix
+# - FormatOptimizedMatrix
+# - HyperMatrix
 
 
 class AbstractEnhancedMatrixDecorator(EnhancedMatrix, ABC):
@@ -23,6 +31,10 @@ class AbstractEnhancedMatrixDecorator(EnhancedMatrix, ABC):
     @property
     def format(self) -> MatrixForm:
         return self.base.format
+
+    @property
+    def dtype(self) -> DataType:
+        return self.base.dtype
 
     def to_matrix(self) -> Matrix:
         return self.base.to_matrix()

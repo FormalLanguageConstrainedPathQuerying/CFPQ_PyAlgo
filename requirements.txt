@@ -3,3 +3,5 @@ pytest
 pytest-benchmark
 cfpq_data==1.0.2
 pygraphblas==5.1.8.0
+suitesparse-graphblas==7.4.4.0
+python-graphblas==2023.7.0

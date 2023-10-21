@@ -1,6 +1,8 @@
-from pygraphblas import Matrix
+import graphblas
+from graphblas.core.matrix import Matrix
 
 from src.matrix.enhanced_matrix import OPTIMIZE_EMPTY
+from src.utils.unique_ptr import unique_ptr
 
 
 class HyperMatrixUtils:
@@ -16,12 +18,14 @@ class HyperMatrixUtils:
         if hyper_width == 1:
             return hyper_rectangle
         new_hyper_width = hyper_width // 2
-        new_rectangle = Matrix.sparse(hyper_rectangle.type, nrows=self.n * self.hyper_size, ncols=self.n * new_hyper_width)
-        new_rectangle[(self.n * new_hyper_width):, :] = (
-            hyper_rectangle[:(self.n * self.hyper_size) - (self.n * new_hyper_width) - 1, self.n * new_hyper_width:]
+        new_rectangle = unique_ptr(Matrix(hyper_rectangle.dtype, nrows=self.n * self.hyper_size, ncols=self.n * new_hyper_width))
+        new_rectangle[(self.n * new_hyper_width):, :] << (
+            hyper_rectangle[:(self.n * self.hyper_size) - (self.n * new_hyper_width), self.n * new_hyper_width:]
         )
-        new_rectangle[:, :] += (
-            hyper_rectangle[:, :self.n * new_hyper_width - 1]
+        new_rectangle << new_rectangle.ewise_add(
+            hyper_rectangle[:, :self.n * new_hyper_width],
+            # FIXME bool specific code
+            op=graphblas.monoid.any
         )
         return self._hyper_rectangle_to_hyper_column(new_rectangle, new_hyper_width)
 
@@ -29,8 +33,8 @@ class HyperMatrixUtils:
         assert hyper_row.nrows == self.n
         assert hyper_row.ncols == self.n * self.hyper_size
         if OPTIMIZE_EMPTY and hyper_row.nvals == 0:
-            return Matrix.sparse(hyper_row.type, hyper_row.ncols, hyper_row.nrows)
-        hyper_rectangle = hyper_row.dup()
+            return unique_ptr(Matrix(hyper_row.dtype, hyper_row.ncols, hyper_row.nrows))
+        hyper_rectangle = unique_ptr(hyper_row.dup())
         hyper_rectangle.resize(nrows=self.n * self.hyper_size, ncols=self.n * self.hyper_size)
         column = self._hyper_rectangle_to_hyper_column(hyper_rectangle, hyper_width=self.hyper_size)
         return column
@@ -39,12 +43,14 @@ class HyperMatrixUtils:
         if hyper_height == 1:
             return hyper_rectangle
         new_hyper_height = hyper_height // 2
-        new_rectangle = Matrix.sparse(hyper_rectangle.type, nrows=self.n * new_hyper_height, ncols=self.n * self.hyper_size)
-        new_rectangle[:, (self.n * new_hyper_height):] = (
-            hyper_rectangle[self.n * new_hyper_height:, :(self.n * self.hyper_size) - (self.n * new_hyper_height) - 1]
+        new_rectangle = unique_ptr(Matrix(hyper_rectangle.dtype, nrows=self.n * new_hyper_height, ncols=self.n * self.hyper_size))
+        new_rectangle[:, (self.n * new_hyper_height):] << (
+            hyper_rectangle[self.n * new_hyper_height:, :(self.n * self.hyper_size) - (self.n * new_hyper_height)]
         )
-        new_rectangle[:, :] += (
-            hyper_rectangle[:self.n * new_hyper_height - 1, :]
+        new_rectangle += new_rectangle.ewise_add(
+            hyper_rectangle[:self.n * new_hyper_height, :],
+            # FIXME bool specific code
+            op=graphblas.monoid.any
         )
         return self._hyper_rectangle_to_hyper_row(new_rectangle, new_hyper_height)
 
@@ -52,8 +58,8 @@ class HyperMatrixUtils:
         assert hyper_column.nrows == self.n * self.hyper_size
         assert hyper_column.ncols == self.n
         if OPTIMIZE_EMPTY and hyper_column.nvals == 0:
-            return Matrix.sparse(hyper_column.type, hyper_column.ncols, hyper_column.nrows)
-        hyper_rectangle = hyper_column.dup()
+            return unique_ptr(Matrix(hyper_column.dtype, hyper_column.ncols, hyper_column.nrows))
+        hyper_rectangle = unique_ptr(hyper_column.dup())
         hyper_rectangle.resize(nrows=self.n * self.hyper_size, ncols=self.n * self.hyper_size)
         row = self._hyper_rectangle_to_hyper_row(hyper_rectangle, hyper_height=self.hyper_size)
         return row
@@ -63,12 +69,14 @@ class HyperMatrixUtils:
             return hyper_rectangle
         new_hyper_height = hyper_height // 2
         new_hyper_width = hyper_width * 2
-        new_rectangle = Matrix.sparse(hyper_rectangle.type, nrows=self.n * new_hyper_height, ncols=self.n * new_hyper_width)
-        new_rectangle[:, (self.n * hyper_width):] = (
+        new_rectangle = unique_ptr(Matrix(hyper_rectangle.dtype, nrows=self.n * new_hyper_height, ncols=self.n * new_hyper_width))
+        new_rectangle[:, (self.n * hyper_width):] << (
             hyper_rectangle[self.n * new_hyper_height:, :]
         )
-        new_rectangle[:, :((self.n * hyper_width) - 1)] += (
-            hyper_rectangle[:self.n * new_hyper_height - 1, :]
+        new_rectangle[:, :(self.n * hyper_width)] << new_rectangle[:, :(self.n * hyper_width)].ewise_add(
+            hyper_rectangle[:self.n * new_hyper_height, :],
+            # FIXME bool specific code
+            op=graphblas.monoid.any
         )
         return self._hyper_rectangle_to_hyper_sausage(new_rectangle, new_hyper_height, new_hyper_width)
 
@@ -84,17 +92,17 @@ class HyperMatrixUtils:
             return hyper_sausage
         new_hyper_height = hyper_height * 2
         new_hyper_width = hyper_width // 2
-        new_sausage = Matrix.sparse(hyper_sausage.type, nrows=self.n * new_hyper_height,
-                                    ncols=self.n * (new_hyper_width + total_hyper_offset + hyper_offset))
+        new_sausage = unique_ptr(Matrix(hyper_sausage.dtype, nrows=self.n * new_hyper_height,
+                                    ncols=self.n * (new_hyper_width + total_hyper_offset + hyper_offset)))
         tmp = hyper_sausage[:, (self.n * new_hyper_width):]
-        new_sausage[(self.n * hyper_height):, (self.n * hyper_offset):(self.n * hyper_offset + tmp.ncols - 1)] = tmp
-        tmp = hyper_sausage[:, :(self.n * new_hyper_width - 1)]
-        new_sausage[:(self.n * hyper_height - 1), :(tmp.ncols - 1)] = tmp
+        new_sausage[(self.n * hyper_height):, (self.n * hyper_offset):(self.n * hyper_offset + tmp.ncols)] = tmp
+        tmp = hyper_sausage[:, :(self.n * new_hyper_width)]
+        new_sausage[:(self.n * hyper_height), :tmp.ncols] = tmp
         return self._hyper_sausage_to_hyper_matrix(new_sausage, new_hyper_height, new_hyper_width, hyper_offset * 2,
                                                    total_hyper_offset=total_hyper_offset + hyper_offset)
 
     def hyper_column_to_hyper_matrix(self, hyper_column: Matrix) -> Matrix:
-        hyper_rectangle = hyper_column.dup()
+        hyper_rectangle = unique_ptr(hyper_column.dup())
         hyper_rectangle.resize(nrows=self.n * self.hyper_size, ncols=self.n * self.hyper_size)
         sausage = self._hyper_rectangle_to_hyper_sausage(hyper_rectangle, hyper_width=self.hyper_size,
                                                          hyper_height=self.hyper_size)
@@ -106,7 +114,11 @@ class HyperMatrixUtils:
         if hyper_size == 1:
             return hyper_row
         return self._reduce_hyper_row(
-            hyper_row[:, :(hyper_row.ncols // 2 - 1)] + hyper_row[:, hyper_row.ncols // 2:],
+            unique_ptr(hyper_row[:, :(hyper_row.ncols // 2)].ewise_add(
+                hyper_row[:, hyper_row.ncols // 2:],
+                # FIXME bool specific code
+                op=graphblas.monoid.any
+            ).new()),
             hyper_size=hyper_size // 2
         )
 
@@ -117,7 +129,11 @@ class HyperMatrixUtils:
         if hyper_size == 1:
             return hyper_column
         return self._reduce_hyper_column(
-            hyper_column[:(hyper_column.nrows // 2 - 1), :] + hyper_column[hyper_column.nrows // 2:, :],
+            unique_ptr((hyper_column[:(hyper_column.nrows // 2), :].ewise_add(
+                hyper_column[hyper_column.nrows // 2:, :],
+                # FIXME bool specific code
+                op=graphblas.monoid.any
+            )).new()),
             hyper_size=hyper_size // 2
         )
 

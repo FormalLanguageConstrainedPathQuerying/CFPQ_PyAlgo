@@ -2,9 +2,10 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Tuple, List
 
-from pygraphblas import Matrix
+from graphblas.core.matrix import Matrix
 
 from src.matrix.enhanced_matrix import EnhancedMatrix
+
 
 class HyperVectorOrientation(Enum):
     HORIZONTAL = 0

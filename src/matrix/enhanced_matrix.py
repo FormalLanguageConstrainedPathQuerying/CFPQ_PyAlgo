@@ -1,14 +1,20 @@
+import weakref
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple
 
-from pygraphblas import Matrix
+import graphblas
+from graphblas.core.dtypes import DataType
+from graphblas.core.matrix import Matrix
 
 OPTIMIZE_EMPTY = True
 
 # TODO ShortCircuitingForEmptyMatrix
 
 # TODO rename to MatrixFormat
-MatrixForm = Optional[int]
+MatrixForm = Optional[str]
+
+old_ss_init = graphblas.core.ss.matrix.ss.__init__
+graphblas.core.ss.matrix.ss.__init__ = lambda self, parent: old_ss_init(self, weakref.proxy(parent))
 
 
 class EnhancedMatrix(ABC):
@@ -25,6 +31,11 @@ class EnhancedMatrix(ABC):
     @property
     @abstractmethod
     def format(self) -> MatrixForm:
+        pass
+
+    @property
+    @abstractmethod
+    def dtype(self) -> DataType:
         pass
 
     @abstractmethod

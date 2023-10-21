@@ -1,15 +1,17 @@
-from pygraphblas import Matrix
+import graphblas
+from graphblas.core.matrix import Matrix
 
 from src.matrix.abstract_enhanced_matrix_decorator import AbstractEnhancedMatrixDecorator
 from src.matrix.enhanced_matrix import EnhancedMatrix
+from src.utils.unique_ptr import unique_ptr
 
 
+# TODO extract EnhancedMatrixAdapter
 class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
     def __init__(self, base: EnhancedMatrix, nvals_factor: int = 10, min_nvals: int = 10):
         assert min_nvals > 0
         assert nvals_factor > 0
         self.matrices = [base]
-        # self.dups = [base.dup()]
         self.size_factor = nvals_factor
         self.min_size = min_nvals
 
@@ -25,9 +27,13 @@ class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
             self,
             mapper,
             self_combine_threshold,
-            combiner=lambda acc, cur: acc + cur,
+            combiner=lambda acc, cur: unique_ptr(acc.ewise_add(
+                cur,
+                # FIXME bool specific code
+                op=graphblas.monoid.any
+            ).new()),
             acc=None,
-            reverse_sort=False
+            reverse_sort=False,
     ) -> Matrix:
         new_matrices = []
         for m in sorted(self.matrices, key=lambda m: m.nvals):
@@ -67,9 +73,9 @@ class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
 
     def iadd(self, other: Matrix):
         # TODO lazy
-        other = other.dup()
+        other = unique_ptr(other.dup())
         if self.format is not None:
-            other.format = self.format
+            other.ss.config["format"] = self.format
         base = self.base
         while True:
             other_nvals = max(other.nvals, self.min_size)
@@ -77,8 +83,10 @@ class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
             # def get_size_diff(self_matrix_idx: int) -> int:
             #     self_matrix_nvals = max(self.matrices[self_matrix_idx].nvals, self.min_size)
             #     return max(other_nvals / self_matrix_nvals, self_matrix_nvals / other_nvals)
-            #
-            # i = min((i for i in range(len(self.matrices))), key=get_size_diff)
+
+            # i = min((i for i in range(len(self.matrices))), key=get_size_diff, default=None)
+            # if i is not None and get_size_diff(i) > self.size_factor:
+            #     i = None
 
             i = next((i for i in range(len(self.matrices)) if
                       other_nvals / self.size_factor <= max(self.min_size,
@@ -87,10 +95,14 @@ class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
 
             if i is None:
                 # self.matrices.append(self.base.create_similar(other))
-                self.matrices.append(base.enhance_similarly(other.dup()))
+                self.matrices.append(base.enhance_similarly(other))
                 # self.dups.append(other.dup())
                 return self
-            other += self.matrices[i].to_matrix()
+            other << other.ewise_add(
+                self.matrices[i].to_matrix(),
+                # FIXME bool specific code
+                op=graphblas.monoid.any
+            )
             del self.matrices[i]
 
     def enhance_similarly(self, base: Matrix) -> EnhancedMatrix:
@@ -99,3 +111,36 @@ class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
             nvals_factor=self.size_factor,
             min_nvals=self.min_size
         )
+
+    def __sizeof__(self):
+        return sum(m.__sizeof__() for m in self.matrices)
+
+    # def __iadd__(self, other) -> "IAddOptimizedMatrix":
+    #     if OPTIMIZE_EMPTY and other.nvals == 0:
+    #         return self
+    #     other = other.dup()
+    #     other.format = self.format.to_graphblas_format()
+    #     while True:
+    #         other_nvals = max(other.nvals, self.min_size)
+    #         i = next((i for i in range(len(self.matrices)) if
+    #                   other_nvals / self.size_factor <= max(self.min_size,
+    #                                                         self.matrices[i].nvals) <= other_nvals * self.size_factor),
+    #                  None)
+    #         if i is None:
+    #             self.matrices.append(other.dup())
+    #             # self.dups.append(other.dup())
+    #             return self
+    #         other += self.matrices[i]
+    #         del self.matrices[i]
+    #         # del self.dups[i]
+
+    # def with_format(self, format: MatrixFormat) -> "IAddOptimizedMatrix":
+    #     if self.format == format:
+    #         return self
+    #     matrix = self.to_matrix()
+    #     matrix.format = format.to_graphblas_format()
+    #     return IAddOptimizedMatrix(
+    #         base=matrix,
+    #         size_factor=self.size_factor,
+    #         min_size=self.min_size,
+    #     )

@@ -1,7 +1,6 @@
 from abc import ABC
-from typing import Callable, Optional, Tuple
 
-from pygraphblas import Matrix
+from graphblas.core.matrix import Matrix
 
 from src.matrix.abstract_enhanced_matrix_decorator import AbstractEnhancedMatrixDecorator
 from src.matrix.enhanced_matrix import EnhancedMatrix
@@ -182,6 +181,9 @@ class CellHyperMatrix(HyperMatrix):
     def iadd(self, other: Matrix):
         self.base.iadd(other)
 
+    def __sizeof__(self):
+        return self.base.__sizeof__()
+
 
 class VectorHyperMatrix(HyperMatrix):
     def __init__(self, base: EnhancedMatrix, hyper_space: HyperMatrixSpace):
@@ -220,3 +222,6 @@ class VectorHyperMatrix(HyperMatrix):
             m.iadd(
                 self.hyper_space.hyper_rotate(other, orientation)
             )
+
+    def __sizeof__(self):
+        return sum(m.__sizeof__() for m in self.matrices.values())
