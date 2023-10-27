@@ -16,6 +16,9 @@ class MatrixBaseAlgo(BaseProblem):
         self.graph.load_bool_graph()
         self.grammar = CnfGrammar.from_cfg(grammar)
 
+    def inject_cnf_grammar(self, grammar: CnfGrammar):
+        self.grammar = grammar
+
     def solve(self):
         m = LabelGraph(self.graph.matrices_size)
         

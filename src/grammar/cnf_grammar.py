@@ -16,9 +16,11 @@ class CnfGrammar:
         self.eps_rules = []
 
     def __setitem__(self, key, value):
-        if (isinstance(value, tuple) or isinstance(value, list)) and 1 <= len(value) <= 2:
+        if (isinstance(value, tuple) or isinstance(value, list)) and 0 <= len(value) <= 2:
             self.nonterms.add(key)
-            if len(value) == 1:
+            if len(value) == 0:
+                self.eps_rules.append(key)
+            elif len(value) == 1:
                 self.simple_rules.append((key, value[0]))
                 self.terms.add(value[0])
             else:
