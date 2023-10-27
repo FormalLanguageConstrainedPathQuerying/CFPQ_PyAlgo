@@ -14,8 +14,6 @@ from src.utils.graph_size import get_graph_size
 
 import numpy as np
 
-from src.utils.unique_ptr import unique_ptr
-
 
 class Graph:
     def __init__(self):
@@ -118,10 +116,10 @@ class Graph:
         self.empty_matrix_factory = lambda: GbMatrix(self.type, self.matrices_size, self.matrices_size)
 
         for k, v in coo_matrices.items():
-            self.matrices[k] = unique_ptr(GbMatrix.from_coo(
+            self.matrices[k] = GbMatrix.from_coo(
                 rows=v[0],
                 columns=v[1],
                 values=True,
                 nrows=self.matrices_size,
                 ncols=self.matrices_size,
-            ))
+            )

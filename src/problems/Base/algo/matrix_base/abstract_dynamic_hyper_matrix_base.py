@@ -22,7 +22,6 @@ from src.problems.Base.Base import BaseProblem
 from src.problems.utils import ResultAlgo
 from src.utils.default_dict import DefaultKeyDependentDict
 
-from src.utils.unique_ptr import unique_ptr
 
 DOMAIN = BOOL
 SEMIRING = any_pair
@@ -90,7 +89,7 @@ class AbstractDynamicHyperMatrixBaseAlgo(BaseProblem, ABC):
             new_front = DefaultKeyDependentDict(lambda var_name: (
                 self.hyper_space.create_hyper_vector(DOMAIN, HyperVectorOrientation.VERTICAL)
                 if var_name in self.hyper_grammar.hyper_nonterms
-                else unique_ptr(Matrix(DOMAIN, self.graph.matrices_size, self.graph.matrices_size))
+                else Matrix(DOMAIN, self.graph.matrices_size, self.graph.matrices_size)
             ))
 
             if iter != 1:
@@ -170,7 +169,7 @@ class AbstractDynamicHyperMatrixBaseAlgo(BaseProblem, ABC):
                 else HyperVectorOrientation.HORIZONTAL
             )
         else:
-            base_matrix = unique_ptr(Matrix(DOMAIN, self.graph.matrices_size, self.graph.matrices_size))
+            base_matrix = Matrix(DOMAIN, self.graph.matrices_size, self.graph.matrices_size)
 
         return self.hyper_space.wrap_enhanced_hyper_matrix(
             self.non_hyper_enhance_matrix(
@@ -189,7 +188,7 @@ class AbstractDynamicHyperMatrixBaseAlgo(BaseProblem, ABC):
         return (
             self.hyper_space.create_hyper_vector(DOMAIN, HyperVectorOrientation.VERTICAL)
             if var_name in self.hyper_grammar.hyper_nonterms
-            else unique_ptr(Matrix(DOMAIN, self.graph.matrices_size, self.graph.matrices_size))
+            else Matrix(DOMAIN, self.graph.matrices_size, self.graph.matrices_size)
         )
 
     def _fix_hyper_vector(self, hyper_vector: Matrix, reduce: bool) -> Matrix:

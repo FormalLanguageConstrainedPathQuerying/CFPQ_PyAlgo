@@ -5,7 +5,6 @@ from graphblas.core.dtypes import DataType
 from graphblas.core.matrix import Matrix
 
 from src.matrix.enhanced_matrix import EnhancedMatrix, MatrixForm
-from src.utils.unique_ptr import unique_ptr
 
 
 class MatrixToEnhancedAdapter(EnhancedMatrix):
@@ -35,14 +34,12 @@ class MatrixToEnhancedAdapter(EnhancedMatrix):
 
     def mxm(self, other: Matrix, swap_operands: bool = False, *args, **kwargs) -> Matrix:
         # with SimpleTimer(f"mxm ({self.nvals}, {self.format}) x ({other.nvals}, {other.format})"):
-        return unique_ptr(
-            (other.mxm(self.base, *args, **kwargs) if swap_operands else self.base.mxm(other, *args, **kwargs)).new()
-        )
+        return (other.mxm(self.base, *args, **kwargs) if swap_operands else self.base.mxm(other, *args, **kwargs)).new()
 
     def r_complimentary_mask(self, other: Matrix) -> Matrix:
-        zero = unique_ptr(Matrix(self.base.dtype, nrows=self.base.nrows, ncols=self.base.ncols))
+        zero = Matrix(self.base.dtype, nrows=self.base.nrows, ncols=self.base.ncols)
         zero.ss.config["format"] = self.format
-        res = unique_ptr(Matrix(self.base.dtype, nrows=self.base.nrows, ncols=self.base.ncols))
+        res = Matrix(self.base.dtype, nrows=self.base.nrows, ncols=self.base.ncols)
         res.ss.config["format"] = self.format
         res(~self.base.S) << other.ewise_add(zero, op=graphblas.monoid.any)
         return res

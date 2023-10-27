@@ -4,7 +4,6 @@ from graphblas.core.matrix import Matrix
 
 from src.matrix.abstract_enhanced_matrix_decorator import AbstractEnhancedMatrixDecorator
 from src.matrix.enhanced_matrix import EnhancedMatrix
-from src.utils.unique_ptr import unique_ptr
 
 
 class FormatOptimizedMatrix(AbstractEnhancedMatrixDecorator):
@@ -34,7 +33,7 @@ class FormatOptimizedMatrix(AbstractEnhancedMatrixDecorator):
         #     self.discard_base_on_reformat = False
         if desired_format not in self.matrices:
             # print("force reformat", desired_format)
-            base_matrix = unique_ptr(self.base.to_matrix().dup())
+            base_matrix = self.base.to_matrix().dup()
             base_matrix.ss.config["format"] = desired_format
             self.matrices[desired_format] = self.base.enhance_similarly(base_matrix)
             if self.discard_base_on_reformat:

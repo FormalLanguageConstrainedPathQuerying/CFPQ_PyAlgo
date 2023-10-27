@@ -3,10 +3,8 @@ from graphblas.core.matrix import Matrix
 
 from src.matrix.abstract_enhanced_matrix_decorator import AbstractEnhancedMatrixDecorator
 from src.matrix.enhanced_matrix import EnhancedMatrix
-from src.utils.unique_ptr import unique_ptr
 
 
-# TODO extract EnhancedMatrixAdapter
 class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
     def __init__(self, base: EnhancedMatrix, nvals_factor: int = 10, min_nvals: int = 10):
         assert min_nvals > 0
@@ -27,11 +25,11 @@ class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
             self,
             mapper,
             self_combine_threshold,
-            combiner=lambda acc, cur: unique_ptr(acc.ewise_add(
+            combiner=lambda acc, cur: acc.ewise_add(
                 cur,
                 # FIXME bool specific code
                 op=graphblas.monoid.any
-            ).new()),
+            ).new(),
             acc=None,
             reverse_sort=False,
     ) -> Matrix:
@@ -73,7 +71,7 @@ class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
 
     def iadd(self, other: Matrix):
         # TODO lazy
-        other = unique_ptr(other.dup())
+        other = other.dup()
         if self.format is not None:
             other.ss.config["format"] = self.format
         base = self.base
