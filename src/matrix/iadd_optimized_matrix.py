@@ -112,33 +112,3 @@ class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
 
     def __sizeof__(self):
         return sum(m.__sizeof__() for m in self.matrices)
-
-    # def __iadd__(self, other) -> "IAddOptimizedMatrix":
-    #     if OPTIMIZE_EMPTY and other.nvals == 0:
-    #         return self
-    #     other = other.dup()
-    #     other.format = self.format.to_graphblas_format()
-    #     while True:
-    #         other_nvals = max(other.nvals, self.min_size)
-    #         i = next((i for i in range(len(self.matrices)) if
-    #                   other_nvals / self.size_factor <= max(self.min_size,
-    #                                                         self.matrices[i].nvals) <= other_nvals * self.size_factor),
-    #                  None)
-    #         if i is None:
-    #             self.matrices.append(other.dup())
-    #             # self.dups.append(other.dup())
-    #             return self
-    #         other += self.matrices[i]
-    #         del self.matrices[i]
-    #         # del self.dups[i]
-
-    # def with_format(self, format: MatrixFormat) -> "IAddOptimizedMatrix":
-    #     if self.format == format:
-    #         return self
-    #     matrix = self.to_matrix()
-    #     matrix.format = format.to_graphblas_format()
-    #     return IAddOptimizedMatrix(
-    #         base=matrix,
-    #         size_factor=self.size_factor,
-    #         min_size=self.min_size,
-    #     )

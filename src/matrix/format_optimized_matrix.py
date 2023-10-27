@@ -43,13 +43,6 @@ class FormatOptimizedMatrix(AbstractEnhancedMatrixDecorator):
         res = self.matrices[desired_format]
         return res
 
-    # def _with_format_if_needed(self, other: Matrix, desired_format: MatrixFormat) -> "EnhancedMatrix":
-    #     if ((self.format == MatrixFormat.BOTH and other.nvals < self.nvals) or
-    #             other.nvals < self.nvals / self.size_diff_reformat_threshold):
-    #         other.format = desired_format.to_graphblas_format()
-    #         return self.base.with_format(desired_format)
-    #     return self.base
-
     def mxm(self, other: Matrix, swap_operands: bool = False, *args, **kwargs) -> Matrix:
         left_nvals = other.nvals if swap_operands else self.nvals
         right_nvals = self.nvals if swap_operands else other.nvals

@@ -8,10 +8,7 @@ from graphblas.core.matrix import Matrix
 
 OPTIMIZE_EMPTY = True
 
-# TODO ShortCircuitingForEmptyMatrix
-
-# TODO rename to MatrixFormat
-MatrixForm = Optional[str]
+MatrixFormat = Optional[str]
 
 old_ss_init = graphblas.core.ss.matrix.ss.__init__
 graphblas.core.ss.matrix.ss.__init__ = lambda self, parent: old_ss_init(self, weakref.proxy(parent))
@@ -30,7 +27,7 @@ class EnhancedMatrix(ABC):
 
     @property
     @abstractmethod
-    def format(self) -> MatrixForm:
+    def format(self) -> MatrixFormat:
         pass
 
     @property

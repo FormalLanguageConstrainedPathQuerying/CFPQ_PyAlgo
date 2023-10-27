@@ -4,7 +4,7 @@ import graphblas
 from graphblas.core.dtypes import DataType
 from graphblas.core.matrix import Matrix
 
-from src.matrix.enhanced_matrix import EnhancedMatrix, MatrixForm
+from src.matrix.enhanced_matrix import EnhancedMatrix, MatrixFormat
 
 
 class MatrixToEnhancedAdapter(EnhancedMatrix):
@@ -22,7 +22,7 @@ class MatrixToEnhancedAdapter(EnhancedMatrix):
         return self.base.shape
 
     @property
-    def format(self) -> MatrixForm:
+    def format(self) -> MatrixFormat:
         return self.base.ss.config["format"]
 
     @property

@@ -4,14 +4,7 @@ from typing import Tuple
 from graphblas.core.dtypes import DataType
 from graphblas.core.matrix import Matrix
 
-from src.matrix.enhanced_matrix import EnhancedMatrix, MatrixForm
-
-# EnhancedMatrix
-# - MatrixToEnhancedAdapter
-# - AbstractEnhancedMatrixDecorator
-# - IAddOptimizedMatrix
-# - FormatOptimizedMatrix
-# - HyperMatrix
+from src.matrix.enhanced_matrix import EnhancedMatrix, MatrixFormat
 
 
 class AbstractEnhancedMatrixDecorator(EnhancedMatrix, ABC):
@@ -29,7 +22,7 @@ class AbstractEnhancedMatrixDecorator(EnhancedMatrix, ABC):
         return self.base.shape
 
     @property
-    def format(self) -> MatrixForm:
+    def format(self) -> MatrixFormat:
         return self.base.format
 
     @property
