@@ -173,9 +173,7 @@ class AbstractDynamicHyperMatrixBaseAlgo(BaseProblem, ABC):
 
         return self.hyper_space.wrap_enhanced_hyper_matrix(
             self.non_hyper_enhance_matrix(
-                ShortCircuitingForEmptyMatrix(
-                    MatrixToEnhancedAdapter(base_matrix)
-                ),
+                MatrixToEnhancedAdapter(base_matrix),
                 var_name
             )
         )
