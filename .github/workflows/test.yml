@@ -21,6 +21,10 @@ jobs:
       run: |
         git submodule init && git submodule update
 
+    - name: Install dependencies for legacy algorithms
+      run: |
+        pip3 install pygraphblas==5.1.8.0
+
     - name: Install requirements
       run: |
         pip3 install -r requirements.txt
@@ -28,10 +32,6 @@ jobs:
     - name: Install cfpq_data_devtools
       run: |
         cd deps/CFPQ_Data && python3 setup.py install
-
-    - name: Build matrix AllPaths
-      run: |
-        cd src/problems/AllPaths/algo/matrix_all_paths/impl && make && cd -
 
     - name: Run tests
       run: |
