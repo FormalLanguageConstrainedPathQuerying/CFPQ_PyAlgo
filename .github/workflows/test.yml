@@ -35,4 +35,14 @@ jobs:
 
     - name: Run tests
       run: |
-        python3 -m pytest test -v -m "CI"
+        python3 -m coverage run -m pytest test -v -m "CI"
+
+    - name: Generate coverage HTML report
+      run: |
+        coverage html
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage-report
+        path: htmlcov/

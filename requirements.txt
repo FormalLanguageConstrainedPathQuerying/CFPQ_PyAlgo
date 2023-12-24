@@ -1,6 +1,7 @@
 tqdm
 pytest
 pytest-benchmark
+pytest-cov
 cfpq_data==1.0.2
 suitesparse-graphblas==7.4.4.0
 python-graphblas==2023.7.0
