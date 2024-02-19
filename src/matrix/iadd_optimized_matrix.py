@@ -45,7 +45,7 @@ class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
         # TODO check OPTIMIZE_EMPTY
         for cur in sorted((mapper(m) for m in self.matrices if m.nvals != 0), key=lambda m: m.nvals, reverse=reverse_sort):
             acc = cur if acc is None else combiner(acc, cur)
-        return acc
+        return mapper(self.base) if acc is None else acc
 
     def to_matrix(self) -> Matrix:
         # res = self._map_and_fold()

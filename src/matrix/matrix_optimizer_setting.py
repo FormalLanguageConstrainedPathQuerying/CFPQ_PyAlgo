@@ -1,0 +1,81 @@
+from abc import ABC, abstractmethod
+from argparse import Namespace, ArgumentParser
+from typing import List
+
+from graphblas.core.matrix import Matrix
+
+from src.algo_setting.algo_setting import AlgoSetting
+from src.matrix.enhanced_matrix import EnhancedMatrix
+from src.matrix.format_optimized_matrix import FormatOptimizedMatrix
+from src.matrix.iadd_optimized_matrix import IAddOptimizedMatrix
+from src.matrix.matrix_to_enhanced_adapter import MatrixToEnhancedAdapter
+from src.matrix.short_circuiting_for_empty_matrix import ShortCircuitingForEmptyMatrix
+
+
+class MatrixOptimizerSetting(AlgoSetting, ABC):
+    def __init__(self):
+        super().__init__()
+        self.is_enabled = True
+
+    @property
+    def flag_name(self) -> str:
+        return "-disable-" + self.var_name.replace("_", "-")
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(is_enabled={self.is_enabled})"
+
+    def add_arg(self, parser: ArgumentParser):
+        parser.add_argument(self.flag_name, dest=self.var_name, default=False, action="store_true")
+
+    def read_arg(self, args: Namespace):
+        if args.__getattribute__(self.var_name) is True:
+            self.was_specified_by_user = True
+            self.is_enabled = False
+
+    def wrap_matrix(self, base_matrix: EnhancedMatrix) -> EnhancedMatrix:
+        return self._wrap_matrix_unconditionally(base_matrix) if self.is_enabled else base_matrix
+
+    @abstractmethod
+    def _wrap_matrix_unconditionally(self, base_matrix: EnhancedMatrix) -> EnhancedMatrix:
+        pass
+
+
+def optimize_matrix(
+    matrix: Matrix,
+    settings: List[MatrixOptimizerSetting],
+) -> EnhancedMatrix:
+    optimized_matrix = MatrixToEnhancedAdapter(matrix)
+    for setting in settings:
+        optimized_matrix = setting.wrap_matrix(optimized_matrix)
+    return optimized_matrix
+
+
+def get_matrix_optimizer_settings(algo_settings: List[AlgoSetting]) -> List[MatrixOptimizerSetting]:
+    return [setting for setting in algo_settings if isinstance(setting, MatrixOptimizerSetting)]
+
+
+class OptimizeEmptyMatrixSetting(MatrixOptimizerSetting):
+    def _wrap_matrix_unconditionally(self, base_matrix: EnhancedMatrix) -> EnhancedMatrix:
+        return ShortCircuitingForEmptyMatrix(base_matrix)
+
+    @property
+    def var_name(self) -> str:
+        return "optimize_empty"
+
+
+class OptimizeFormatMatrixSetting(MatrixOptimizerSetting):
+    def _wrap_matrix_unconditionally(self, base_matrix: EnhancedMatrix) -> EnhancedMatrix:
+        return FormatOptimizedMatrix(base_matrix)
+
+    @property
+    def var_name(self) -> str:
+        return "optimize_format"
+
+
+class LazyAddMatrixSetting(MatrixOptimizerSetting):
+    def _wrap_matrix_unconditionally(self, base_matrix: EnhancedMatrix) -> EnhancedMatrix:
+        return IAddOptimizedMatrix(base_matrix)
+
+    @property
+    def var_name(self) -> str:
+        return "lazy_add"

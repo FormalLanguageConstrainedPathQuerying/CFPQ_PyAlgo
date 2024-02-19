@@ -12,11 +12,15 @@ class ShortCircuitingForEmptyMatrix(AbstractEnhancedMatrixDecorator):
     def base(self) -> EnhancedMatrix:
         return self._base
 
-    def mxm(self, other: Matrix, *args, **kwargs) -> Matrix:
+    def mxm(self, other: Matrix, swap_operands: bool = False, *args, **kwargs) -> Matrix:
         if self.nvals == 0 or other.nvals == 0:
-            assert self.shape[1] == other.shape[0]
-            return Matrix(self.dtype, self.shape[0], other.shape[1])
-        return self.base.mxm(other, *args, **kwargs)
+            if swap_operands:
+                assert self.shape[0] == other.shape[1]
+                return Matrix(self.dtype, self.shape[1], other.shape[0])
+            else:
+                assert self.shape[1] == other.shape[0]
+                return Matrix(self.dtype, self.shape[0], other.shape[1])
+        return self.base.mxm(other, swap_operands, *args, **kwargs)
 
     def r_complimentary_mask(self, other: Matrix) -> Matrix:
         if self.nvals == 0 or other.nvals == 0:
@@ -29,3 +33,6 @@ class ShortCircuitingForEmptyMatrix(AbstractEnhancedMatrixDecorator):
 
     def enhance_similarly(self, base: Matrix) -> "EnhancedMatrix":
         return ShortCircuitingForEmptyMatrix(self.base.enhance_similarly(base))
+
+    def __sizeof__(self):
+        return self.base.__sizeof__()

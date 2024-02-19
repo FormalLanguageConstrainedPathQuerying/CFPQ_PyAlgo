@@ -44,22 +44,32 @@ class CellHyperMatrix(HyperMatrix):
         return self.base.r_complimentary_mask(other)
 
     def iadd(self, other: Matrix):
-        self.base.iadd(other)
+        self.base.iadd(self.hyper_space.reduce_hyper_vector_or_cell(other))
 
     def __sizeof__(self):
         return self.base.__sizeof__()
 
 
 class VectorHyperMatrix(HyperMatrix):
-    def __init__(self, base: EnhancedMatrix, hyper_space: HyperMatrixSpace):
+    def __init__(
+        self,
+        base: EnhancedMatrix,
+        hyper_space: HyperMatrixSpace,
+        discard_base_on_reformat: bool = True,
+    ):
         assert hyper_space.is_hyper_vector(base.shape)
         super().__init__(base, hyper_space)
         self.matrices = {hyper_space.get_hyper_orientation(base.shape): base}
+        self.discard_base_on_reformat = discard_base_on_reformat
 
     def _force_init_orientation(self, desired_orientation: HyperVectorOrientation) -> "EnhancedMatrix":
         if desired_orientation not in self.matrices:
             base_matrix = self.hyper_space.hyper_rotate(self.base.to_matrix(), desired_orientation)
             self.matrices[desired_orientation] = self.base.enhance_similarly(base_matrix)
+            if self.discard_base_on_reformat:
+                del self.matrices[self.hyper_space.get_hyper_orientation(self.base.shape)]
+                self._base = self.matrices[desired_orientation]
+        self.discard_base_on_reformat = False
         return self.matrices[desired_orientation]
 
     def mxm(self, other: Matrix, swap_operands: bool = False, *args, **kwargs) -> Matrix:
@@ -83,6 +93,8 @@ class VectorHyperMatrix(HyperMatrix):
         return self.matrices[self.hyper_space.get_hyper_orientation(other.shape)].r_complimentary_mask(other)
 
     def iadd(self, other: Matrix):
+        if self.hyper_space.is_single_cell(other.shape):
+            other = self.hyper_space.repeat_into_hyper_column(other)
         for (orientation, m) in self.matrices.items():
             m.iadd(
                 self.hyper_space.hyper_rotate(other, orientation)

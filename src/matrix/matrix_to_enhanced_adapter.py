@@ -1,3 +1,4 @@
+import gc
 from typing import Tuple
 
 import graphblas
@@ -33,8 +34,11 @@ class MatrixToEnhancedAdapter(EnhancedMatrix):
         return self.base
 
     def mxm(self, other: Matrix, swap_operands: bool = False, *args, **kwargs) -> Matrix:
-        # with SimpleTimer(f"mxm ({self.nvals}, {self.format}) x ({other.nvals}, {other.format})"):
-        return (other.mxm(self.base, *args, **kwargs) if swap_operands else self.base.mxm(other, *args, **kwargs)).new()
+        return (
+            other.mxm(self.base, *args, **kwargs)
+            if swap_operands
+            else self.base.mxm(other, *args, **kwargs)
+        ).new(self.dtype)
 
     def r_complimentary_mask(self, other: Matrix) -> Matrix:
         zero = Matrix(self.base.dtype, nrows=self.base.nrows, ncols=self.base.ncols)

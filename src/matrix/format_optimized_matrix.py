@@ -10,7 +10,7 @@ class FormatOptimizedMatrix(AbstractEnhancedMatrixDecorator):
     def __new__(
             cls,
             base: EnhancedMatrix,
-            discard_base_on_reformat: bool = False,
+            discard_base_on_reformat: bool = True,
             reformat_threshold: int = 3.0
     ):
         if base.format is None:
@@ -39,7 +39,7 @@ class FormatOptimizedMatrix(AbstractEnhancedMatrixDecorator):
             if self.discard_base_on_reformat:
                 del self.matrices[self.base.format]
                 self._base = self.matrices[desired_format]
-                self.discard_base_on_reformat = False
+        self.discard_base_on_reformat = False
         res = self.matrices[desired_format]
         return res
 

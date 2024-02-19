@@ -15,7 +15,7 @@ class HyperSquareMatrixSpace(HyperMatrixSpace):
         assert hyper_size >= 1
         self.n = n
         self.raw_hyper_size = hyper_size
-        self.rounded_hyper_size = 2 ** (hyper_size - 1).bit_length()
+        self.rounded_hyper_size = hyper_size
 
     def is_single_cell(self, matrix_shape: Tuple[int, int]) -> bool:
         return matrix_shape == (self.n, self.n)
@@ -90,6 +90,9 @@ class HyperSquareMatrixSpace(HyperMatrixSpace):
         }[orientation]
         return Matrix(dtype=typ, nrows=shape[0], ncols=shape[1])
 
+    def create_hyper_cell(self, typ) -> Matrix:
+        return Matrix(dtype=typ, nrows=self.n, ncols=self.n)
+
     def stack_into_hyper_column(self, matrices: List[Matrix]) -> Matrix:
         assert len(matrices) == self.raw_hyper_size
         tiles = [[m] for m in matrices]
@@ -97,6 +100,9 @@ class HyperSquareMatrixSpace(HyperMatrixSpace):
         for i in range(self.raw_hyper_size, self.rounded_hyper_size):
             tiles.append([zero])
         return graphblas.ss.concat(tiles)
+
+    def repeat_into_hyper_column(self, matrix: Matrix) -> Matrix:
+        return self.stack_into_hyper_column([matrix] * self.raw_hyper_size)
 
     def wrap_enhanced_hyper_matrix(self, base: EnhancedMatrix) -> HyperMatrix:
         return CellHyperMatrix(base, self) if self.is_single_cell(base.shape) else VectorHyperMatrix(base, self)
