@@ -1,3 +1,9 @@
+# Tests output
+test/pocr_data/**/actual_*
+
+# Temp pytest-cov config
+.temp_coveragerc
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

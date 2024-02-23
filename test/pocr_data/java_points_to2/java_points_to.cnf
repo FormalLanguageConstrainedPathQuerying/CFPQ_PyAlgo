@@ -1,0 +1,30 @@
+PT	PTh	Alloc
+PTh	Assign	PTh
+FT	Alloc_r	FTh
+FTh	Assign_r	FTh
+Al	PT	FT
+PT	alloc
+FT	alloc_r
+PTh	assign
+FTh	assign_r
+Alloc_r	alloc_r
+Alloc	alloc
+Assign	assign
+Assign_r	assign_r
+st_r_i	store_r_i
+ld_r_i	load_r_i
+st_i	store_i
+ld_i	load_i
+PTh	ld_i	Al_st_PTh_i
+FTh	st_r_i	Al_ld_r_FTh_i
+Al_st_PTh_i	Al	st_PTh_i
+Al_ld_r_FTh_i	Al	ld_r_FTh_i
+st_PTh_i	st_i	PTh
+ld_r_FTh_i	ld_r_i	FTh
+PTh	ld_i	Al_st_i
+Al_st_i	Al	st_i
+FTh	st_r_i	Al_ld_r_i
+Al_ld_r_i	Al	ld_r_i
+
+Count:
+PT

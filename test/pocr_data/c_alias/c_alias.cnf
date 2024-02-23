@@ -1,0 +1,37 @@
+S	H1	H0
+S	H2	H0
+V	H3	V3
+V	V2	V3
+V	V1	V3
+V	V1	V2
+V	H4	V3
+V	H5	V3
+V	H5	V2
+V	a
+V	H1	H0
+V	H2	H0
+V	H6	V1
+V	V2	H7
+V	H7	V1
+V	a_r
+V1	H6	V1
+V1	V2	H7
+V1	H7	V1
+V1	a_r
+V2	H1	H0
+V2	H2	H0
+V3	H4	V3
+V3	H5	V3
+V3	H5	V2
+V3	a
+H0	d
+H1	H2	V
+H2	d_r
+H3	V1	V2
+H4	H5	V2
+H5	a
+H6	V2	H7
+H7	a_r
+
+Count:
+S
