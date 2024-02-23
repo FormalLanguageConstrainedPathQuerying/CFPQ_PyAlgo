@@ -31,17 +31,14 @@ class FormatOptimizedMatrix(AbstractOptimizedMatrixDecorator):
         return self._base
 
     def _force_init_format(self, desired_format: str) -> OptimizedMatrix:
-        # if desired_format == self.base.format:
-        #     self.discard_base_on_reformat = False
         if desired_format not in self.matrices:
-            # print("force reformat", desired_format)
             base_matrix = self.base.to_unoptimized().dup()
             base_matrix.ss.config["format"] = desired_format
             self.matrices[desired_format] = self.base.optimize_similarly(base_matrix)
             if self.discard_base_on_reformat:
                 del self.matrices[self.base.format]
                 self._base = self.matrices[desired_format]
-        self.discard_base_on_reformat = False
+                self.discard_base_on_reformat = False
         res = self.matrices[desired_format]
         return res
 
@@ -50,8 +47,6 @@ class FormatOptimizedMatrix(AbstractOptimizedMatrixDecorator):
         right_nvals = self.nvals if swap_operands else other.nvals
         desired_format = "by_row" if left_nvals < right_nvals else "by_col"
 
-        # if desired_format not in self.matrices:
-        #     print("self.nvals:", self.nvals, "other.nvals:", other.nvals)
         if desired_format in self.matrices or other.nvals < self.nvals / self.reformat_threshold:
             other.ss.config["format"] = desired_format
             reformatted_self = self._force_init_format(desired_format)
@@ -66,7 +61,10 @@ class FormatOptimizedMatrix(AbstractOptimizedMatrixDecorator):
             m.iadd(other, op)
 
     def optimize_similarly(self, other: Matrix) -> OptimizedMatrix:
-        return FormatOptimizedMatrix(self.base.optimize_similarly(other), reformat_threshold=self.reformat_threshold)
+        return FormatOptimizedMatrix(
+            self.base.optimize_similarly(other),
+            reformat_threshold=self.reformat_threshold
+        )
 
     def __sizeof__(self):
         return sum(m.__sizeof__() for m in self.matrices.values())
