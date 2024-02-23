@@ -4,13 +4,13 @@ from typing import Tuple
 from graphblas.core.dtypes import DataType
 from graphblas.core.matrix import Matrix
 
-from src.matrix.enhanced_matrix import EnhancedMatrix, MatrixFormat
+from src.matrix.optimized_matrix import OptimizedMatrix, MatrixFormat
 
 
-class AbstractEnhancedMatrixDecorator(EnhancedMatrix, ABC):
+class AbstractOptimizedMatrixDecorator(OptimizedMatrix, ABC):
     @property
     @abstractmethod
-    def base(self) -> EnhancedMatrix:
+    def base(self) -> OptimizedMatrix:
         pass
 
     @property
@@ -29,5 +29,5 @@ class AbstractEnhancedMatrixDecorator(EnhancedMatrix, ABC):
     def dtype(self) -> DataType:
         return self.base.dtype
 
-    def to_matrix(self) -> Matrix:
-        return self.base.to_matrix()
+    def to_unoptimized(self) -> Matrix:
+        return self.base.to_unoptimized()

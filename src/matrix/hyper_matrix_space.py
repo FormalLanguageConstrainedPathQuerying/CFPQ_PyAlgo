@@ -5,7 +5,7 @@ from typing import Tuple, List
 from graphblas.core.dtypes import DataType
 from graphblas.core.matrix import Matrix
 
-from src.matrix.enhanced_matrix import EnhancedMatrix
+from src.matrix.optimized_matrix import OptimizedMatrix
 
 
 class HyperVectorOrientation(Enum):
@@ -62,5 +62,5 @@ class HyperMatrixSpace(ABC):
         pass
 
     @abstractmethod
-    def wrap_enhanced_hyper_matrix(self, base: "EnhancedMatrix") -> EnhancedMatrix:
+    def wrap_enhanced_hyper_matrix(self, base: "OptimizedMatrix") -> OptimizedMatrix:
         pass

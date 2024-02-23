@@ -20,7 +20,7 @@ class NonIncrementalAllPairsCFLReachabilityMatrixAlgoInstance(AbstractAllPairsCf
                 self.graph.to_unoptimized(),
                 self.grammar,
                 accum=self.graph,
-                op=self.algebraic_structure.semiring
+                op=self.semiring
             )
             new_nvals = self.graph.nvals
             if old_nvals == new_nvals:

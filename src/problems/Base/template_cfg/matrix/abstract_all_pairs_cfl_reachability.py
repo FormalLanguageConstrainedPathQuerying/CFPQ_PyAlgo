@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from graphblas.core.matrix import Matrix
+from graphblas.core.operator import Semiring, Monoid
 from graphblas.core.vector import Vector
 from graphblas.semiring import any_pair
 
@@ -11,7 +12,7 @@ from src.graph.label_decomposed_graph import OptimizedLabelDecomposedGraph, Labe
 from src.matrix.matrix_optimizer_setting import get_matrix_optimizer_settings
 from src.matrix.utils import complimentary_mask
 from src.problems.Base.template_cfg.template_cfg_all_pairs_reachability import AllPairsCflReachabilityAlgoInstance
-from src.utils.typed_subtractable_semiring import SubtractableSemiring
+from src.utils.subtractable_semiring import SubtractableSemiring
 
 
 class AbstractAllPairsCflReachabilityMatrixAlgoInstance(AllPairsCflReachabilityAlgoInstance, ABC):
@@ -23,7 +24,7 @@ class AbstractAllPairsCflReachabilityMatrixAlgoInstance(AllPairsCflReachabilityA
         algebraic_structure: SubtractableSemiring = SubtractableSemiring(
             one=True,
             semiring=any_pair,
-            sub_op=lambda minuend, subtrahend: complimentary_mask(minuend, subtrahend, any_pair)
+            sub_op=lambda minuend, subtrahend: complimentary_mask(minuend, subtrahend)
         )
     ):
         matrix_optimizers = get_matrix_optimizer_settings(settings)
@@ -32,6 +33,14 @@ class AbstractAllPairsCflReachabilityMatrixAlgoInstance(AllPairsCflReachabilityA
         self.grammar = grammar
         self.settings = settings
         self.algebraic_structure = algebraic_structure
+
+    @property
+    def semiring(self) -> Semiring:
+        return self.algebraic_structure.semiring
+
+    @property
+    def monoid(self) -> Monoid:
+        return self.semiring.monoid
 
     def solve(self) -> Matrix:
         self.add_epsilon_edges()
@@ -52,8 +61,8 @@ class AbstractAllPairsCflReachabilityMatrixAlgoInstance(AllPairsCflReachabilityA
             dtype=self.graph.dtype
         ).diag()
         for non_terminal in self.grammar.epsilon_rules:
-            self.graph.iadd_by_symbol(non_terminal, identity_matrix)
+            self.graph.iadd_by_symbol(non_terminal, identity_matrix, op=self.monoid)
 
     def add_edges_for_simple_rules(self):
         for (non_terminal, terminal) in self.grammar.simple_rules:
-            self.graph.iadd_by_symbol(non_terminal, self.graph[terminal])
+            self.graph.iadd_by_symbol(non_terminal, self.graph[terminal], op=self.monoid)

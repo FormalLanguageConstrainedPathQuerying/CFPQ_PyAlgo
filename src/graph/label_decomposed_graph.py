@@ -1,20 +1,21 @@
 from collections import defaultdict
-
-import numpy as np
-import pandas as pd
-
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
+import graphblas
+import numpy as np
+import pandas as pd
 from graphblas.core.dtypes import DataType, BOOL
 from graphblas.core.matrix import Matrix
+from graphblas.core.operator import Monoid, Semiring
 from graphblas.exceptions import IndexOutOfBound
 
 from src.grammar.cnf_grammar_template import CnfGrammarTemplate, Symbol
-from src.matrix.enhanced_matrix import EnhancedMatrix
 from src.matrix.hyper_matrix_space import HyperMatrixSpace
 from src.matrix.hyper_square_matrix_space import HyperSquareMatrixSpace
 from src.matrix.matrix_optimizer_setting import MatrixOptimizerSetting, optimize_matrix
+from src.matrix.optimized_matrix import OptimizedMatrix
+from src.utils.subtractable_semiring import SubOp
 
 
 class LabelDecomposedGraph:
@@ -145,7 +146,7 @@ class OptimizedLabelDecomposedGraph:
         self.block_matrix_space = block_matrix_space
         self.dtype = dtype
         self.matrix_optimizers = matrix_optimizers
-        self.matrices: Dict[Symbol, EnhancedMatrix] = dict()
+        self.matrices: Dict[Symbol, OptimizedMatrix] = dict()
 
     @staticmethod
     def from_unoptimized(
@@ -158,7 +159,7 @@ class OptimizedLabelDecomposedGraph:
             dtype=unoptimized_graph.dtype,
             matrix_optimizers=matrix_optimizers
         )
-        optimized_graph += unoptimized_graph
+        optimized_graph.iadd(unoptimized_graph, op=graphblas.monoid.any)
         return optimized_graph
 
     def empty_copy(self) -> "OptimizedLabelDecomposedGraph":
@@ -174,7 +175,7 @@ class OptimizedLabelDecomposedGraph:
             vertex_count=self.vertex_count,
             block_matrix_space=self.block_matrix_space,
             matrices={
-                symbol: matrix.to_matrix()
+                symbol: matrix.to_unoptimized()
                 for symbol, matrix in self.matrices.items()
             },
             dtype=self.dtype,
@@ -184,25 +185,25 @@ class OptimizedLabelDecomposedGraph:
     def nvals(self) -> int:
         return sum(matrix.nvals for matrix in self.matrices.values())
 
-    def iadd_by_symbol(self, symbol: Symbol, matrix: Matrix):
+    def iadd_by_symbol(self, symbol: Symbol, matrix: Matrix, op: Monoid):
         if symbol not in self:
             self.matrices[symbol] = self.block_matrix_space.wrap_enhanced_hyper_matrix(
                 optimize_matrix(self._create_matrix_for_symbol(symbol), self.matrix_optimizers)
             )
-        self.matrices[symbol] += matrix
+        self.matrices[symbol].iadd(matrix, op)
 
-    def __iadd__(self, other: LabelDecomposedGraph) -> "OptimizedLabelDecomposedGraph":
+    def iadd(self, other: LabelDecomposedGraph, op: Monoid):
         for symbol, matrix in other.matrices.items():
-            self.iadd_by_symbol(symbol, matrix)
+            self.iadd_by_symbol(symbol, matrix, op)
         return self
 
-    def r_complimentary_mask(self, other: LabelDecomposedGraph) -> LabelDecomposedGraph:
+    def rsub(self, other: LabelDecomposedGraph, op: SubOp) -> LabelDecomposedGraph:
         return LabelDecomposedGraph(
             vertex_count=self.vertex_count,
             block_matrix_space=self.block_matrix_space,
             dtype=self.dtype,
             matrices={
-                symbol: (self.matrices[symbol].r_complimentary_mask(matrix) if symbol in self else matrix)
+                symbol: (self.matrices[symbol].rsub(matrix, op) if symbol in self else matrix)
                 for symbol, matrix in other.matrices.items()
             },
         )
@@ -211,9 +212,9 @@ class OptimizedLabelDecomposedGraph:
             self,
             other: LabelDecomposedGraph,
             grammar: CnfGrammarTemplate,
+            op: Semiring,
             accum: Optional["OptimizedLabelDecomposedGraph"] = None,
             swap_operands: bool = False,
-            *args, **kwargs
     ) -> "OptimizedLabelDecomposedGraph":
         if accum is None:
             accum = self.empty_copy()
@@ -221,22 +222,27 @@ class OptimizedLabelDecomposedGraph:
             if swap_operands:
                 rhs1, rhs2 = rhs2, rhs1
             if rhs1 in self.matrices and rhs2 in other.matrices:
-                mxm = self.matrices[rhs1].mxm(other.matrices[rhs2], swap_operands=swap_operands, *args, **kwargs)
-                accum.iadd_by_symbol(lhs, mxm)
+                mxm = self.matrices[rhs1].mxm(
+                    other.matrices[rhs2],
+                    swap_operands=swap_operands,
+                    op=op,
+                )
+                accum.iadd_by_symbol(lhs, mxm, op.monoid)
         return accum
 
     def rmxm(
             self,
             other: LabelDecomposedGraph,
             grammar: CnfGrammarTemplate,
+            op: Semiring,
             accum: Optional["OptimizedLabelDecomposedGraph"] = None,
             *args, **kwargs
     ) -> "OptimizedLabelDecomposedGraph":
-        return self.mxm(other, grammar, accum, swap_operands=True, *args, **kwargs)
+        return self.mxm(other, grammar, op, accum, swap_operands=True, *args, **kwargs)
 
     def __getitem__(self, symbol: Symbol) -> Matrix:
         return (
-            self.matrices[symbol].to_matrix()
+            self.matrices[symbol].to_unoptimized()
             if symbol in self
             else self._create_matrix_for_symbol(symbol)
         )

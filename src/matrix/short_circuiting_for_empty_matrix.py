@@ -1,18 +1,20 @@
 from graphblas.core.matrix import Matrix
+from graphblas.core.operator import Semiring, Monoid
 
-from src.matrix.abstract_enhanced_matrix_decorator import AbstractEnhancedMatrixDecorator
-from src.matrix.enhanced_matrix import EnhancedMatrix
+from src.matrix.abstract_optimized_matrix_decorator import AbstractOptimizedMatrixDecorator
+from src.matrix.optimized_matrix import OptimizedMatrix
+from src.utils.subtractable_semiring import SubOp
 
 
-class ShortCircuitingForEmptyMatrix(AbstractEnhancedMatrixDecorator):
-    def __init__(self, base: EnhancedMatrix):
+class ShortCircuitingForEmptyMatrix(AbstractOptimizedMatrixDecorator):
+    def __init__(self, base: OptimizedMatrix):
         self._base = base
 
     @property
-    def base(self) -> EnhancedMatrix:
+    def base(self) -> OptimizedMatrix:
         return self._base
 
-    def mxm(self, other: Matrix, swap_operands: bool = False, *args, **kwargs) -> Matrix:
+    def mxm(self, other: Matrix, op: Semiring, swap_operands: bool = False) -> Matrix:
         if self.nvals == 0 or other.nvals == 0:
             if swap_operands:
                 assert self.shape[0] == other.shape[1]
@@ -20,19 +22,19 @@ class ShortCircuitingForEmptyMatrix(AbstractEnhancedMatrixDecorator):
             else:
                 assert self.shape[1] == other.shape[0]
                 return Matrix(self.dtype, self.shape[0], other.shape[1])
-        return self.base.mxm(other, swap_operands, *args, **kwargs)
+        return self.base.mxm(other, op, swap_operands)
 
-    def r_complimentary_mask(self, other: Matrix) -> Matrix:
+    def rsub(self, other: Matrix, op: SubOp) -> Matrix:
         if self.nvals == 0 or other.nvals == 0:
             return other
-        return self.base.r_complimentary_mask(other)
+        return self.base.rsub(other, op)
 
-    def iadd(self, other: Matrix):
+    def iadd(self, other: Matrix, op: Monoid):
         if other.nvals != 0:
-            self.base.iadd(other)
+            self.base.iadd(other, op=op)
 
-    def enhance_similarly(self, base: Matrix) -> "EnhancedMatrix":
-        return ShortCircuitingForEmptyMatrix(self.base.enhance_similarly(base))
+    def optimize_similarly(self, other: Matrix) -> "OptimizedMatrix":
+        return ShortCircuitingForEmptyMatrix(self.base.optimize_similarly(other))
 
     def __sizeof__(self):
         return self.base.__sizeof__()

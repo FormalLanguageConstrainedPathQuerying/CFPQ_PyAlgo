@@ -4,7 +4,7 @@ import graphblas.ss
 from graphblas.core.matrix import Matrix
 import graphblas.monoid
 
-from src.matrix.enhanced_matrix import EnhancedMatrix
+from src.matrix.optimized_matrix import OptimizedMatrix
 from src.matrix.hyper_matrix import HyperMatrix, CellHyperMatrix, VectorHyperMatrix
 from src.matrix.hyper_matrix_space import HyperMatrixSpace, HyperVectorOrientation
 
@@ -104,5 +104,5 @@ class HyperSquareMatrixSpace(HyperMatrixSpace):
     def repeat_into_hyper_column(self, matrix: Matrix) -> Matrix:
         return self.stack_into_hyper_column([matrix] * self.raw_hyper_size)
 
-    def wrap_enhanced_hyper_matrix(self, base: EnhancedMatrix) -> HyperMatrix:
+    def wrap_enhanced_hyper_matrix(self, base: OptimizedMatrix) -> HyperMatrix:
         return CellHyperMatrix(base, self) if self.is_single_cell(base.shape) else VectorHyperMatrix(base, self)

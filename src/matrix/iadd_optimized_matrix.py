@@ -1,20 +1,23 @@
 import graphblas
 from graphblas.core.matrix import Matrix
+from graphblas.core.operator import Monoid, Semiring
 
-from src.matrix.abstract_enhanced_matrix_decorator import AbstractEnhancedMatrixDecorator
-from src.matrix.enhanced_matrix import EnhancedMatrix
+from src.matrix.abstract_optimized_matrix_decorator import AbstractOptimizedMatrixDecorator
+from src.matrix.optimized_matrix import OptimizedMatrix
+from src.utils.subtractable_semiring import SubOp
 
 
-class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
-    def __init__(self, base: EnhancedMatrix, nvals_factor: int = 10, min_nvals: int = 10):
+class IAddOptimizedMatrix(AbstractOptimizedMatrixDecorator):
+    def __init__(self, base: OptimizedMatrix, nvals_factor: int = 10, min_nvals: int = 10):
         assert min_nvals > 0
         assert nvals_factor > 0
         self.matrices = [base]
         self.size_factor = nvals_factor
         self.min_size = min_nvals
+        self.last_used_monoid = None
 
     @property
-    def base(self) -> EnhancedMatrix:
+    def base(self) -> OptimizedMatrix:
         return self.matrices[0]
 
     @property
@@ -24,7 +27,7 @@ class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
     def _map_and_fold(
             self,
             mapper,
-            self_combine_threshold,
+            nvals_combine_threshold,
             combiner=lambda acc, cur: acc.ewise_add(
                 cur,
                 # FIXME bool specific code
@@ -33,44 +36,50 @@ class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
             acc=None,
             reverse_sort=False,
     ) -> Matrix:
-        new_matrices = []
-        for m in sorted(self.matrices, key=lambda m: m.nvals):
-            if m.nvals <= self_combine_threshold and len(new_matrices) > 0:
-                # print("self_combine:", new_matrices[-1].nvals, m.nvals, self_combine_threshold)
-                new_matrices[-1] += m.to_matrix()
-            else:
-                new_matrices.append(m)
-        self.matrices = new_matrices
+        self.force_combine_small_matrices(nvals_combine_threshold)
 
         # TODO check OPTIMIZE_EMPTY
         for cur in sorted((mapper(m) for m in self.matrices if m.nvals != 0), key=lambda m: m.nvals, reverse=reverse_sort):
             acc = cur if acc is None else combiner(acc, cur)
         return mapper(self.base) if acc is None else acc
 
-    def to_matrix(self) -> Matrix:
+    def force_combine_small_matrices(self, nvals_combine_threshold):
+        new_matrices = []
+        for m in sorted(self.matrices, key=lambda m: m.nvals):
+            if m.nvals <= nvals_combine_threshold and len(new_matrices) > 0:
+                new_matrices[-1].iadd(m.to_unoptimized(), op=self.last_used_monoid)
+            else:
+                new_matrices.append(m)
+        self.matrices = new_matrices
+
+    def to_unoptimized(self) -> Matrix:
         # res = self._map_and_fold()
         # self.matrices = [self.base.enhance_similarly(res)]
         # print(list(sorted([m.nvals for m in self.matrices])))
-        return self._map_and_fold(mapper=lambda m: m.to_matrix(), self_combine_threshold=float("inf"))
+        return self._map_and_fold(mapper=lambda m: m.to_unoptimized(), nvals_combine_threshold=float("inf"))
         # if len(self.matrices) > 1
         # # TODO this .dup() looks like a hack, although same can said about almost any dup(), redesign needed.
         # #  Best idea rn is to introduce some DupMatrix that dupes lazily when it (or original) gets modified.
         # else self.matrices[0].to_matrix().dup())
 
-    def mxm(self, other: Matrix, *args, **kwargs) -> Matrix:
-        return self._map_and_fold(mapper=lambda m: m.mxm(other, *args, **kwargs), self_combine_threshold=other.nvals)
+    def mxm(self, other: Matrix, op: Semiring, swap_operands: bool = False) -> Matrix:
+        self.update_monoid(op.monoid)
+        return self._map_and_fold(
+            mapper=lambda m: m.mxm(other, op=op, swap_operands=swap_operands),
+            nvals_combine_threshold=other.nvals
+        )
 
-    def r_complimentary_mask(self, other) -> Matrix:
+    def rsub(self, other, op: SubOp) -> Matrix:
         return self._map_and_fold(
             acc=other,
             reverse_sort=True,
             mapper=lambda m: m,
-            combiner=lambda acc, cur: cur.r_complimentary_mask(acc),
-            self_combine_threshold=other.nvals
+            combiner=lambda acc, cur: cur.rsub(acc, op),
+            nvals_combine_threshold=other.nvals
         )
 
-    def iadd(self, other: Matrix):
-        # TODO lazy
+    def iadd(self, other: Matrix, op: Monoid):
+        self.update_monoid(op)
         other = other.dup()
         if self.format is not None:
             other.ss.config["format"] = self.format
@@ -93,19 +102,24 @@ class IAddOptimizedMatrix(AbstractEnhancedMatrixDecorator):
 
             if i is None:
                 # self.matrices.append(self.base.create_similar(other))
-                self.matrices.append(base.enhance_similarly(other))
+                self.matrices.append(base.optimize_similarly(other))
                 # self.dups.append(other.dup())
                 return self
             other << other.ewise_add(
-                self.matrices[i].to_matrix(),
+                self.matrices[i].to_unoptimized(),
                 # FIXME bool specific code
                 op=graphblas.monoid.any
             )
             del self.matrices[i]
 
-    def enhance_similarly(self, base: Matrix) -> EnhancedMatrix:
+    def update_monoid(self, op: Monoid):
+        if self.last_used_monoid is not op:
+            self.force_combine_small_matrices(nvals_combine_threshold=float("inf"))
+            self.last_used_monoid = op
+
+    def optimize_similarly(self, other: Matrix) -> OptimizedMatrix:
         return IAddOptimizedMatrix(
-            self.base.enhance_similarly(base),
+            self.base.optimize_similarly(other),
             nvals_factor=self.size_factor,
             min_nvals=self.min_size
         )

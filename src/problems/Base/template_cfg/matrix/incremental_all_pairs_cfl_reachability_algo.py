@@ -17,16 +17,16 @@ class IncrementalAllPairsCFLReachabilityMatrixAlgoInstance(AbstractAllPairsCflRe
         front = self.graph.to_unoptimized()
         self.graph = self.graph.empty_copy()
         while front.nvals != 0:
-            new_front = self.graph.mxm(front, self.grammar, op=self.algebraic_structure.semiring)
-            self.graph += front
+            new_front = self.graph.mxm(front, self.grammar, op=self.semiring)
+            self.graph.iadd(front, op=self.monoid)
             self.graph.rmxm(
                 front,
                 self.grammar,
                 accum=new_front,
-                op=self.algebraic_structure.semiring
+                op=self.semiring
             )
             front = new_front.to_unoptimized()
-            front = self.graph.r_complimentary_mask(front)
+            front = self.graph.rsub(front, op=self.algebraic_structure.sub_op)
 
 
 class IncrementalAllPairsCFLReachabilityMatrixAlgo(AllPairsCflReachabilityAlgo):
