@@ -7,7 +7,7 @@ from graphblas.core.matrix import Matrix
 from src.algo_setting.algo_setting import AlgoSetting
 from src.matrix.optimized_matrix import OptimizedMatrix
 from src.matrix.format_optimized_matrix import FormatOptimizedMatrix
-from src.matrix.iadd_optimized_matrix import IAddOptimizedMatrix
+from src.matrix.lazy_add_optimized_matrix import LazyAddOptimizedMatrix
 from src.matrix.matrix_to_optimized_adapter import MatrixToOptimizedAdapter
 from src.matrix.short_circuiting_for_empty_matrix import ShortCircuitingForEmptyMatrix
 
@@ -74,7 +74,7 @@ class OptimizeFormatMatrixSetting(MatrixOptimizerSetting):
 
 class LazyAddMatrixSetting(MatrixOptimizerSetting):
     def _wrap_matrix_unconditionally(self, base_matrix: OptimizedMatrix) -> OptimizedMatrix:
-        return IAddOptimizedMatrix(base_matrix)
+        return LazyAddOptimizedMatrix(base_matrix)
 
     @property
     def var_name(self) -> str:
