@@ -10,7 +10,7 @@ convert_path_to_module() {
 }
 
 git fetch
-MERGE_BASE_COMMIT=$(git merge-base HEAD master)
+MERGE_BASE_COMMIT=$(git merge-base HEAD origin/master)
 
 echo "Collecting coverage for files modified after commit:"
 git --no-pager log -n 1 $MERGE_BASE_COMMIT
