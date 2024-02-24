@@ -104,9 +104,9 @@ class LabelDecomposedGraph:
                     )
                 except IndexOutOfBound as e:
                     raise ValueError(
-                        f"Failed to create adjacency matrix for label '{symbol.label}'.\n"
-                        f"This issue is usually caused by using indexes for label without '_i' suffix.\n"
-                        f"Consider adding suffix '_i' to label '{symbol.label}'."
+                        f"Failed to create adjacency matrix for label `{symbol.label}`.\n"
+                        f"This issue is usually caused by using indexes for label without `_i` suffix.\n"
+                        f"Consider adding `_i` suffix to label '{symbol.label}'."
                     ) from e
 
             return LabelDecomposedGraph(
@@ -123,7 +123,7 @@ class LabelDecomposedGraph:
                 "```\n"
                 "Whitespace characters should be used to separate values on one line.\n"
                 "[LABEL_INDEX] is optional.\n"
-                "Indexed labels names must end with '_i'."
+                "Indexed labels names must end with `_i`."
             ) from e
 
     def __sizeof__(self) -> int:

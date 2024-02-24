@@ -48,14 +48,32 @@ def run_all_pairs_cflr(
 
 def main(raw_args: List[str]):
     parser = argparse.ArgumentParser(
-        description="Measures running time for solving all-pairs reachability")
-    parser.add_argument('-algo', dest='algo', required=True, choices=ALL_PAIRS_CFL_REACHABILITY_ALGO_NAMES,
-                        help='Algorithm implementation that will be run')
-    parser.add_argument('-graph', dest='graph', required=True, help='Graph file to query on in POCR format')
-    parser.add_argument('-grammar', dest='grammar', required=True,
-                        help='Context-free grammar file to query with in POCR format')
-    parser.add_argument('-time-limit', dest='time_limit', default=None, help='Time limit in seconds')
-    parser.add_argument('-out', dest='out', default=None, help='Output file for saving vertex pairs')
+        description="Solves the Context-Free Language Reachability (CFL-R) problem for all vertex pairs.",
+    )
+    parser.add_argument(dest='algo', choices=ALL_PAIRS_CFL_REACHABILITY_ALGO_NAMES,
+                        help='Specifies the algorithm to use.')
+    parser.add_argument(dest='graph',
+                        help='Specifies the graph file in POCR format. The line format is: '
+                             '`<EDGE_SOURCE> <EDGE_DESTINATION> <EDGE_LABEL> [LABEL_INDEX]`, '
+                             'with values separated by whitespace characters. '
+                             '[LABEL_INDEX] is optional. '
+                             'Indexed label names should end with `_i`.')
+    parser.add_argument(dest='grammar',
+                        help='Specifies the grammar file in POCR format. '
+                             'Non-empty lines (except the last two) denote grammar rules: '
+                             'complex rules (`<NON_TERMINAL> <SYMBOL_1> <SYMBOL_2>`), '
+                             'simple rules (`<NON_TERMINAL> <TERMINAL>`), and epsilon rules (`<NON_TERMINAL>`), '
+                             'with values separated by whitespace characters. '
+                             'Indexed symbol names should end with `_i`. '
+                             'The final two lines define the starting non-terminal as: '
+                             '`Count:\\n <START_NON_TERMINAL>`.')
+    parser.add_argument('--time-limit', dest='time_limit', default=None, help='Sets a time limit in seconds.')
+    parser.add_argument('--out', dest='out', default=None,
+                        help='Specifies the output file for saving vertex pairs. '
+                             'The line format is: `[START_VERTEX]\t[END_VERTEX]`. '
+                             'Each line indicates a path exists from [START_VERTEX] to [END_VERTEX], '
+                             'labels along which spell a word from the specified Context-Free Language (CFL).'
+                        )
     settings_manager = AlgoSettingsManager()
     settings_manager.add_args(parser)
     args = parser.parse_args(raw_args)

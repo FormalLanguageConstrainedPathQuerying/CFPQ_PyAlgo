@@ -49,17 +49,17 @@ class CnfGrammarTemplate:
         Reads a CNF grammar from a file and constructs a CnfGrammarTemplate object.
 
         The file format is expected to be as follows:
-        - Each non-blank line represents a rule, except the last two lines.
-        - Complex rules are in the format: <NON_TERMINAL> <SYMBOL_1> <SYMBOL_2>
-        - Simple rules are in the format: <NON_TERMINAL> <TERMINAL>
-        - Epsilon rules are in the format: <NON_TERMINAL>
-        - Indexed symbols names must end with suffix '_i'.
+        - Each non-empty line represents a rule, except the last two lines.
+        - Complex rules are in the format: `<NON_TERMINAL> <SYMBOL_1> <SYMBOL_2>`
+        - Simple rules are in the format: `<NON_TERMINAL> <TERMINAL>`
+        - Epsilon rules are in the format: `<NON_TERMINAL>`
+        - Indexed symbols names must end with suffix `_i`.
         - Whitespace characters are used to separate values on one line
         - The last two lines specify the starting non-terminal in the format:
-            '''
+            ```
             Count:
             <START_NON_TERMINAL>
-            '''
+            ```
         """
         with open(path, 'r') as file:
             lines = [line.strip() for line in file.readlines() if line.strip()]
@@ -91,9 +91,9 @@ class CnfGrammarTemplate:
                     complex_rules.append((Symbol(parts[0]), Symbol(parts[1]), Symbol(parts[2])))
                 else:
                     raise ValueError(
-                        f"Invalid rule format: '{line}' in file '{path}'. "
-                        f"Expected formats are '<NON_TERMINAL> <SYMBOL_1> <SYMBOL_2>' for complex rules, "
-                        f"'<NON_TERMINAL> <TERMINAL>' for simple rules, and '<NON_TERMINAL>' for epsilon rules."
+                        f"Invalid rule format: `{line}` in file `{path}`. "
+                        f"Expected formats are `<NON_TERMINAL> <SYMBOL_1> <SYMBOL_2>` for complex rules, "
+                        f"`<NON_TERMINAL> <TERMINAL>` for simple rules, and `<NON_TERMINAL>` for epsilon rules."
                     )
 
             return CnfGrammarTemplate(start_nonterm, epsilon_rules, simple_rules, complex_rules)

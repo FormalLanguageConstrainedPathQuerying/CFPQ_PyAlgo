@@ -19,13 +19,24 @@ class MatrixOptimizerSetting(AlgoSetting, ABC):
 
     @property
     def flag_name(self) -> str:
-        return "-disable-" + self.var_name.replace("_", "-")
+        return "--disable-" + self.var_name.replace("_", "-")
+
+    @property
+    @abstractmethod
+    def help(self) -> str:
+        pass
 
     def __repr__(self):
         return f"{self.__class__.__name__}(is_enabled={self.is_enabled})"
 
     def add_arg(self, parser: ArgumentParser):
-        parser.add_argument(self.flag_name, dest=self.var_name, default=False, action="store_true")
+        parser.add_argument(
+            self.flag_name,
+            dest=self.var_name,
+            default=False,
+            action="store_true",
+            help=self.help
+        )
 
     def read_arg(self, args: Namespace):
         if args.__getattribute__(self.var_name) is True:
@@ -63,6 +74,10 @@ class OptimizeEmptyMatrixSetting(MatrixOptimizerSetting):
     def var_name(self) -> str:
         return "optimize_empty"
 
+    @property
+    def help(self) -> str:
+        return "Turns off empty matrix optimization."
+
 
 class OptimizeFormatMatrixSetting(MatrixOptimizerSetting):
     def _wrap_matrix_unconditionally(self, base_matrix: OptimizedMatrix) -> OptimizedMatrix:
@@ -72,6 +87,10 @@ class OptimizeFormatMatrixSetting(MatrixOptimizerSetting):
     def var_name(self) -> str:
         return "optimize_format"
 
+    @property
+    def help(self) -> str:
+        return "Turns off matrix format optimization."
+
 
 class LazyAddMatrixSetting(MatrixOptimizerSetting):
     def _wrap_matrix_unconditionally(self, base_matrix: OptimizedMatrix) -> OptimizedMatrix:
@@ -80,3 +99,7 @@ class LazyAddMatrixSetting(MatrixOptimizerSetting):
     @property
     def var_name(self) -> str:
         return "lazy_add"
+
+    @property
+    def help(self) -> str:
+        return "Turns off lazy addition optimization."

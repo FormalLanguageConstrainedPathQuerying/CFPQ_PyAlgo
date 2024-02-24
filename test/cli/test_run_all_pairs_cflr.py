@@ -14,10 +14,10 @@ def test_cli_run_all_pairs_cflr_out():
     expected_path = os.path.join(data_path, 'expected_all_pairs_reachability.txt')
     run_all_pairs_cflr.main(
         [
-            '-algo', 'IncrementalAllPairsCFLReachabilityMatrix',
-            '-graph', find_graph_file(data_path),
-            '-grammar', find_grammar_file(data_path),
-            '-out', actual_path
+            'IncrementalAllPairsCFLReachabilityMatrix',
+            find_graph_file(data_path),
+            find_grammar_file(data_path),
+            '--out', actual_path
         ]
     )
     with open(actual_path, 'r') as actual_file:

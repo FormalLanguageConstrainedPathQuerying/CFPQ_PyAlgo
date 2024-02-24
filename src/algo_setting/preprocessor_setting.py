@@ -39,14 +39,20 @@ class IndexExplodingPreProcessorSetting(PreProcessorSetting):
 
     @property
     def flag_name(self) -> str:
-        return "-" + self.var_name.replace('_', '-')
+        return "--disable-optimize-block-matrix"
 
     @property
     def var_name(self) -> str:
         return "explode_indexes"
 
     def add_arg(self, parser: ArgumentParser):
-        parser.add_argument(self.flag_name, dest=self.var_name, default=False, action="store_true")
+        parser.add_argument(
+            self.flag_name,
+            dest=self.var_name,
+            default=False,
+            action="store_true",
+            help="Turns off block matrix optimization."
+        )
 
     def read_arg(self, args: Namespace):
         if args.explode_indexes:
