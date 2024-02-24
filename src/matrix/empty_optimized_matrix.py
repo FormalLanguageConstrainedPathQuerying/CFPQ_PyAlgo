@@ -6,7 +6,7 @@ from src.matrix.optimized_matrix import OptimizedMatrix
 from src.utils.subtractable_semiring import SubOp
 
 
-class ShortCircuitingForEmptyMatrix(AbstractOptimizedMatrixDecorator):
+class EmptyOptimizedMatrix(AbstractOptimizedMatrixDecorator):
     def __init__(self, base: OptimizedMatrix):
         self._base = base
 
@@ -34,7 +34,7 @@ class ShortCircuitingForEmptyMatrix(AbstractOptimizedMatrixDecorator):
             self.base.iadd(other, op=op)
 
     def optimize_similarly(self, other: Matrix) -> "OptimizedMatrix":
-        return ShortCircuitingForEmptyMatrix(self.base.optimize_similarly(other))
+        return EmptyOptimizedMatrix(self.base.optimize_similarly(other))
 
     def __sizeof__(self):
         return self.base.__sizeof__()

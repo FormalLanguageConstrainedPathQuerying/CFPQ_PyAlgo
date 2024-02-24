@@ -1,4 +1,3 @@
-import graphblas
 from graphblas.core.matrix import Matrix
 from graphblas.core.operator import Monoid, Semiring
 

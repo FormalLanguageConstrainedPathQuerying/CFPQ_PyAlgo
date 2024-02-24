@@ -9,7 +9,7 @@ from src.matrix.optimized_matrix import OptimizedMatrix
 from src.matrix.format_optimized_matrix import FormatOptimizedMatrix
 from src.matrix.lazy_add_optimized_matrix import LazyAddOptimizedMatrix
 from src.matrix.matrix_to_optimized_adapter import MatrixToOptimizedAdapter
-from src.matrix.short_circuiting_for_empty_matrix import ShortCircuitingForEmptyMatrix
+from src.matrix.empty_optimized_matrix import EmptyOptimizedMatrix
 
 
 class MatrixOptimizerSetting(AlgoSetting, ABC):
@@ -56,7 +56,7 @@ def get_matrix_optimizer_settings(algo_settings: List[AlgoSetting]) -> List[Matr
 
 class OptimizeEmptyMatrixSetting(MatrixOptimizerSetting):
     def _wrap_matrix_unconditionally(self, base_matrix: OptimizedMatrix) -> OptimizedMatrix:
-        return ShortCircuitingForEmptyMatrix(base_matrix)
+        return EmptyOptimizedMatrix(base_matrix)
 
     @property
     def var_name(self) -> str:
