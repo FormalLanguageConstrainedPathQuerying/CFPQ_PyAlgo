@@ -3,6 +3,7 @@ from argparse import ArgumentParser, Namespace
 from typing import List
 
 from src.algo_setting.algo_setting import AlgoSetting
+from src.algo_setting.preprocessor_setting import IndexExplodingPreProcessorSetting
 from src.matrix.matrix_optimizer_setting import OptimizeEmptyMatrixSetting, LazyAddMatrixSetting, \
     OptimizeFormatMatrixSetting
 
@@ -15,6 +16,7 @@ class AlgoSettingsManager:
     def create_settings():
         # NOTE: changing order of settings may change the semantics
         return [
+            IndexExplodingPreProcessorSetting(),
             OptimizeEmptyMatrixSetting(),
             LazyAddMatrixSetting(),
             OptimizeFormatMatrixSetting()

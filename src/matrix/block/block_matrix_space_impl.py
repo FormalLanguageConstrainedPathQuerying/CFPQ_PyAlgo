@@ -15,7 +15,11 @@ class BlockMatrixSpaceImpl(BlockMatrixSpace):
         assert n >= 0
         assert block_count >= 1
         self.n = n
-        self.block_count = block_count
+        self._block_count = block_count
+
+    @property
+    def block_count(self) -> int:
+        return self._block_count
 
     def is_single_cell(self, matrix_shape: Tuple[int, int]) -> bool:
         return matrix_shape == (self.n, self.n)
@@ -102,3 +106,6 @@ class BlockMatrixSpaceImpl(BlockMatrixSpace):
 
     def automize_block_operations(self, base: OptimizedMatrix) -> BlockMatrix:
         return CellBlockMatrix(base, self) if self.is_single_cell(base.shape) else VectorBlockMatrix(base, self)
+
+    def get_hyper_vector_blocks(self, hyper_vector: Matrix) -> List[Matrix]:
+        return [cell for row in hyper_vector.ss.split(self.n) for cell in row]

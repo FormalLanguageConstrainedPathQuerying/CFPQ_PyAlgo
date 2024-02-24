@@ -24,7 +24,7 @@ class BlockMatrixSpace(ABC):
 
     Within one `BlockMatrixSpace`:
       - all cells have the same shape `(n, n)`
-      - exists an integer `k` such that each hyper vector either has shape `(k * n, n)` or `(n, k * n)`
+      - each hyper vector either has shape `(self.block_count * n, n)` or `(n, self.block_count * n)`
 
     If you are using `OptimizedMatrix` class, then you can just wrap all your
      `OptimizedMatrix` class instances by calling `automize_block_operations()` method
@@ -37,6 +37,11 @@ class BlockMatrixSpace(ABC):
        - Subtracting cells from hyper-vectors and vice-versa is not supported
        - Rotated copies of your matrix may be cached to improve performance
     """
+
+    @property
+    @abstractmethod
+    def block_count(self) -> int:
+        pass
 
     @abstractmethod
     def automize_block_operations(self, base: "OptimizedMatrix") -> OptimizedMatrix:
@@ -91,4 +96,8 @@ class BlockMatrixSpace(ABC):
 
     @abstractmethod
     def repeat_into_hyper_column(self, matrix: Matrix) -> Matrix:
+        pass
+
+    @abstractmethod
+    def get_hyper_vector_blocks(self, hyper_vector: Matrix) -> List[Matrix]:
         pass

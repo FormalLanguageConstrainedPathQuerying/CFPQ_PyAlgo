@@ -28,7 +28,6 @@ class AbstractAllPairsCflReachabilityMatrixAlgoInstance(AllPairsCflReachabilityA
         )
     ):
         matrix_optimizers = get_matrix_optimizer_settings(settings)
-        AlgoSetting.mark_as_used_by_algo(matrix_optimizers)
         self.graph = OptimizedLabelDecomposedGraph.from_unoptimized(graph, matrix_optimizers)
         self.grammar = grammar
         self.settings = settings

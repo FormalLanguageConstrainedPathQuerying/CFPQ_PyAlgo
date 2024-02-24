@@ -5,8 +5,8 @@ from typing import Dict, List, Optional, Union
 import graphblas
 import numpy as np
 import pandas as pd
+from graphblas import Matrix
 from graphblas.core.dtypes import DataType, BOOL
-from graphblas.core.matrix import Matrix
 from graphblas.core.operator import Monoid, Semiring
 from graphblas.exceptions import IndexOutOfBound
 

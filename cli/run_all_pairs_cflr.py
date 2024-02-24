@@ -4,6 +4,7 @@ import sys
 from time import time
 from typing import Optional, List
 
+from src.algo_setting.preprocessor_setting import preprocess_graph_and_grammar
 from src.utils.time_limit import time_limit, TimeoutException
 from src.algo_setting.algo_setting import AlgoSetting
 from src.algo_setting.algo_settings_manager import AlgoSettingsManager
@@ -25,6 +26,7 @@ def run_all_pairs_cflr(
     algo = get_all_pairs_cfl_reachability_algo(algo_name)
     graph = LabelDecomposedGraph.read_from_pocr_graph_file(graph_path)
     grammar = CnfGrammarTemplate.read_from_pocr_cnf_file(grammar_path)
+    graph, grammar = preprocess_graph_and_grammar(graph, grammar, settings)
     try:
         with (time_limit(time_limit_sec)):
             start = time()

@@ -45,6 +45,7 @@ def optimize_matrix(
     settings: List[MatrixOptimizerSetting],
 ) -> OptimizedMatrix:
     optimized_matrix = MatrixToOptimizedAdapter(matrix)
+    AlgoSetting.mark_as_used_by_algo(settings)
     for setting in settings:
         optimized_matrix = setting.wrap_matrix(optimized_matrix)
     return optimized_matrix
