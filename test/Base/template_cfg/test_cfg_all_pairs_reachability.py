@@ -24,7 +24,6 @@ def test_all_pairs_cflr(algo_name, pocr_data_path, algo_settings):
             settings=algo_settings,
             time_limit_sec=600,
             out_file=actual_path,
-            profile=False
         )
         with open(actual_path, 'r') as actual_file:
             with open(expected_path, 'r') as expected_file:
