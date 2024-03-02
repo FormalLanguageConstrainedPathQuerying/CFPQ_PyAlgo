@@ -16,7 +16,7 @@ echo "Collecting coverage for files modified after commit:"
 git --no-pager log -n 1 $MERGE_BASE_COMMIT
 
 echo
-MODIFIED_FILES=$(git diff --name-only $MERGE_BASE_COMMIT | grep '.py$' | grep -v '^test')
+MODIFIED_FILES=$(git diff --name-only $MERGE_BASE_COMMIT | grep '.py$' | grep '^src')
 echo "Changed Python files:"
 echo $MODIFIED_FILES
 

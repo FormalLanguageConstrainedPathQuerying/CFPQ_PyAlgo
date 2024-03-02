@@ -1,13 +1,23 @@
-FROM graphblas/pygraphblas-minimal:v4.2.2
+FROM python:3.9-slim as builder
 
-ADD . /CFPQ_PyAlgo
+# Avoid prompts from apt
+ENV DEBIAN_FRONTEND=noninteractive
 
-WORKDIR /CFPQ_PyAlgo
-RUN git submodule init
-RUN git submodule update
+WORKDIR /app
 
-WORKDIR /CFPQ_PyAlgo/deps/CFPQ_Data
-RUN python3 setup.py install
+COPY requirements.txt /app/
+COPY deps/CFPQ_Data /app/deps/CFPQ_Data
 
-WORKDIR /CFPQ_PyAlgo
+RUN pip3 install pygraphblas==5.1.8.0
 RUN pip3 install -r requirements.txt
+RUN cd deps/CFPQ_Data && python3 setup.py install
+
+FROM python:3.9-slim
+
+RUN apt update
+RUN apt install time
+
+COPY --from=builder /usr/local /usr/local
+
+WORKDIR /app
+COPY . /app

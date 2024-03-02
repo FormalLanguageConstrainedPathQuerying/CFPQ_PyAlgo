@@ -1,0 +1,77 @@
+# Download base image here: https://figshare.com/ndownloader/files/42214812
+FROM pearl-ase23:v1
+ENV PEARL_DIR=/root/eval
+
+# Common utilities
+RUN apt-get update && apt-get install -y git sed time bsdmainutils vim
+
+# POCR dependencies
+RUN apt-get update && apt-get install -y \
+    cmake \
+    gcc \
+    g++ \
+    libtinfo-dev \
+    libz-dev \
+    zip \
+    wget \
+    npm
+
+# Gigascale dependencies
+RUN apt-get update && apt-get install -y openjdk-17-jdk ant python2
+
+# Graspan dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    wget \
+    make \
+    g++ \
+    libboost-all-dev \
+    git
+RUN wget -qO- https://sourceforge.net/projects/boost/files/boost/1.62.0/boost_1_62_0.tar.gz | tar xvz -C /usr/local
+ENV BOOST_ROOT=/usr/local/boost_1_62_0
+ENV LD_LIBRARY_PATH=$BOOST_ROOT/stage/lib:$LD_LIBRARY_PATH
+
+## POCR dependency, that needs to be built from sources
+RUN git clone https://github.com/kisslune/SVF.git /SVF \
+    && cd /SVF \
+    && /bin/bash -c "source ./build.sh" \
+    && echo 'pushd /SVF > /dev/null && source setup.sh && popd > /dev/null' >> /root/.bashrc
+ENV SVF_DIR=/SVF
+
+# POCR (general-purpose CFL-r tool)
+RUN git clone https://github.com/kisslune/POCR.git /POCR \
+    && cd /POCR \
+    && /bin/bash -c "source ./../SVF/setup.sh && source ./build.sh" \
+    && echo 'pushd /POCR > /dev/null && source setup.sh && popd > /dev/null' >> /root/.bashrc
+ENV POCR_DIR=/POCR
+
+# Gigascale (specialized CFL-r tools)
+RUN git clone https://bitbucket.org/jensdietrich/gigascale-pointsto-oopsla2015.git /gigascale
+RUN sed -i 's/python /python2 /g' /gigascale/run.sh
+RUN sed -i 's/-d64 //g' /gigascale/run.sh
+ENV JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF8"
+ENV GIGASCALE_DIR=/gigascale
+
+# Graspan (general-purpose CFL-r tool)
+RUN git clone https://github.com/Graspan/Graspan-C.git /graspan
+RUN sed -i 's|/home/aftab/Downloads/boost_1_62_installed|'$BOOST_ROOT'|g' /graspan/src/makefile
+RUN sed -i 's|/home/aftab/Downloads/boost_1_62_installed|'$BOOST_ROOT'|g' /graspan/src/run
+RUN cd /graspan/src && make
+ENV GRASPAN_DIR=/graspan
+
+# CFPQ_PyAlgo dependencies
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y python3.9 python3.9-distutils python3.9-dev python3-pip
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+RUN python3 -m pip install --upgrade pip
+
+# CFPQ_PyAlgo (this tool)
+COPY requirements.txt /py_algo/requirements.txt
+COPY deps/CFPQ_Data /py_algo/deps/CFPQ_Data
+RUN pip3 install pygraphblas==5.1.8.0
+RUN cd /py_algo && pip3 install -r requirements.txt
+RUN cd /py_algo/deps/CFPQ_Data && python3 setup.py install
+COPY . /py_algo

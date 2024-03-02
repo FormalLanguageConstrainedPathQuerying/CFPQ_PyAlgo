@@ -1,5 +1,5 @@
-tqdm
-pytest
+tqdm==4.62.2
+pytest==8.0.1
 pytest-benchmark
 pytest-cov
 cfpq_data==1.0.2

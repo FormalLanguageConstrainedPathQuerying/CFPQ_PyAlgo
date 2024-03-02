@@ -8,8 +8,7 @@ test/pocr_data/**/actual_*
 temp_ram_usage.txt
 
 # Local files
-.playground/**
-data
+.playground
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
