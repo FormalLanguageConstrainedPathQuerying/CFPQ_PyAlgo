@@ -4,15 +4,15 @@ import sys
 from time import time
 from typing import Optional, List
 
-from src.algo_setting.preprocessor_setting import preprocess_graph_and_grammar
-from src.utils.time_limit import time_limit, TimeoutException
 from src.algo_setting.algo_setting import AlgoSetting
 from src.algo_setting.algo_settings_manager import AlgoSettingsManager
+from src.algo_setting.preprocessor_setting import preprocess_graph_and_grammar
 from src.grammar.cnf_grammar_template import CnfGrammarTemplate
 from src.graph.label_decomposed_graph import LabelDecomposedGraph
 from src.problems.Base.template_cfg.template_cfg_all_pairs_reachability_impls import \
     ALL_PAIRS_CFL_REACHABILITY_ALGO_NAMES, \
     get_all_pairs_cfl_reachability_algo
+from src.utils.time_limit import time_limit, TimeoutException
 
 
 def run_all_pairs_cflr(

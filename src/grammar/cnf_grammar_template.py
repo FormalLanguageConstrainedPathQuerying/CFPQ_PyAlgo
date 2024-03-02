@@ -39,6 +39,14 @@ class CnfGrammarTemplate:
             (non_terminal for (non_terminal, _, _) in self.complex_rules),
         )
 
+    @property
+    def symbols(self) -> Set[Symbol]:
+        return set.union(
+            set(self.epsilon_rules),
+            itertools.chain(*self.simple_rules),
+            itertools.chain(*self.complex_rules)
+        )
+
     @staticmethod
     def read_from_pocr_cnf_file(path: Union[Path, str]) -> "CnfGrammarTemplate":
         """
@@ -93,3 +101,19 @@ class CnfGrammarTemplate:
                     )
 
             return CnfGrammarTemplate(start_nonterm, epsilon_rules, simple_rules, complex_rules)
+
+    def write_to_pocr_cnf_file(self, path: Union[Path, str], include_starting: bool = True) -> None:
+        with open(path, 'w') as file:
+            for epsilon_rule in self.epsilon_rules:
+                file.write(f"{epsilon_rule.label}\n")
+
+            for non_terminal, terminal in self.simple_rules:
+                file.write(f"{non_terminal.label}\t{terminal.label}\n")
+
+            for non_terminal, symbol1, symbol2 in self.complex_rules:
+                file.write(f"{non_terminal.label}\t{symbol1.label}\t{symbol2.label}\n")
+
+            if include_starting:
+                file.write("\n")
+                file.write("Count:\n")
+                file.write(self.start_nonterm.label)

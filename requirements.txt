@@ -7,3 +7,4 @@ suitesparse-graphblas==7.4.4.0
 python-graphblas==2023.7.0
 pandas==2.0.3
 numpy==1.23.5
+psutil==5.9.8

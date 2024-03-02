@@ -126,6 +126,19 @@ class LabelDecomposedGraph:
                 "Indexed labels names must end with `_i`."
             ) from e
 
+    def write_to_pocr_graph_file(self, path: Union[Path, str]):
+        with open(path, 'w') as output_file:
+            for symbol, matrix in self.matrices.items():
+                edge_label = symbol.label
+                (rows, columns, _) = matrix.to_coo()
+                edges_df = pd.DataFrame({
+                    'source': rows,
+                    'destination': columns,
+                    'label': edge_label
+                })
+                csv_string = edges_df.to_csv(sep='\t', index=False, header=False)
+                output_file.write(csv_string)
+
     def __sizeof__(self) -> int:
         return sum(m.__sizeof__() for m in self.matrices.values())
 
