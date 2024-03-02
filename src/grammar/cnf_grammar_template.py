@@ -1,5 +1,6 @@
+import itertools
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Set
 
 
 class Symbol:
@@ -11,7 +12,7 @@ class Symbol:
         return self.label
 
     def __eq__(self, other):
-        return self.label == other.label
+        return isinstance(other, Symbol) and self.label == other.label
 
     def __hash__(self) -> int:
         return self.label.__hash__()
@@ -30,11 +31,6 @@ class CnfGrammarTemplate:
         self.simple_rules = simple_rules
         self.complex_rules = complex_rules
 
-        for (non_terminal, terminal) in simple_rules:
-            if terminal in self.non_terminals:
-                raise ValueError(f"Invalid rule '{non_terminal} {terminal}'. "
-                                 f"Right hand side of a simple rule should be a terminal symbol.")
-
     @property
     def non_terminals(self):
         return set.union(
@@ -51,7 +47,7 @@ class CnfGrammarTemplate:
         The file format is expected to be as follows:
         - Each non-empty line represents a rule, except the last two lines.
         - Complex rules are in the format: `<NON_TERMINAL> <SYMBOL_1> <SYMBOL_2>`
-        - Simple rules are in the format: `<NON_TERMINAL> <TERMINAL>`
+        - Simple rules are in the format: `<NON_TERMINAL> <SYMBOL_1>`
         - Epsilon rules are in the format: `<NON_TERMINAL>`
         - Indexed symbols names must end with suffix `_i`.
         - Whitespace characters are used to separate values on one line
@@ -93,7 +89,7 @@ class CnfGrammarTemplate:
                     raise ValueError(
                         f"Invalid rule format: `{line}` in file `{path}`. "
                         f"Expected formats are `<NON_TERMINAL> <SYMBOL_1> <SYMBOL_2>` for complex rules, "
-                        f"`<NON_TERMINAL> <TERMINAL>` for simple rules, and `<NON_TERMINAL>` for epsilon rules."
+                        f"`<NON_TERMINAL> <SYMBOL_1>` for simple rules, and `<NON_TERMINAL>` for epsilon rules."
                     )
 
             return CnfGrammarTemplate(start_nonterm, epsilon_rules, simple_rules, complex_rules)

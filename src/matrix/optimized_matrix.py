@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from typing import Optional, Tuple
 
 import graphblas
-from graphblas import Matrix
 from graphblas.core.dtypes import DataType
+from graphblas.core.matrix import Matrix
 from graphblas.core.operator import Semiring, Monoid
 
 from src.utils.subtractable_semiring import SubOp

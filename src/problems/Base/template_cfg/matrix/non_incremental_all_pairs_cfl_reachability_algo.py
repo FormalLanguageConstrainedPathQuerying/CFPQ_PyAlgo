@@ -16,6 +16,9 @@ class NonIncrementalAllPairsCFLReachabilityMatrixAlgoInstance(AbstractAllPairsCf
     def compute_transitive_closure(self) -> OptimizedLabelDecomposedGraph:
         old_nvals = self.graph.nvals
         while True:
+            for (lhs, rhs) in self.grammar.simple_rules:
+                if rhs in self.grammar.non_terminals:
+                    self.graph.iadd_by_symbol(lhs, self.graph[rhs], op=self.monoid)
             self.graph.mxm(
                 self.graph.to_unoptimized(),
                 self.grammar,

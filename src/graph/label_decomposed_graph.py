@@ -129,6 +129,13 @@ class LabelDecomposedGraph:
     def __sizeof__(self) -> int:
         return sum(m.__sizeof__() for m in self.matrices.values())
 
+    def __getitem__(self, symbol: Symbol):
+        return (
+            self.matrices[symbol]
+            if symbol in self.matrices
+            else self.block_matrix_space.create_space_element(self.dtype, is_vector=symbol.is_indexed)
+        )
+
 
 class OptimizedLabelDecomposedGraph:
     """

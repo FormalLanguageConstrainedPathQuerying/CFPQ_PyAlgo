@@ -25,6 +25,9 @@ class IncrementalAllPairsCFLReachabilityMatrixAlgoInstance(AbstractAllPairsCflRe
                 accum=new_front,
                 op=self.semiring
             )
+            for (lhs, rhs) in self.grammar.simple_rules:
+                if rhs in self.grammar.non_terminals:
+                    new_front.iadd_by_symbol(lhs, front[rhs], op=self.monoid)
             front = new_front.to_unoptimized()
             front = self.graph.rsub(front, op=self.algebraic_structure.sub_op)
 
