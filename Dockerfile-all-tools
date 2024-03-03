@@ -16,21 +16,6 @@ RUN apt-get update && apt-get install -y \
     wget \
     npm
 
-# Gigascale dependencies
-RUN apt-get update && apt-get install -y openjdk-17-jdk ant python2
-
-# Graspan dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    wget \
-    make \
-    g++ \
-    libboost-all-dev \
-    git
-RUN wget -qO- https://sourceforge.net/projects/boost/files/boost/1.62.0/boost_1_62_0.tar.gz | tar xvz -C /usr/local
-ENV BOOST_ROOT=/usr/local/boost_1_62_0
-ENV LD_LIBRARY_PATH=$BOOST_ROOT/stage/lib:$LD_LIBRARY_PATH
-
 ## POCR dependency, that needs to be built from sources
 RUN git clone https://github.com/kisslune/SVF.git /SVF \
     && cd /SVF \
@@ -45,12 +30,27 @@ RUN git clone https://github.com/kisslune/POCR.git /POCR \
     && echo 'pushd /POCR > /dev/null && source setup.sh && popd > /dev/null' >> /root/.bashrc
 ENV POCR_DIR=/POCR
 
+# Gigascale dependencies
+RUN apt-get update && apt-get install -y openjdk-17-jdk ant python2 expect
+
 # Gigascale (specialized CFL-r tools)
 RUN git clone https://bitbucket.org/jensdietrich/gigascale-pointsto-oopsla2015.git /gigascale
 RUN sed -i 's/python /python2 /g' /gigascale/run.sh
 RUN sed -i 's/-d64 //g' /gigascale/run.sh
 ENV JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF8"
 ENV GIGASCALE_DIR=/gigascale
+
+# Graspan dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    wget \
+    make \
+    g++ \
+    libboost-all-dev \
+    git
+RUN wget -qO- https://sourceforge.net/projects/boost/files/boost/1.62.0/boost_1_62_0.tar.gz | tar xvz -C /usr/local
+ENV BOOST_ROOT=/usr/local/boost_1_62_0
+ENV LD_LIBRARY_PATH=$BOOST_ROOT/stage/lib:$LD_LIBRARY_PATH
 
 # Graspan (general-purpose CFL-r tool)
 RUN git clone https://github.com/Graspan/Graspan-C.git /graspan
@@ -68,7 +68,7 @@ RUN apt-get update && apt-get install -y \
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
 RUN python3 -m pip install --upgrade pip
 
-# CFPQ_PyAlgo (this tool)
+# CFPQ_PyAlgo (this general-purpose CFL-r tool)
 COPY requirements.txt /py_algo/requirements.txt
 COPY deps/CFPQ_Data /py_algo/deps/CFPQ_Data
 RUN pip3 install pygraphblas==5.1.8.0

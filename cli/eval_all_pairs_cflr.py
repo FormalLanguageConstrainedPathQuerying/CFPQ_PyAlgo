@@ -1,20 +1,19 @@
 import argparse
 import csv
 import os
-import shlex
-import signal
 import subprocess
 import sys
 from pathlib import Path
 from typing import Optional, List
 
-from cli.all_pairs_cflr_command_manager import get_all_pairs_cflr_command_manager
+from cli.runners.all_pairs_cflr_tool_runner import IncompatibleCflrToolError
+from cli.runners.all_pairs_cflr_tool_runner_facade import run_appropriate_all_pairs_cflr_tool
 
 # see `man timeout`
 TIMEOUT_EXIT_CODE = 124
 
 
-def check_file_for_completion(result_file_path, rounds):
+def is_enough_data_collected(result_file_path, rounds):
     try:
         with open(result_file_path, 'r') as file:
             reader = list(csv.reader(file))
@@ -31,7 +30,7 @@ def run_experiment(
     graph_path: Path,
     grammar_path: Path,
     rounds: int,
-    timeout: Optional[int],
+    timeout_sec: Optional[int],
     result_file_path: Path
 ):
     graph_base_name = graph_path.stem
@@ -40,7 +39,7 @@ def run_experiment(
     if not os.path.exists(result_file_path):
         with open(result_file_path, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(["algo", "graph", "grammar", "edge_count", "ram_kb", "time_sec"])
+            writer.writerow(["algo", "graph", "grammar", "s_edges", "ram_kb", "time_sec"])
 
     if "--rewrite-grammar" in algo_settings:
         algo_settings = algo_settings.replace("--rewrite-grammar", "")
@@ -49,61 +48,40 @@ def run_experiment(
             grammar_path = rewritten_grammar_path
 
     for _ in range(rounds):
-        if check_file_for_completion(result_file_path, rounds):
+        if is_enough_data_collected(result_file_path, rounds):
             return
 
-        command_manager = get_all_pairs_cflr_command_manager(algo_settings, graph_path, grammar_path)
-
-        temp_ram_file = Path("temp_ram_usage.txt").absolute()
-
-        base_command = command_manager.create_command()
-
-        if base_command is None:
-            edge_count, ram_kb, time_sec = "-", "-", "-"
-        else:
-            command = (f"/usr/bin/time -o {temp_ram_file} -f %M "
-                       + ("" if timeout is None else f"timeout {timeout}s ")
-                       + base_command)
-
-            process = subprocess.Popen(
-                shlex.split(command),
-                cwd=command_manager.work_dir,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL if command_manager.discard_stderr() else None
+        try:
+            result = run_appropriate_all_pairs_cflr_tool(
+                algo_settings=algo_settings,
+                graph_path=graph_path,
+                grammar_path=grammar_path,
+                timeout_sec=timeout_sec
             )
-            try:
-                output, _ = process.communicate()
-            except KeyboardInterrupt:
-                process.send_signal(signal.SIGINT)
-                try:
-                    process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                raise
-            if process.returncode == 0:
-                output = output.decode()
-                time_sec = command_manager.get_analysis_time(output)
-                edge_count = command_manager.get_edge_count(output)
-                with open(temp_ram_file, 'r') as f:
-                    ram_kb = f.read().strip()
-            elif process.returncode == TIMEOUT_EXIT_CODE:
+            s_edges = result.s_edges
+            ram_kb = result.ram_kb
+            time_sec = result.time_sec
+        except IncompatibleCflrToolError:
+            s_edges, ram_kb, time_sec = "-", "-", "-"
+        except subprocess.CalledProcessError as e:
+            if e.returncode == TIMEOUT_EXIT_CODE:
                 print("    Runner process timed out")
-                edge_count, ram_kb, time_sec = "OOT", "OOT", "OOT"
+                s_edges, ram_kb, time_sec = "OOT", "OOT", "OOT"
             else:
                 print(
-                    f"   Runner process terminated with return code {process.returncode}\n"
+                    f"   Runner process terminated with return code {e.returncode}\n"
                     f"   (interpreting as out of memory error)"
                 )
-                edge_count, ram_kb, time_sec = "OOM", "OOM", "OOM"
+                s_edges, ram_kb, time_sec = "OOM", "OOM", "OOM"
 
         with open(result_file_path, 'a', newline='') as csvfile:
-            print(f"   {edge_count} {ram_kb} {time_sec}")
+            print(f"   {s_edges} {ram_kb} {time_sec}")
             writer = csv.writer(csvfile)
             writer.writerow([
                 {algo_name},
                 os.path.basename(graph_base_name),
                 os.path.basename(grammar_base_name),
-                edge_count,
+                s_edges,
                 ram_kb,
                 time_sec
             ])
@@ -114,7 +92,7 @@ def eval_all_pairs_cflr(
     data_config: Path,
     result_path: Path,
     rounds: Optional[int],
-    timeout: Optional[int],
+    timeout_sec: Optional[int],
 ):
     with open(algo_config, mode='r') as algo_file:
         algo_reader = csv.DictReader(algo_file)
@@ -141,7 +119,7 @@ def eval_all_pairs_cflr(
                         graph_path=graph_path,
                         grammar_path=grammar_path,
                         rounds=rounds,
-                        timeout=timeout,
+                        timeout_sec=timeout_sec,
                         result_file_path=result_file_path
                     )
 
@@ -168,7 +146,7 @@ def main(raw_args: List[str]):
         data_config=Path(args.data_config),
         result_path=Path(args.result_path),
         rounds=args.rounds,
-        timeout=args.timeout
+        timeout_sec=args.timeout
     )
 
 
