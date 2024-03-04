@@ -49,19 +49,20 @@ class AbstractAllPairsCflrToolRunner(AllPairsCflrToolRunner, ABC):
         pass
 
     @property
-    def command(self) -> Optional[str]:
-        if self.base_command is None:
-            return None
-        else:
-            return (f'/usr/bin/time -f "Ram usage in KB: %M;\n" -o /dev/stdout '
-                    + ('' if self.timeout_sec is None else f'timeout {self.timeout_sec}s ')
-                    + self.base_command)
+    def timeout_command(self) -> str:
+        return '' if self.timeout_sec is None else f'timeout {self.timeout_sec}s '
+
+    @property
+    def measure_ram_command(self) -> str:
+        return '/usr/bin/time -f "Ram usage in KB: %M;\n" -o /dev/stdout '
 
     def run(self) -> CflrToolRunResult:
-        if self.command is None:
+        if self.base_command is None:
             raise IncompatibleCflrToolError()
         process = subprocess.run(
-            shlex.split(self.command),
+            shlex.split(
+                self.measure_ram_command + self.timeout_command + self.base_command
+            ),
             cwd=self.work_dir,
             stdout=subprocess.PIPE,
             text=True,

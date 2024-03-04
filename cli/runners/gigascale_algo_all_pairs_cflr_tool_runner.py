@@ -1,5 +1,6 @@
 import os
 import re
+import shlex
 import subprocess
 from pathlib import Path
 from typing import Optional
@@ -25,21 +26,21 @@ class GigascaleAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
         return Path(os.environ['GIGASCALE_DIR'])
 
     def run(self) -> CflrToolRunResult:
-        if self.command is None:
+        if self.base_command is None:
             raise IncompatibleCflrToolError()
         # Gigascale run script uses `bash -i -c`, which can't be used repeatedly
         # without emulating interactive environment with tools like `expect`.
         # Read more about `bash -ic` pitfalls:
         # https://stackoverflow.com/questions/39920915/unexpected-sigttin-after-bash-ic-bin-echo-hello-when-bash-scripting
         process = subprocess.run(
-            ["expect"],
+            shlex.split(self.timeout_command + "expect"),
             cwd=self.work_dir,
             stdout=subprocess.PIPE,
             text=True,
             input=
             f"""
             set timeout -1
-            spawn {self.command}
+            spawn {self.measure_ram_command + self.base_command}
             expect eof
             """
         )
