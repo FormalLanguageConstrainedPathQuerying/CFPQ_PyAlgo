@@ -1,4 +1,9 @@
-# Download base image here: https://figshare.com/ndownloader/files/42214812
+# Download base image here:
+# https://figshare.com/articles/dataset/ASE_2023_artifact/23702271?file=42214815
+# ```
+# wget -O pearl.tar.gz https://figshare.com/ndownloader/files/42214812
+# docker load --input pearl.tar.gz
+# ```
 FROM pearl-ase23:v1
 ENV PEARL_DIR=/root/eval
 
