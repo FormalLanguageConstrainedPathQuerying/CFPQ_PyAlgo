@@ -7,10 +7,11 @@ from graphblas.core.vector import Vector
 
 
 def complimentary_mask(matrix: Matrix, mask: Matrix) -> Matrix:
+    larger_matrix = matrix if matrix.nvals > mask.nvals else mask
     zero = Matrix(matrix.dtype, nrows=matrix.nrows, ncols=matrix.ncols)
-    zero.ss.config["format"] = matrix.ss.config["format"]
+    zero.ss.config["format"] = larger_matrix.ss.config["format"]
     res = Matrix(matrix.dtype, nrows=matrix.nrows, ncols=matrix.ncols)
-    res.ss.config["format"] = matrix.ss.config["format"]
+    res.ss.config["format"] = larger_matrix.ss.config["format"]
     res(~mask.S) << zero.ewise_add(matrix, op=graphblas.monoid.any)
     return res
 
