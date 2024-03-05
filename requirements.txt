@@ -8,3 +8,4 @@ python-graphblas==2023.7.0
 pandas==2.0.3
 numpy==1.23.5
 psutil==5.9.8
+tabulate==0.9.0
