@@ -44,7 +44,7 @@ class GigascaleAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
             expect eof
             """
         )
-        return self.parse_results(process)
+        return self.safe_parse_results(process)
 
     def parse_results(self, process: subprocess.CompletedProcess[str]) -> CflrToolRunResult:
         # parses a table like this:

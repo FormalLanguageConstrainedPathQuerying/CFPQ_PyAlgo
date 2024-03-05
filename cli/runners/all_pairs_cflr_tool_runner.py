@@ -1,6 +1,7 @@
 import re
 import shlex
 import subprocess
+import traceback
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
@@ -67,7 +68,26 @@ class AbstractAllPairsCflrToolRunner(AllPairsCflrToolRunner, ABC):
             stdout=subprocess.PIPE,
             text=True,
         )
-        return self.parse_results(process)
+        return self.safe_parse_results(process)
+
+    def safe_parse_results(self, process: subprocess.CompletedProcess[str]) -> CflrToolRunResult:
+        try:
+            return self.parse_results(process)
+        except Exception:
+            print(
+                "   Failed to parse results\n"
+                "   (interpreting as incompatible CFL-r tool error)"
+            )
+            print("=====")
+            print("stdout:")
+            print(process.stdout)
+            print("=====")
+            print("stderr:")
+            print(process.stderr)
+            print("=====")
+            traceback.print_exc()
+            print("=====")
+            raise IncompatibleCflrToolError()
 
     @abstractmethod
     def parse_results(self, process: subprocess.CompletedProcess[str]) -> CflrToolRunResult:
