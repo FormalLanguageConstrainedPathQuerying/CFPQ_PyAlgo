@@ -67,6 +67,7 @@ class AbstractAllPairsCflrToolRunner(AllPairsCflrToolRunner, ABC):
             cwd=self.work_dir,
             stdout=subprocess.PIPE,
             text=True,
+            check=True
         )
         return self.safe_parse_results(process)
 

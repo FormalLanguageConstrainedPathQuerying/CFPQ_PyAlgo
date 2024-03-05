@@ -37,6 +37,7 @@ class GigascaleAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
             cwd=self.work_dir,
             stdout=subprocess.PIPE,
             text=True,
+            check=True,
             input=
             f"""
             set timeout -1
