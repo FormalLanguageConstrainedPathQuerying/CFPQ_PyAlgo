@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from cli import run_all_pairs_cflr
+from cfpq_cli import run_all_pairs_cflr
 from src.utils.useful_paths import POCR_FORMAT_DATA
 from test.utils import find_grammar_file, find_graph_file, read_tuples_set
 

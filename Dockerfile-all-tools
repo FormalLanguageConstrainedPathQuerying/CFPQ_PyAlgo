@@ -80,3 +80,5 @@ RUN pip3 install pygraphblas==5.1.8.0
 RUN cd /py_algo && pip3 install -r requirements.txt
 RUN cd /py_algo/deps/CFPQ_Data && python3 setup.py install
 COPY . /py_algo
+
+# TODO add data downloading
