@@ -31,7 +31,7 @@ After it, you can develop everything locally and run tests and benchmarks inside
 Also, you can use PyCharm Professional and [configure an interpreter using Docker](https://www.jetbrains.com/help/pycharm/using-docker-as-a-remote-interpreter.html).
 
 ### Direct install
-The other way is to install everything into your local python interpreter or virtual environment.
+The other way is to install everything into your local Python 3.9 interpreter or virtual environment.
 
 First of all you need to install [pygraphblas](https://github.com/michelp/pygraphblas) package.
 ```bash
