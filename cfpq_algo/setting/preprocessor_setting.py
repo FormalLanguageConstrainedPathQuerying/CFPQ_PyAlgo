@@ -5,7 +5,7 @@ from typing import List
 from cfpq_algo.setting.algo_setting import AlgoSetting
 from cfpq_model.cnf_grammar_template import CnfGrammarTemplate
 from cfpq_model.label_decomposed_graph import LabelDecomposedGraph
-from cfpq_model.utils import explode_indices
+from cfpq_model.model_utils import explode_indices
 
 
 class PreProcessorSetting(AlgoSetting, ABC):

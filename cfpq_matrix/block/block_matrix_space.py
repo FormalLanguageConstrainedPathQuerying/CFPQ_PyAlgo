@@ -65,7 +65,6 @@ class BlockMatrixSpace(ABC):
         If `hyper_vector_or_cell` is a hyper vector, then sum of its blocks is returned.
         If `hyper_vector_or_cell` is a cell, then underlying matrix is return.
         """
-        pass
 
     @abstractmethod
     def hyper_rotate(self, hyper_vector: Matrix, orientation: BlockMatrixOrientation) -> Matrix:

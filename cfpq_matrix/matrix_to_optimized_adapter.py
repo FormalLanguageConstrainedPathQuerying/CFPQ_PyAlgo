@@ -5,7 +5,7 @@ from graphblas.core.matrix import Matrix
 from graphblas.core.operator import Monoid, Semiring
 
 from cfpq_matrix.optimized_matrix import OptimizedMatrix, MatrixFormat
-from cfpq_model.subtractable_semiring import SubOp
+from cfpq_matrix.subtractable_semiring import SubOp
 
 
 class MatrixToOptimizedAdapter(OptimizedMatrix):

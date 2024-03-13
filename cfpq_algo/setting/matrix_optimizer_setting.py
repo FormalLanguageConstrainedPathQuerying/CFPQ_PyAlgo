@@ -12,7 +12,9 @@ from cfpq_matrix.matrix_to_optimized_adapter import MatrixToOptimizedAdapter
 from cfpq_matrix.empty_optimized_matrix import EmptyOptimizedMatrix
 
 
-def create_matrix_optimizer(algo_settings: List[AlgoSetting]) -> Callable[[Matrix], OptimizedMatrix]:
+def create_matrix_optimizer(
+        algo_settings: List[AlgoSetting]
+) -> Callable[[Matrix], OptimizedMatrix]:
     optimizer_settings = get_matrix_optimizer_settings(algo_settings)
     return lambda matrix: optimize_matrix(matrix, optimizer_settings)
 
@@ -44,7 +46,7 @@ class MatrixOptimizerSetting(AlgoSetting, ABC):
         )
 
     def read_arg(self, args: Namespace):
-        if args.__getattribute__(self.var_name) is True:
+        if getattr(args, self.var_name) is True:
             self.was_specified_by_user = True
             self.is_enabled = False
 

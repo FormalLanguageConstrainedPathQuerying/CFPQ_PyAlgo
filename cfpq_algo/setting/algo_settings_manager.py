@@ -4,8 +4,11 @@ from typing import List
 
 from cfpq_algo.setting.algo_setting import AlgoSetting
 from cfpq_algo.setting.preprocessor_setting import IndexExplodingPreProcessorSetting
-from cfpq_algo.setting.matrix_optimizer_setting import OptimizeEmptyMatrixSetting, LazyAddMatrixSetting, \
+from cfpq_algo.setting.matrix_optimizer_setting import (
+    OptimizeEmptyMatrixSetting,
+    LazyAddMatrixSetting,
     OptimizeFormatMatrixSetting
+)
 
 
 class AlgoSettingsManager:
@@ -34,4 +37,5 @@ class AlgoSettingsManager:
     def report_unused(self):
         for setting in self._settings:
             if setting.was_specified_by_user and not setting.was_used_by_algo:
-                warnings.warn(f"Algo setting '{setting.flag_name}' was specified, but was not used by the algorithm.")
+                warnings.warn(f"Algo setting '{setting.flag_name}' was specified, "
+                              "but was not used by the algorithm.")

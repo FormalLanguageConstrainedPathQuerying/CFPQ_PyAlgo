@@ -3,7 +3,7 @@ from graphblas.core.operator import Monoid, Semiring
 
 from cfpq_matrix.abstract_optimized_matrix_decorator import AbstractOptimizedMatrixDecorator
 from cfpq_matrix.optimized_matrix import OptimizedMatrix
-from cfpq_model.subtractable_semiring import SubOp
+from cfpq_matrix.subtractable_semiring import SubOp
 
 
 class LazyAddOptimizedMatrix(AbstractOptimizedMatrixDecorator):
@@ -33,7 +33,10 @@ class LazyAddOptimizedMatrix(AbstractOptimizedMatrixDecorator):
     ) -> Matrix:
         self.force_combine_small_matrices(nvals_combine_threshold)
 
-        for cur in sorted((mapper(m) for m in self.matrices if m.nvals != 0), key=lambda m: m.nvals, reverse=reverse_sort):
+        for cur in sorted(
+                (mapper(m) for m in self.matrices if m.nvals != 0),
+                key=lambda m: m.nvals, reverse=reverse_sort
+        ):
             acc = cur if acc is None else combiner(acc, cur)
         return mapper(self.base) if acc is None else acc
 
@@ -75,10 +78,13 @@ class LazyAddOptimizedMatrix(AbstractOptimizedMatrixDecorator):
         base = self.base
         while True:
             other_nvals = max(other.nvals, self.min_size)
-            i = next((i for i in range(len(self.matrices)) if
-                      other_nvals / self.size_factor <= max(self.min_size,
-                                                            self.matrices[i].nvals) <= other_nvals * self.size_factor),
-                     None)
+            i = next(
+                (i for i in range(len(self.matrices))
+                 if other_nvals / self.size_factor <=
+                 max(self.min_size, self.matrices[i].nvals)
+                 <= other_nvals * self.size_factor),
+                None
+            )
 
             if i is None:
                 self.matrices.append(base.optimize_similarly(other))

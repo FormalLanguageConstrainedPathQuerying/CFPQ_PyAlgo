@@ -5,14 +5,14 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
-from cfpq_eval.runners.all_pairs_cflr_tool_runner import AbstractAllPairsCflrToolRunner, CflrToolRunResult, \
+from cfpq_eval.runners.all_pairs_cflr_tool_runner import (
+    AbstractAllPairsCflrToolRunner,
+    CflrToolRunResult,
     IncompatibleCflrToolError
+)
 
 
 class GigascaleAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     @property
     def base_command(self) -> Optional[str]:
         return (
@@ -38,12 +38,11 @@ class GigascaleAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
             stdout=subprocess.PIPE,
             text=True,
             check=True,
-            input=
-            f"""
-            set timeout -1
-            spawn {self.measure_ram_command + self.base_command}
-            expect eof
-            """
+            input=f"""
+                   set timeout -1
+                   spawn {self.measure_ram_command + self.base_command}
+                   expect eof
+                   """
         )
         return self.safe_parse_results(process)
 

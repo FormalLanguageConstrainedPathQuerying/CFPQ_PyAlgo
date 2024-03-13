@@ -21,7 +21,7 @@ TIMEOUT_EXIT_CODE = 124
 
 def is_enough_data_collected(result_file_path: Path, rounds: int):
     try:
-        with open(result_file_path, 'r') as file:
+        with open(result_file_path, 'r', encoding="utf-8") as file:
             reader = list(csv.reader(file))
             if len(reader) - 1 >= rounds or any("OOT" in row or "OOM" in row for row in reader):
                 return True
@@ -31,19 +31,19 @@ def is_enough_data_collected(result_file_path: Path, rounds: int):
 
 
 def run_experiment(
-    algo_settings: str,
-    algo_name: str,
-    graph_path: Path,
-    grammar_path: Path,
-    rounds: int,
-    timeout_sec: Optional[int],
-    result_file_path: Path
+        algo_settings: str,
+        algo_name: str,
+        graph_path: Path,
+        grammar_path: Path,
+        rounds: int,
+        timeout_sec: Optional[int],
+        result_file_path: Path
 ):
     graph_base_name = graph_path.stem
     grammar_base_name = grammar_path.stem
 
     if not os.path.exists(result_file_path):
-        with open(result_file_path, 'w', newline='') as csvfile:
+        with open(result_file_path, 'w', newline='', encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["algo", "graph", "grammar", "s_edges", "ram_kb", "time_sec"])
 
@@ -80,7 +80,7 @@ def run_experiment(
                 )
                 s_edges, ram_kb, time_sec = "OOM", "OOM", "OOM"
 
-        with open(result_file_path, 'a', newline='') as csvfile:
+        with open(result_file_path, 'a', newline='', encoding="utf-8") as csvfile:
             print(f"   {s_edges} {ram_kb} {time_sec}")
             writer = csv.writer(csvfile)
             writer.writerow([
@@ -106,7 +106,7 @@ def reduce_result_file_to_one_row(result_file_path: Path) -> pd.DataFrame:
         return df
 
     df['ram_gb'] = df['ram_kb'].apply(
-        lambda x: x / 10**6 if isinstance(x, int) or isinstance(x, float) else x
+        lambda x: x / 10 ** 6 if isinstance(x, (int, float)) else x
     )
     assert df['algo'].nunique() <= 1
     assert df['graph'].nunique() <= 1
@@ -117,8 +117,8 @@ def reduce_result_file_to_one_row(result_file_path: Path) -> pd.DataFrame:
     else:
         unique_s_edges = df['s_edges'].unique()
         if len(unique_s_edges) > 1:
-            warnings.warn(f"Inconsistent 's_edges' values {unique_s_edges} found in {result_file_path}. "
-                          f"Using first 's_edges' value.")
+            warnings.warn(f"Inconsistent 's_edges' values {unique_s_edges} "
+                          f"found in {result_file_path}. Using first 's_edges' value.")
 
         ram_gb_mean = df['ram_gb'].mean()
         time_sec_mean = df['time_sec'].mean()
@@ -135,13 +135,15 @@ def reduce_result_file_to_one_row(result_file_path: Path) -> pd.DataFrame:
             'ram_gb': [
                 round_to_significant_digits(ram_gb_mean)
                 if ram_gb_std < DISPLAY_STD_THRESHOLD * ram_gb_mean
-                else f"{round_to_significant_digits(ram_gb_mean)} ± {round_to_significant_digits(ram_gb_std)}"
+                else f"{round_to_significant_digits(ram_gb_mean)}"
+                     f" ± {round_to_significant_digits(ram_gb_std)}"
             ],
             'time_sec': [
                 # Graspan reports analysis time in whole seconds, so it may report 0
                 (round_to_significant_digits(time_sec_mean) if time_sec_mean != 0 else "< 1")
                 if time_sec_std < DISPLAY_STD_THRESHOLD * time_sec_mean
-                else f"{round_to_significant_digits(time_sec_mean)} ± {round_to_significant_digits(time_sec_std)}"
+                else f"{round_to_significant_digits(time_sec_mean)}"
+                     f" ± {round_to_significant_digits(time_sec_std)}"
             ]
         })
     return df
@@ -205,7 +207,10 @@ def display_results(result_files_paths: List[Path]) -> None:
     print()
 
     df = pd.concat(
-        [reduce_result_file_to_one_row(result_file_path) for result_file_path in result_files_paths],
+        [
+            reduce_result_file_to_one_row(result_file_path)
+            for result_file_path in result_files_paths
+        ],
         ignore_index=True
     )
     df['algo'] = pd.Categorical(df['algo'], categories=df['algo'].unique())
@@ -219,14 +224,14 @@ def display_results(result_files_paths: List[Path]) -> None:
 
 
 def eval_all_pairs_cflr(
-    algo_config: Path,
-    data_config: Path,
-    result_path: Path,
-    rounds: Optional[int],
-    timeout_sec: Optional[int],
+        algo_config: Path,
+        data_config: Path,
+        result_path: Path,
+        rounds: Optional[int],
+        timeout_sec: Optional[int],
 ):
     result_files_paths = []
-    with open(algo_config, mode='r') as algo_file:
+    with open(algo_config, mode='r', encoding="utf-8") as algo_file:
         algo_reader = csv.DictReader(algo_file)
         for algo_row in algo_reader:
             algo_name = algo_row['algo_name']
@@ -236,7 +241,7 @@ def eval_all_pairs_cflr(
             if not os.path.exists(algo_result_path):
                 os.makedirs(algo_result_path)
 
-            with open(data_config, mode='r') as data_file:
+            with open(data_config, mode='r', encoding="utf-8") as data_file:
                 data_reader = csv.DictReader(data_file)
                 for data_row in data_reader:
                     graph_path = Path(data_row['graph_path']).absolute()
@@ -260,7 +265,8 @@ def eval_all_pairs_cflr(
 
 def main(raw_args: List[str]):
     parser = argparse.ArgumentParser(
-        description='Evaluates all vertex pairs Context-Free Language Reachability (CFL-R) algorithms.'
+        description='Evaluates all vertex pairs '
+                    'Context-Free Language Reachability (CFL-R) algorithms.'
     )
 
     parser.add_argument('algo_config', type=str,
@@ -284,5 +290,5 @@ def main(raw_args: List[str]):
     )
 
 
-if __name__ == "__main__":       # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     main(raw_args=sys.argv[1:])  # pragma: no cover

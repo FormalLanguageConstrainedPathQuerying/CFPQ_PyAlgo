@@ -40,4 +40,3 @@ class AllPairsCflReachabilityAlgo(ABC):
 
         Algo instance encapsulates intermediate solving state between algorithm steps.
         """
-        pass

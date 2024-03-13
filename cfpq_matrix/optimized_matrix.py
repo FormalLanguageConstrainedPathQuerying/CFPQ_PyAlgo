@@ -7,7 +7,7 @@ from graphblas.core.dtypes import DataType
 from graphblas.core.matrix import Matrix
 from graphblas.core.operator import Semiring, Monoid
 
-from cfpq_model.subtractable_semiring import SubOp
+from cfpq_matrix.subtractable_semiring import SubOp
 
 MatrixFormat = Optional[str]
 
@@ -55,21 +55,18 @@ class OptimizedMatrix(ABC):
         """
         Returns the result of subtracting `self` from `other`.
         """
-        pass
 
     @abstractmethod
     def iadd(self, other: Matrix, op: Monoid):
         """
         Adds `other` to `self` in-place.
         """
-        pass
 
     @abstractmethod
     def optimize_similarly(self, other: Matrix) -> "OptimizedMatrix":
         """
         Applies to `other` matrix all optimizations that are applied to `self` matrix.
         """
-        pass
 
     def __str__(self):
         return self.to_unoptimized().__str__()

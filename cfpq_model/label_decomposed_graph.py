@@ -1,32 +1,33 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Union, Callable
+from typing import Dict, Optional, Union, Callable
 
 import graphblas
+import graphblas.core.matrix
 import numpy as np
 import pandas as pd
-from graphblas import Matrix
 from graphblas.core.dtypes import DataType, BOOL
+from graphblas.core.matrix import Matrix
 from graphblas.core.operator import Monoid, Semiring
 from graphblas.exceptions import IndexOutOfBound
 
-from cfpq_model.cnf_grammar_template import CnfGrammarTemplate, Symbol
 from cfpq_matrix.block.block_matrix_space import BlockMatrixSpace
 from cfpq_matrix.block.block_matrix_space_impl import BlockMatrixSpaceImpl
 from cfpq_matrix.optimized_matrix import OptimizedMatrix
-from cfpq_model.subtractable_semiring import SubOp
+from cfpq_matrix.subtractable_semiring import SubOp
+from cfpq_model.cnf_grammar_template import CnfGrammarTemplate, Symbol
 
 
 class LabelDecomposedGraph:
     """
     Representation of an edge labeled graph where labels are of type `(Symbol, Optional[int])`,
     i.e. each label is represented by a combination of "label symbol" and an optional "label index".
-    
+
     For each label string an adjacency matrix is stored.
-    
+
     If "label symbol" is used without indices, then its adjacency
     matrix is a square matrix of shape `(vertex_count, vertex_count)`.
-    
+
     If "label symbol" is used with indices, then its adjacency matrix is a
     block-matrix of shape `(block_matrix_space.block_count * vertex_count, vertex_count)`
     or `(vertex_count, block_matrix_space.block_count * vertex_count)`, where
@@ -69,27 +70,36 @@ class LabelDecomposedGraph:
 
                 for label, group in df.groupby('EDGE_LABEL'):
                     symbol = Symbol(label)
-                    data_chunks[symbol][0].append(group['EDGE_SOURCE'].to_numpy(dtype=np.int64))
-                    data_chunks[symbol][1].append(group['EDGE_DESTINATION'].to_numpy(dtype=np.int64))
-                    data_chunks[symbol][2].append(group['LABEL_INDEX'].to_numpy(dtype=np.int64))
+                    (edge_sources, edge_destinations, label_indices) = data_chunks[symbol]
+                    edge_sources.append(group['EDGE_SOURCE'].to_numpy(dtype=np.int64))
+                    edge_destinations.append(group['EDGE_DESTINATION'].to_numpy(dtype=np.int64))
+                    label_indices.append(group['LABEL_INDEX'].to_numpy(dtype=np.int64))
 
             vertex_count = 1
             block_count = 1
 
             # edge_label -> (edge_sources, edge_destinations, label_indices)
-            data = dict()
+            data = {}
 
-            for symbol, (edge_source_chunks, edge_destination_chunks, label_index_chunks) in data_chunks.items():
-                edge_sources = np.concatenate(edge_source_chunks)
-                edge_destinations = np.concatenate(edge_destination_chunks)
-                label_indices = np.concatenate(label_index_chunks)
+            for symbol, (
+                    edge_sources_chunks,
+                    edge_destinations_chunks,
+                    label_indices_chunks
+            ) in data_chunks.items():
+                edge_sources = np.concatenate(edge_sources_chunks)
+                edge_destinations = np.concatenate(edge_destinations_chunks)
+                label_indices = np.concatenate(label_indices_chunks)
 
                 data[symbol] = (edge_sources, edge_destinations, label_indices)
 
-                vertex_count = max(vertex_count, int(edge_sources.max()) + 1, int(edge_destinations.max()) + 1)
+                vertex_count = max(
+                    vertex_count,
+                    int(edge_sources.max()) + 1,
+                    int(edge_destinations.max()) + 1
+                )
                 block_count = max(block_count, int(label_indices.max()) + 1)
 
-            matrices: Dict[Symbol, Matrix] = dict()
+            matrices: Dict[Symbol, Matrix] = {}
             for symbol, (edge_sources, edge_destinations, label_indices) in data.items():
                 edge_sources += label_indices * vertex_count
 
@@ -126,7 +136,7 @@ class LabelDecomposedGraph:
             ) from e
 
     def write_to_pocr_graph_file(self, path: Union[Path, str]):
-        with open(path, 'w') as output_file:
+        with open(path, 'w', encoding="utf-8") as output_file:
             for symbol, matrix in self.matrices.items():
                 edge_label = symbol.label
                 (rows, columns, _) = matrix.to_coo()
@@ -145,7 +155,10 @@ class LabelDecomposedGraph:
         return (
             self.matrices[symbol]
             if symbol in self.matrices
-            else self.block_matrix_space.create_space_element(self.dtype, is_vector=symbol.is_indexed)
+            else self.block_matrix_space.create_space_element(
+                self.dtype,
+                is_vector=symbol.is_indexed
+            )
         )
 
 
@@ -165,7 +178,7 @@ class OptimizedLabelDecomposedGraph:
         self.block_matrix_space = block_matrix_space
         self.dtype = dtype
         self.matrix_optimizer = matrix_optimizer
-        self.matrices: Dict[Symbol, OptimizedMatrix] = dict()
+        self.matrices: Dict[Symbol, OptimizedMatrix] = {}
 
     @staticmethod
     def from_unoptimized(

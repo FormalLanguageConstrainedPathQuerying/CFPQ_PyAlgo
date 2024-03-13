@@ -1,18 +1,19 @@
 from typing import List
 
+from cfpq_algo.all_pairs.all_pairs_cfl_reachability_algo import (
+    AllPairsCflReachabilityAlgoInstance,
+    AllPairsCflReachabilityAlgo
+)
+from cfpq_algo.all_pairs.matrix.abstract_all_pairs_cfl_reachability import \
+    AbstractAllPairsCflReachabilityMatrixAlgoInstance
 from cfpq_algo.setting.algo_setting import AlgoSetting
 from cfpq_model.cnf_grammar_template import CnfGrammarTemplate
 from cfpq_model.label_decomposed_graph import LabelDecomposedGraph
-from cfpq_algo.all_pairs.matrix.abstract_all_pairs_cfl_reachability import \
+
+
+class IncrementalAllPairsCFLReachabilityMatrixAlgoInstance(
     AbstractAllPairsCflReachabilityMatrixAlgoInstance
-from cfpq_algo.all_pairs.all_pairs_cfl_reachability_algo import AllPairsCflReachabilityAlgoInstance, \
-    AllPairsCflReachabilityAlgo
-
-
-class IncrementalAllPairsCFLReachabilityMatrixAlgoInstance(AbstractAllPairsCflReachabilityMatrixAlgoInstance):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
+):
     def compute_transitive_closure(self):
         front = self.graph.to_unoptimized()
         self.graph = self.graph.empty_copy()

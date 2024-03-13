@@ -1,17 +1,17 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+import graphblas
 from graphblas.core.matrix import Matrix
 from graphblas.core.operator import Semiring, Monoid
-from graphblas.semiring import any_pair
 
+from cfpq_algo.all_pairs.all_pairs_cfl_reachability_algo import AllPairsCflReachabilityAlgoInstance
 from cfpq_algo.setting.algo_setting import AlgoSetting
+from cfpq_algo.setting.matrix_optimizer_setting import create_matrix_optimizer
+from cfpq_matrix.matrix_utils import complimentary_mask, identity_matrix
 from cfpq_model.cnf_grammar_template import CnfGrammarTemplate
 from cfpq_model.label_decomposed_graph import OptimizedLabelDecomposedGraph, LabelDecomposedGraph
-from cfpq_algo.setting.matrix_optimizer_setting import get_matrix_optimizer_settings, create_matrix_optimizer
-from cfpq_matrix.utils import complimentary_mask, identity_matrix
-from cfpq_algo.all_pairs.all_pairs_cfl_reachability_algo import AllPairsCflReachabilityAlgoInstance
-from cfpq_model.subtractable_semiring import SubtractableSemiring
+from cfpq_matrix.subtractable_semiring import SubtractableSemiring
 
 
 class AbstractAllPairsCflReachabilityMatrixAlgoInstance(AllPairsCflReachabilityAlgoInstance, ABC):
@@ -22,13 +22,13 @@ class AbstractAllPairsCflReachabilityMatrixAlgoInstance(AllPairsCflReachabilityA
         settings: List[AlgoSetting],
         algebraic_structure: SubtractableSemiring = SubtractableSemiring(
             one=True,
-            semiring=any_pair,
-            sub_op=lambda minuend, subtrahend: complimentary_mask(minuend, subtrahend)
+            semiring=graphblas.semiring.any_pair,
+            sub_op=complimentary_mask
         )
     ):
         self.graph = OptimizedLabelDecomposedGraph.from_unoptimized(
             graph,
-            matrix_optimizer = create_matrix_optimizer(settings)
+            matrix_optimizer=create_matrix_optimizer(settings)
         )
         self.grammar = grammar
         self.settings = settings

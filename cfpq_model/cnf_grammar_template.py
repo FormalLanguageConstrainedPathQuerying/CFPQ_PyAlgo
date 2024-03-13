@@ -65,7 +65,7 @@ class CnfGrammarTemplate:
             <START_NON_TERMINAL>
             ```
         """
-        with open(path, 'r') as file:
+        with open(path, 'r', encoding="utf-8") as file:
             lines = [line.strip() for line in file.readlines() if line.strip()]
 
             if len(lines) >= 2 and lines[-2] == "Count:":
@@ -103,7 +103,7 @@ class CnfGrammarTemplate:
             return CnfGrammarTemplate(start_nonterm, epsilon_rules, simple_rules, complex_rules)
 
     def write_to_pocr_cnf_file(self, path: Union[Path, str], include_starting: bool = True) -> None:
-        with open(path, 'w') as file:
+        with open(path, 'w', encoding="utf-8") as file:
             for epsilon_rule in self.epsilon_rules:
                 file.write(f"{epsilon_rule.label}\n")
 

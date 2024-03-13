@@ -6,7 +6,7 @@ from graphblas.core.operator import Monoid, Semiring
 from cfpq_matrix.abstract_optimized_matrix_decorator import AbstractOptimizedMatrixDecorator
 from cfpq_matrix.optimized_matrix import OptimizedMatrix
 from cfpq_matrix.block.block_matrix_space import BlockMatrixSpace, BlockMatrixOrientation
-from cfpq_model.subtractable_semiring import SubOp
+from cfpq_matrix.subtractable_semiring import SubOp
 
 
 class BlockMatrix(AbstractOptimizedMatrixDecorator, ABC):
@@ -19,7 +19,9 @@ class BlockMatrix(AbstractOptimizedMatrixDecorator, ABC):
         return self._base
 
     def optimize_similarly(self, other: Matrix) -> "OptimizedMatrix":
-        return self.block_matrix_space.automize_block_operations(self.base.optimize_similarly(other))
+        return self.block_matrix_space.automize_block_operations(
+            self.base.optimize_similarly(other)
+        )
 
 
 class CellBlockMatrix(BlockMatrix):
@@ -30,15 +32,16 @@ class CellBlockMatrix(BlockMatrix):
     def mxm(self, other: Matrix, op: Semiring, swap_operands: bool = False) -> Matrix:
         if self.block_matrix_space.is_single_cell(other.shape):
             return self.base.mxm(other, op, swap_operands=swap_operands)
-        else:
-            return self.base.mxm(
-                self.block_matrix_space.hyper_rotate(
-                    other,
-                    BlockMatrixOrientation.VERTICAL if swap_operands else BlockMatrixOrientation.HORIZONTAL
-                ),
-                op,
-                swap_operands=swap_operands,
-            )
+        return self.base.mxm(
+            self.block_matrix_space.hyper_rotate(
+                other,
+                BlockMatrixOrientation.VERTICAL
+                if swap_operands
+                else BlockMatrixOrientation.HORIZONTAL
+            ),
+            op=op,
+            swap_operands=swap_operands,
+        )
 
     def rsub(self, other: Matrix, op: SubOp) -> Matrix:
         assert self.block_matrix_space.is_single_cell(other.shape)
@@ -63,12 +66,19 @@ class VectorBlockMatrix(BlockMatrix):
         self.matrices = {block_matrix_space.get_block_matrix_orientation(base.shape): base}
         self.discard_base_on_reformat = discard_base_on_reformat
 
-    def _force_init_orientation(self, desired_orientation: BlockMatrixOrientation) -> "OptimizedMatrix":
+    def _force_init_orientation(
+            self,
+            desired_orientation: BlockMatrixOrientation
+    ) -> "OptimizedMatrix":
         if desired_orientation not in self.matrices:
-            rotated_matrix = self.block_matrix_space.hyper_rotate(self.base.to_unoptimized(), desired_orientation)
+            rotated_matrix = self.block_matrix_space.hyper_rotate(
+                self.base.to_unoptimized(),
+                desired_orientation
+            )
             self.matrices[desired_orientation] = self.base.optimize_similarly(rotated_matrix)
             if self.discard_base_on_reformat:
-                del self.matrices[self.block_matrix_space.get_block_matrix_orientation(self.base.shape)]
+                base_shape = self.block_matrix_space.get_block_matrix_orientation(self.base.shape)
+                del self.matrices[base_shape]
                 self._base = self.matrices[desired_orientation]
         self.discard_base_on_reformat = False
         return self.matrices[desired_orientation]
@@ -76,17 +86,26 @@ class VectorBlockMatrix(BlockMatrix):
     def mxm(self, other: Matrix, op: Semiring, swap_operands: bool = False) -> Matrix:
         if self.block_matrix_space.is_single_cell(other.shape):
             return self._force_init_orientation(
-                BlockMatrixOrientation.HORIZONTAL if swap_operands else BlockMatrixOrientation.VERTICAL
+                BlockMatrixOrientation.HORIZONTAL
+                if swap_operands
+                else BlockMatrixOrientation.VERTICAL
             ).mxm(other, op, swap_operands=swap_operands)
-        else:
-            return self._force_init_orientation(
-                BlockMatrixOrientation.VERTICAL if swap_operands else BlockMatrixOrientation.HORIZONTAL
-            ).mxm(self.block_matrix_space.to_block_diag_matrix(other), op, swap_operands=swap_operands)
+        return self._force_init_orientation(
+            BlockMatrixOrientation.VERTICAL
+            if swap_operands
+            else BlockMatrixOrientation.HORIZONTAL
+        ).mxm(
+            self.block_matrix_space.to_block_diag_matrix(other),
+            op=op,
+            swap_operands=swap_operands
+        )
 
     def rsub(self, other: Matrix, op: SubOp) -> Matrix:
         if self.block_matrix_space.get_block_matrix_orientation(other.shape) not in self.matrices:
-            other = self.block_matrix_space.hyper_rotate(other, self.matrices.keys().__iter__().__next__())
-        return self.matrices[self.block_matrix_space.get_block_matrix_orientation(other.shape)].rsub(other, op)
+            my_shape = next(self.matrices.keys().__iter__())
+            other = self.block_matrix_space.hyper_rotate(other, my_shape)
+        other_shape = self.block_matrix_space.get_block_matrix_orientation(other.shape)
+        return self.matrices[other_shape].rsub(other, op)
 
     def iadd(self, other: Matrix, op: Monoid):
         if self.block_matrix_space.is_single_cell(other.shape):

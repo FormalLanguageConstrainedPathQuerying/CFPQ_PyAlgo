@@ -28,7 +28,6 @@ class AllPairsCflrToolRunner(ABC):
 
         Raises CalledProcessError if CFL-r exits with non-zero exit code.
         """
-        pass
 
 
 class AbstractAllPairsCflrToolRunner(AllPairsCflrToolRunner, ABC):
@@ -74,7 +73,7 @@ class AbstractAllPairsCflrToolRunner(AllPairsCflrToolRunner, ABC):
     def safe_parse_results(self, process: subprocess.CompletedProcess[str]) -> CflrToolRunResult:
         try:
             return self.parse_results(process)
-        except Exception:
+        except Exception as exc:
             print(
                 "   Failed to parse results\n"
                 "   (interpreting as incompatible CFL-r tool error)"
@@ -88,7 +87,7 @@ class AbstractAllPairsCflrToolRunner(AllPairsCflrToolRunner, ABC):
             print("=====")
             traceback.print_exc()
             print("=====")
-            raise IncompatibleCflrToolError()
+            raise IncompatibleCflrToolError() from exc
 
     @abstractmethod
     def parse_results(self, process: subprocess.CompletedProcess[str]) -> CflrToolRunResult:

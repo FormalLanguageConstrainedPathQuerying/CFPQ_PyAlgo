@@ -3,7 +3,7 @@ from graphblas.core.operator import Semiring, Monoid
 
 from cfpq_matrix.abstract_optimized_matrix_decorator import AbstractOptimizedMatrixDecorator
 from cfpq_matrix.optimized_matrix import OptimizedMatrix
-from cfpq_model.subtractable_semiring import SubOp
+from cfpq_matrix.subtractable_semiring import SubOp
 
 
 class EmptyOptimizedMatrix(AbstractOptimizedMatrixDecorator):
@@ -19,9 +19,8 @@ class EmptyOptimizedMatrix(AbstractOptimizedMatrixDecorator):
             if swap_operands:
                 assert self.shape[0] == other.shape[1]
                 return Matrix(self.dtype, self.shape[1], other.shape[0])
-            else:
-                assert self.shape[1] == other.shape[0]
-                return Matrix(self.dtype, self.shape[0], other.shape[1])
+            assert self.shape[1] == other.shape[0]
+            return Matrix(self.dtype, self.shape[0], other.shape[1])
         return self.base.mxm(other, op, swap_operands)
 
     def rsub(self, other: Matrix, op: SubOp) -> Matrix:

@@ -9,7 +9,7 @@ def explode_indices(
     block_matrix_space = graph.block_matrix_space
     block_count = block_matrix_space.block_count
 
-    matrices = dict()
+    matrices = {}
     for symbol, matrix in graph.matrices.items():
         if block_matrix_space.is_single_cell(matrix.shape):
             matrices[symbol] = matrix

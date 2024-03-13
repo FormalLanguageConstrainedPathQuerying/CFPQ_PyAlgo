@@ -2,13 +2,12 @@ import re
 import subprocess
 from typing import Optional
 
-from cfpq_eval.runners.all_pairs_cflr_tool_runner import AbstractAllPairsCflrToolRunner, CflrToolRunResult
+from cfpq_eval.runners.all_pairs_cflr_tool_runner import (
+    AbstractAllPairsCflrToolRunner, CflrToolRunResult
+)
 
 
 class PocrAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     @property
     def base_command(self) -> Optional[str]:
         return (

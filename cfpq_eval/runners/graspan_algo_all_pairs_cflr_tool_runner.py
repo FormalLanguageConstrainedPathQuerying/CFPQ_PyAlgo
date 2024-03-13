@@ -6,16 +6,16 @@ from typing import Optional
 
 import psutil
 
-from cfpq_eval.runners.all_pairs_cflr_tool_runner import AbstractAllPairsCflrToolRunner, CflrToolRunResult
+from cfpq_eval.runners.all_pairs_cflr_tool_runner import (
+    AbstractAllPairsCflrToolRunner,
+    CflrToolRunResult
+)
 from cfpq_model.cnf_grammar_template import CnfGrammarTemplate
 from cfpq_model.label_decomposed_graph import LabelDecomposedGraph
-from cfpq_model.utils import explode_indices
+from cfpq_model.model_utils import explode_indices
 
 
 class GraspanAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     @property
     def base_command(self) -> Optional[str]:
         grammar = CnfGrammarTemplate.read_from_pocr_cnf_file(self.grammar_path)
@@ -52,7 +52,7 @@ class GraspanAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
     def parse_results(self, process: subprocess.CompletedProcess[str]) -> CflrToolRunResult:
         final_file = re.search(r"finalFile:\s*(.*)", process.stdout).group(1)
         start_nonterm = CnfGrammarTemplate.read_from_pocr_cnf_file(self.grammar_path).start_nonterm
-        with open(final_file, "r") as file:
+        with open(final_file, "r", encoding="utf-8") as file:
             s_edges = set()
             for line in file:
                 if line.split()[-1] == start_nonterm.label:

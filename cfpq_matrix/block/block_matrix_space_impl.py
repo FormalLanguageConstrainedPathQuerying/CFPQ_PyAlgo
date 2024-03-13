@@ -25,7 +25,10 @@ class BlockMatrixSpaceImpl(BlockMatrixSpace):
         return matrix_shape == (self.n, self.n)
 
     def is_hyper_vector(self, matrix_shape: Tuple[int, int]) -> bool:
-        return matrix_shape in [(self.n * self.block_count, self.n), (self.n, self.n * self.block_count)]
+        return matrix_shape in [
+            (self.n * self.block_count, self.n),
+            (self.n, self.n * self.block_count)
+        ]
 
     def get_block_matrix_orientation(self, matrix_shape: Tuple[int, int]) -> BlockMatrixOrientation:
         return {
@@ -36,23 +39,22 @@ class BlockMatrixSpaceImpl(BlockMatrixSpace):
     def reduce_hyper_vector_or_cell(self, hyper_vector_or_cell: Matrix, op: Monoid) -> Matrix:
         if self.is_single_cell(hyper_vector_or_cell.shape):
             return hyper_vector_or_cell
+        input_orientation = self.get_block_matrix_orientation(hyper_vector_or_cell.shape)
+        (rows, columns, values) = hyper_vector_or_cell.to_coo()
+        if input_orientation == BlockMatrixOrientation.VERTICAL:
+            rows = rows % self.n
+        elif input_orientation == BlockMatrixOrientation.HORIZONTAL:
+            columns = columns % self.n
         else:
-            input_orientation = self.get_block_matrix_orientation(hyper_vector_or_cell.shape)
-            (rows, columns, values) = hyper_vector_or_cell.to_coo()
-            if input_orientation == BlockMatrixOrientation.VERTICAL:
-                rows = rows % self.n
-            elif input_orientation == BlockMatrixOrientation.HORIZONTAL:
-                columns = columns % self.n
-            else:
-                assert False
-            return Matrix.from_coo(
-                rows,
-                columns,
-                values,
-                nrows=self.n,
-                ncols=self.n,
-                dup_op=op
-            )
+            assert False
+        return Matrix.from_coo(
+            rows,
+            columns,
+            values,
+            nrows=self.n,
+            ncols=self.n,
+            dup_op=op
+        )
 
     def hyper_rotate(self, hyper_vector: Matrix, orientation: BlockMatrixOrientation) -> Matrix:
         input_orientation = self.get_block_matrix_orientation(hyper_vector.shape)
@@ -68,7 +70,13 @@ class BlockMatrixSpaceImpl(BlockMatrixSpace):
         else:
             assert False
 
-        return Matrix.from_coo(rows, columns, values, nrows=hyper_vector.ncols, ncols=hyper_vector.nrows)
+        return Matrix.from_coo(
+            rows,
+            columns,
+            values,
+            nrows=hyper_vector.ncols,
+            ncols=hyper_vector.nrows
+        )
 
     def to_block_diag_matrix(self, hyper_vector: Matrix) -> Matrix:
         input_orientation = self.get_block_matrix_orientation(hyper_vector.shape)
@@ -105,7 +113,11 @@ class BlockMatrixSpaceImpl(BlockMatrixSpace):
         return self.stack_into_hyper_column([matrix] * self.block_count)
 
     def automize_block_operations(self, base: OptimizedMatrix) -> BlockMatrix:
-        return CellBlockMatrix(base, self) if self.is_single_cell(base.shape) else VectorBlockMatrix(base, self)
+        return (
+            CellBlockMatrix(base, self)
+            if self.is_single_cell(base.shape)
+            else VectorBlockMatrix(base, self)
+        )
 
     def get_hyper_vector_blocks(self, hyper_vector: Matrix) -> List[Matrix]:
         return [cell for row in hyper_vector.ss.split(self.n) for cell in row]
