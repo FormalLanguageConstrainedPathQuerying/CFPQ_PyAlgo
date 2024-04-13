@@ -81,7 +81,7 @@ def run_experiment(
                 s_edges, ram_kb, time_sec = "OOM", "OOM", "OOM"
 
         with open(result_file_path, 'a', newline='', encoding="utf-8") as csvfile:
-            print(f"   {s_edges} {ram_kb} {time_sec}")
+            print(f"    SEdges: {s_edges}\t\t RAM KB: {ram_kb}\t\t TIME SEC: {time_sec}")
             writer = csv.writer(csvfile)
             writer.writerow([
                 algo_name,
