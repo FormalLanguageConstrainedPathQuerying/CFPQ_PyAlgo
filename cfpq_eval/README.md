@@ -23,7 +23,7 @@ For detailed information on evaluation script options, execute the following com
 
 ```bash
 cd .. # Should be run from CFPQ_PyAlgo project root directory
-python3 -m cfpq_cli.run_all_pairs_cflr --help
+python3 -m cfpq_eval.eval_all_pairs_cflr --help
 ```
 
 The basic command usage is as follows:
