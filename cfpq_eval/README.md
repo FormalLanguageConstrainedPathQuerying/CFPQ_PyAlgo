@@ -1,6 +1,6 @@
 # CFPQ Evaluation
 
-The `cfpq_eval` module in CFPQ_PyAlgo evaluates performance of CFPQ solvers,
+The `cfpq_eval` module evaluates performance of various CFPQ solvers,
 integrating with both CFPQ_PyAlgo itself and third-party tools.
 
 ## Setting up the environment
@@ -21,8 +21,8 @@ docker run -it cfpq_eval bash
 
 For detailed information on evaluation script options, execute the following command:
 
-```bash
-cd .. # Should be run from CFPQ_PyAlgo project root directory
+```
+# Should be run from CFPQ_PyAlgo project root directory in cfpq_eval Docker container
 python3 -m cfpq_eval.eval_all_pairs_cflr --help
 ```
 
@@ -32,14 +32,17 @@ The basic command usage is as follows:
 python3 -m cfpq_eval.eval_all_pairs_cflr algo_config.csv data_config.csv results_path [--rounds ROUNDS] [--timeout TIMEOUT]
 ```
 
-- `algo_config.csv` specifies algorithm configurations.
-- `data_config.csv` specifies the dataset.
+- `algo_config.csv` specifies algorithm configurations (e.g. `configs/algo/fast_matrix_cfpq.csv`).
+- `data_config.csv` specifies the dataset (e.g. `configs/data/small_examples.csv`).
 - `results_path` specifies path for saving raw results.
 - `--rounds` sets run times per config (default is 1).
 - `--timeout` limits each configuration's execution time in seconds (optional).
 
 ## Configuration Files
 
+### Premade Configurations
+
+The CFPQ_eval Docker image includes premade configurations located in the `/py_algo/configs` folder.
 ### Algorithm Configuration
 
 The `algo_config.csv` outlines algorithms and settings. Supported algorithms:
@@ -51,7 +54,7 @@ The `algo_config.csv` outlines algorithms and settings. Supported algorithms:
 - `graspan`
 - `gigascale`
 
-For Matrix-based algorithms options described in [cfpq_cli/README](../cfpq_cli/README.md).
+For Matrix-based algorithms options described in [cfpq_cli/README](../cfpq_cli/README.md)
 can be used to alter the behaviour.
 
 #### Example
@@ -82,5 +85,5 @@ memory usage, and output size are rendered in standard output stream.
 
 ## Custom Tools Integration
 
-Additional CFPQ solvers can be supported to evaluation by implementing `AllPairsCflrToolRunner` interface
+Custom CFPQ solvers can be evaluated by implementing `AllPairsCflrToolRunner` interface
 and updating `run_appropriate_all_pairs_cflr_tool()` function.
