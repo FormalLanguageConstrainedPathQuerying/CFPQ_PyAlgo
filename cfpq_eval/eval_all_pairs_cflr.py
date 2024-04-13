@@ -13,7 +13,7 @@ import pandas as pd
 from cfpq_eval.runners.all_pairs_cflr_tool_runner import IncompatibleCflrToolError
 from cfpq_eval.runners.all_pairs_cflr_tool_runner_facade import run_appropriate_all_pairs_cflr_tool
 
-DISPLAY_STD_THRESHOLD = 0.1
+DISPLAY_STD_THRESHOLD = 0.01
 
 # see `man timeout`
 TIMEOUT_EXIT_CODE = 124
@@ -94,9 +94,10 @@ def run_experiment(
 
 
 def round_to_significant_digits(x: float, digits: int = 2) -> float:
-    if x == 0:
-        return x
-    return round(x, max(0, -int(floor(log10(abs(x)))) + digits - 1))
+    if x == 0.0:
+        return 0.0
+    absolute_digits = -int(floor(log10(abs(x)))) + digits - 1
+    return round(x, absolute_digits) if absolute_digits > 0 else int(round(x))
 
 
 def reduce_result_file_to_one_row(result_file_path: Path) -> pd.DataFrame:
@@ -136,14 +137,14 @@ def reduce_result_file_to_one_row(result_file_path: Path) -> pd.DataFrame:
                 round_to_significant_digits(ram_gb_mean)
                 if ram_gb_std < DISPLAY_STD_THRESHOLD * ram_gb_mean
                 else f"{round_to_significant_digits(ram_gb_mean)}"
-                     f" ± {round_to_significant_digits(ram_gb_std)}"
+                     f" ± {int(ram_gb_std / ram_gb_mean * 100)}%"
             ],
             'time_sec': [
                 # Graspan reports analysis time in whole seconds, so it may report 0
                 (round_to_significant_digits(time_sec_mean) if time_sec_mean != 0 else "< 1")
                 if time_sec_std < DISPLAY_STD_THRESHOLD * time_sec_mean
                 else f"{round_to_significant_digits(time_sec_mean)}"
-                     f" ± {round_to_significant_digits(time_sec_std)}"
+                     f" ± {int(time_sec_std / time_sec_mean * 100)}%"
             ]
         })
     return df
@@ -171,6 +172,14 @@ def display_results_for_grammar(df: pd.DataFrame, grammar: str):
         df['graph'].unique(),
         key=lambda graph: min_numeric(df[df['graph'] == graph]['time_sec'])
     ))
+
+    duplicates = df[df.duplicated(subset=['graph', 'algo'], keep=False)]
+    if not duplicates.empty:
+        warnings.warn(
+            "Duplicate entries found. Repeated entries will be ignored:\n"
+            f"{str(duplicates)}"
+        )
+    df = df.drop_duplicates(subset=['graph', 'algo'])
 
     s_edges_df = df.pivot(index='graph', columns='algo', values='s_edges').sort_index()
     s_edges_df.columns = [
