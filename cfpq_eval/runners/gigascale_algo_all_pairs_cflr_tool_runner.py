@@ -15,11 +15,46 @@ from cfpq_eval.runners.all_pairs_cflr_tool_runner import (
 class GigascaleAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
     @property
     def base_command(self) -> Optional[str]:
-        return (
-            f'./run.sh -wdlrb -i datasets/dacapo9/{self.graph_path.stem}'
-            if self.grammar_path.stem in {"java_points_to", "java_points_to_rewritten"}
-            else None
-        )
+        if self.grammar_path.stem not in {"java_points_to", "java_points_to_rewritten"}:
+            return None
+        base_path = os.path.dirname(self.graph_path)
+        gigascale_path = os.path.join(base_path, 'Gigascale')
+        adapted_graph_path = os.path.join(gigascale_path, self.graph_path.stem)
+        os.makedirs(adapted_graph_path, exist_ok=True)
+
+        alloc_path = os.path.join(adapted_graph_path, 'Alloc.csv')
+        assign_path = os.path.join(adapted_graph_path, 'Assign.csv')
+        load_path = os.path.join(adapted_graph_path, 'Load.csv')
+        store_path = os.path.join(adapted_graph_path, 'Store.csv')
+
+        with open(alloc_path, 'w') as alloc_file, \
+                open(assign_path, 'w') as assign_file, \
+                open(load_path, 'w') as load_file, \
+                open(store_path, 'w') as store_file:
+
+            with open(self.graph_path, 'r') as graph_file:
+                for line in graph_file:
+                    line_data = line.strip().split()
+                    if len(line_data) == 0:
+                        continue
+
+                    source, target, label = line_data[:3]
+                    # NOTE: It's not a mistake that `target` and `source` are sometimes swapped
+                    # The swap is required to get an answer consistent with other tools.
+                    if label == 'alloc':
+                        alloc_file.write(f'"var_{source}","var_{target}"\n')
+                    elif label == 'assign':
+                        assign_file.write(f'"var_{target}","var_{source}"\n')
+                    elif label == 'load_i':
+                        field = line_data[3]
+                        load_file.write(f'"var_{target}","var_{source}","field_{field}"\n')
+                    elif label == 'store_i':
+                        field = line_data[3]
+                        store_file.write(f'"var_{target}","var_{source}","field_{field}"\n')
+                    else:
+                        assert "_r" in label, (f"Label '{label} must be 'alloc', 'assign' "
+                                               f"or 'load_i' or 'store_i' or contain '_r")
+        return f'./run.sh -wdlrb -i {adapted_graph_path}'
 
     @property
     def work_dir(self) -> Optional[Path]:
