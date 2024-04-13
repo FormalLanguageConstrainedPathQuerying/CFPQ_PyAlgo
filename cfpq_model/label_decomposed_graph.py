@@ -140,11 +140,19 @@ class LabelDecomposedGraph:
             for symbol, matrix in self.matrices.items():
                 edge_label = symbol.label
                 (rows, columns, _) = matrix.to_coo()
-                edges_df = pd.DataFrame({
-                    'source': rows,
-                    'destination': columns,
-                    'label': edge_label
-                })
+                if matrix.shape[0] == self.vertex_count:
+                    edges_df = pd.DataFrame({
+                        'source': rows,
+                        'destination': columns,
+                        'label': edge_label
+                    })
+                else:
+                    edges_df = pd.DataFrame({
+                        'source': rows % self.vertex_count,
+                        'destination': columns,
+                        'label': edge_label,
+                        'label_index': rows // self.vertex_count
+                    })
                 csv_string = edges_df.to_csv(sep='\t', index=False, header=False)
                 output_file.write(csv_string)
 
