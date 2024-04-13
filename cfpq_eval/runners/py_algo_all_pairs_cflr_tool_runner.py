@@ -11,7 +11,7 @@ from cfpq_eval.runners.all_pairs_cflr_tool_runner import (
 class PyAlgoAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
     @property
     def base_command(self) -> Optional[str]:
-        return ("python3 -m cli.run_all_pairs_cflr "
+        return ("python3 -m cfpq_cli.run_all_pairs_cflr "
                 f"{self.algo_settings} {self.graph_path} {self.grammar_path}")
 
     def parse_results(self, process: subprocess.CompletedProcess[str]) -> CflrToolRunResult:
