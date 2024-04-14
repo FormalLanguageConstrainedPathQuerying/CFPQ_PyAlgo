@@ -64,6 +64,13 @@ RUN sed -i 's|/home/aftab/Downloads/boost_1_62_installed|'$BOOST_ROOT'|g' /grasp
 RUN cd /graspan/src && make
 ENV GRASPAN_DIR=/graspan
 
+# kotgll (general-purpose CFL-r tool)
+RUN apt-get update && apt-get install -y curl
+RUN mkdir -p /kotgll
+RUN curl -L -O https://github.com/vadyushkins/kotgll/releases/download/v1.0.8/kotgll-1.0.8.jar  \
+    && mv kotgll-1.0.8.jar /kotgll/kotgll.jar
+ENV KOTGLL_DIR=/kotgll
+
 # CFPQ_PyAlgo dependencies
 RUN apt-get update && apt-get install -y \
     software-properties-common \

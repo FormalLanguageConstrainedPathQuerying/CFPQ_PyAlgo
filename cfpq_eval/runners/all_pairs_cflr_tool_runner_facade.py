@@ -6,6 +6,8 @@ from cfpq_eval.runners.gigascale_algo_all_pairs_cflr_tool_runner import (
     GigascaleAllPairsCflrToolRunner)
 from cfpq_eval.runners.graspan_algo_all_pairs_cflr_tool_runner import (
     GraspanAllPairsCflrToolRunner)
+from cfpq_eval.runners.kotgll_all_pairs_cflr_tool_runner import (
+    KotgllAllPairsCflrToolRunner)
 from cfpq_eval.runners.pearl_algo_all_pairs_cflr_tool_runner import (
     PearlAllPairsCflrToolRunner)
 from cfpq_eval.runners.pocr_algo_all_pairs_cflr_tool_runner import (
@@ -24,7 +26,8 @@ def run_appropriate_all_pairs_cflr_tool(
         "pocr": PocrAllPairsCflrToolRunner,
         "pearl": PearlAllPairsCflrToolRunner,
         "gigascale": GigascaleAllPairsCflrToolRunner,
-        "graspan": GraspanAllPairsCflrToolRunner
+        "graspan": GraspanAllPairsCflrToolRunner,
+        "kotgll": KotgllAllPairsCflrToolRunner,
     }.get(algo_settings, PyAlgoAllPairsCflrToolRunner)(
         algo_settings, graph_path, grammar_path, timeout_sec
     ).run()
