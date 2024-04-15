@@ -57,16 +57,22 @@ def run_experiment(
         if is_enough_data_collected(result_file_path, rounds):
             return
 
+        running_file_path = result_file_path.with_suffix('.unfinished')
         try:
-            result = run_appropriate_all_pairs_cflr_tool(
-                algo_settings=algo_settings,
-                graph_path=graph_path,
-                grammar_path=grammar_path,
-                timeout_sec=timeout_sec
-            )
-            s_edges = result.s_edges
-            ram_kb = result.ram_kb
-            time_sec = result.time_sec
+            if os.path.isfile(running_file_path) and not user_confirms_rerun():
+                s_edges, ram_kb, time_sec = "-", "-", "-"
+            else:
+                with open(running_file_path, 'w', encoding="utf-8") as running_file:
+                    running_file.write("CFPQ solver started, but has not finished")
+                result = run_appropriate_all_pairs_cflr_tool(
+                    algo_settings=algo_settings,
+                    graph_path=graph_path,
+                    grammar_path=grammar_path,
+                    timeout_sec=timeout_sec
+                )
+                s_edges = result.s_edges
+                ram_kb = result.ram_kb
+                time_sec = result.time_sec
         except IncompatibleCflrToolError:
             s_edges, ram_kb, time_sec = "-", "-", "-"
         except subprocess.CalledProcessError as e:
@@ -79,6 +85,8 @@ def run_experiment(
                     f"   (interpreting as out of memory error)"
                 )
                 s_edges, ram_kb, time_sec = "OOM", "OOM", "OOM"
+        finally:
+            os.remove(running_file_path)
 
         with open(result_file_path, 'a', newline='', encoding="utf-8") as csvfile:
             print(f"    SEdges: {s_edges}\t\t RAM KB: {ram_kb}\t\t TIME SEC: {time_sec}")
@@ -91,6 +99,20 @@ def run_experiment(
                 ram_kb,
                 time_sec
             ])
+
+
+def user_confirms_rerun() -> bool:
+    while True:
+        print(
+            "Last time you run this CFPQ solver on this input experiment was stopped abruptly "
+            "either because you stopped it manually or because container has crashed. "
+            "Do you want to rerun the CFPQ solver on this input? (y/n)"
+        )
+        user_confirm = input().lower()
+        if user_confirm == "y":
+            return True
+        if user_confirm == "n":
+            return False
 
 
 def round_to_significant_digits(x: float, digits: int = 2) -> float:
