@@ -16,8 +16,15 @@ from cfpq_model.cnf_grammar_template import CnfGrammarTemplate
 from cfpq_model.label_decomposed_graph import LabelDecomposedGraph
 from cfpq_model.model_utils import explode_indices
 
+_WARM_UP_ROUNDS = 1
+
 
 class KotgllAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.timeout_sec is not None:
+            self.timeout_sec += _WARM_UP_ROUNDS * self.timeout_sec
+
     @property
     def base_command(self) -> Optional[str]:
         grammar = CnfGrammarTemplate.read_from_pocr_cnf_file(self.grammar_path)
@@ -62,7 +69,7 @@ class KotgllAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
             f'--grammar {grammar_path.suffix[1:]} --sppf off '
             f'--inputPath {graph_path.parent} --grammarPath {grammar_path} '
             f'--outputPath {out_folder} '
-            '--warmUpRounds 1 --benchmarkRounds 1'
+            f'--warmUpRounds {_WARM_UP_ROUNDS} --benchmarkRounds 1'
         )
 
     @property

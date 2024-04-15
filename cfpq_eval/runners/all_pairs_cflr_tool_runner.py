@@ -50,7 +50,7 @@ class AbstractAllPairsCflrToolRunner(AllPairsCflrToolRunner, ABC):
 
     @property
     def timeout_command(self) -> str:
-        return '' if self.timeout_sec is None else f'timeout {self.timeout_sec}s '
+        return '' if self.timeout_sec is None else f'timeout --kill-after=3m {self.timeout_sec}s '
 
     @property
     def measure_ram_command(self) -> str:
