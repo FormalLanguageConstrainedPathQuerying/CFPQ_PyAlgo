@@ -57,6 +57,7 @@ class GraspanAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
             for line in file:
                 if line.split()[-1] == start_nonterm.label:
                     s_edges.add((line.split()[0], line.split()[1]))
+        os.remove(final_file)
 
         return CflrToolRunResult(
             s_edges=len(s_edges),
