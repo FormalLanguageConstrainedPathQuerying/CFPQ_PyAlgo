@@ -23,7 +23,10 @@ def is_enough_data_collected(result_file_path: Path, rounds: int):
     try:
         with open(result_file_path, 'r', encoding="utf-8") as file:
             reader = list(csv.reader(file))
-            if len(reader) - 1 >= rounds or any("OOT" in row or "OOM" in row for row in reader):
+            if len(reader) - 1 >= rounds or any(
+                    "OOT" in row or "OOM" in row or "-" in row
+                    for row in reader
+            ):
                 return True
     except FileNotFoundError:
         pass
