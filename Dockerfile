@@ -8,6 +8,7 @@ WORKDIR /app
 COPY requirements.txt /app/
 COPY deps/CFPQ_Data /app/deps/CFPQ_Data
 
+RUN apt-get update && apt-get install -y gcc python3-dev libgraphblas-dev
 RUN pip3 install pygraphblas==5.1.8.0
 RUN pip3 install -r requirements.txt
 RUN cd deps/CFPQ_Data && python3 setup.py install
