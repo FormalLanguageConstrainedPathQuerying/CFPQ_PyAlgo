@@ -10,7 +10,7 @@ and work with them in terms of linear algebra.
 First of all you need to clone repository with its submodules:
 
 ```bash
-git clone --recurse-submodules https://github.com/JetBrains-Research/CFPQ_PyAlgo.git
+git clone --recurse-submodules -b murav/optimize-matrix https://github.com/JetBrains-Research/CFPQ_PyAlgo.git
 cd CFPQ_PyAlgo/ 
 git submodule init
 git submodule update
@@ -37,7 +37,7 @@ First of all you need to install [pygraphblas](https://github.com/michelp/pygrap
 ```bash
 pip3 install pygraphblas==5.1.8.0
 ```
-Secondly you need to install cfpq_data_devtools package and other requirements:
+Secondly you need to install `cfpq_data_devtools` package and other requirements:
 
 ```bash
 cd deps/CFPQ_Data
@@ -45,6 +45,7 @@ pip3 install -r requirements.txt
 python3 setup.py install --user
 
 cd ../../
+pip3 install pygraphblas==5.1.8.0 # optional (needed for legacy algorithms and their tests)
 pip3 install -r requirements.txt
 ```
 To check if the installation was successful you can run simple tests

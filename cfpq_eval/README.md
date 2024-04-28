@@ -8,27 +8,36 @@ integrating with both CFPQ_PyAlgo itself and third-party tools.
 Build and run a Docker container for evaluation using [Dockerfile-all-tools](../Dockerfile-all-tools).
 
 Build Docker image:
-```
-docker build -f Dockerfile-all-tools -t cfpq_eval .
+```bash
+cd .. # Should be run from CFPQ_PyAlgo project root directory
+
+# Load base image
+wget -O pearl.tar.gz https://figshare.com/ndownloader/files/42214812
+docker load --input pearl.tar.gz
+rm pearl.tar.gz
+
+# Build eval image
+docker build -f Dockerfile-all-tools -t cfpq/py_algo_eval .
 ```
 
 Run Docker container:
-```
-docker run -it cfpq_eval bash
+```bash
+docker run -it cfpq/py_algo_eval bash
 ```
 
 ## Running the Script
 
 For detailed information on evaluation script options, execute the following command:
 
-```
-# Should be run from CFPQ_PyAlgo project root directory in cfpq_eval Docker container
+```bash
+cd .. # Should be run from CFPQ_PyAlgo project root directory
 python3 -m cfpq_eval.eval_all_pairs_cflr --help
 ```
 
 The basic command usage is as follows:
 
 ```
+# Should be run in cfpq_eval Docker container
 python3 -m cfpq_eval.eval_all_pairs_cflr algo_config.csv data_config.csv results_path [--rounds ROUNDS] [--timeout TIMEOUT]
 ```
 
