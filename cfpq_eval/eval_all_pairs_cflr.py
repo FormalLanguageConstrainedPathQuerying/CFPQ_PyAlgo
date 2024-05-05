@@ -56,6 +56,10 @@ def run_experiment(
         if os.path.exists(rewritten_grammar_path):
             grammar_path = rewritten_grammar_path
 
+    if is_enough_data_collected(result_file_path, rounds):
+        print(f"    Enough data has already been saved to {result_file_path}")
+        return
+
     for _ in range(rounds):
         if is_enough_data_collected(result_file_path, rounds):
             return
@@ -187,6 +191,12 @@ def min_numeric(series: pd.Series) -> float:
     numeric_series = pd.to_numeric(series, errors='coerce').dropna()
     return float('inf') if numeric_series.empty else numeric_series.min()
 
+def format_int(x):
+    try:
+        return format(x, ',').replace(',', '\\,')
+    except ValueError:
+        return x
+
 
 def display_results_for_grammar(df: pd.DataFrame, grammar: str):
     df = df[df['grammar'] == grammar].copy()
@@ -213,6 +223,7 @@ def display_results_for_grammar(df: pd.DataFrame, grammar: str):
         else col
         for col in s_edges_df.columns
     ]
+    s_edges_df = s_edges_df.applymap(lambda x: format_int(x))
     pprint_df(
         s_edges_df,
         title=f" #ANSWER (grammar '{grammar}') ",
