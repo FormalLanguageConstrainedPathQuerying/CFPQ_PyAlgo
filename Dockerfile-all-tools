@@ -21,18 +21,18 @@ RUN apt-get update && apt-get install -y \
     wget \
     npm
 
-## POCR dependency, that needs to be built from sources
-RUN git clone https://github.com/kisslune/SVF.git /SVF \
+# POCR dependency, that needs to be built from sources
+RUN git clone -b svf-llvm14 https://github.com/kisslune/SVF.git /SVF \
     && cd /SVF \
     && /bin/bash -c "source ./build.sh" \
-    && echo 'pushd /SVF > /dev/null && source setup.sh && popd > /dev/null' >> /root/.bashrc
+    && echo 'pushd /SVF > /dev/null && source setup.sh > /dev/null && popd > /dev/null' >> /root/.bashrc
 ENV SVF_DIR=/SVF
 
 # POCR (general-purpose CFL-r tool)
 RUN git clone https://github.com/kisslune/POCR.git /POCR \
     && cd /POCR \
     && /bin/bash -c "source ./../SVF/setup.sh && source ./build.sh" \
-    && echo 'pushd /POCR > /dev/null && source setup.sh && popd > /dev/null' >> /root/.bashrc
+    && echo 'pushd /POCR > /dev/null && source setup.sh > /dev/null && popd > /dev/null' >> /root/.bashrc
 ENV POCR_DIR=/POCR
 
 # Gigascale dependencies
@@ -88,4 +88,19 @@ RUN cd /py_algo && pip3 install -r requirements.txt
 RUN cd /py_algo/deps/CFPQ_Data && python3 setup.py install
 COPY . /py_algo
 
-# TODO add data downloading
+WORKDIR /py_algo
+
+# Download benchmarks
+RUN pip install gdown
+RUN apt-get update && apt-get install unzip
+RUN gdown 12Qhc6XNXYbpPbZGp-lo30NsywFELAFhu \
+    && unzip CFPQ_eval.zip -d . \
+    && rm CFPQ_eval.zip
+
+# Add welcome message
+RUN echo 'echo Welcome to the CFPQ_PyAlgo_Eval Docker container!' >> /root/.bashrc \
+    && echo 'echo "Run \`python3 -m cfpq_eval.eval_all_pairs_cflr --help\` to see the usage message."' >> /root/.bashrc \
+    && echo 'echo "Pre-made configuration files are available in the \`/py_algo/configs/\` folder."' >> /root/.bashrc \
+    && echo 'echo "Detailed documentation is available in the \`/py_algo/docs/\` folder."' >> /root/.bashrc
+
+ENTRYPOINT ["/bin/bash"]
