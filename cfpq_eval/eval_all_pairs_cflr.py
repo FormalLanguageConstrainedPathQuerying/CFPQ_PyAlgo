@@ -193,7 +193,7 @@ def min_numeric(series: pd.Series) -> float:
 
 def format_int(x):
     try:
-        return format(x, ',').replace(',', '\\,')
+        return format(x, ',')
     except ValueError:
         return x
 
