@@ -3,7 +3,8 @@
 This document explains how to use `CFPQ_eval` to evaluate the performance of various Context-Free Path Querying (CFPQ)
 solvers, including both the `CFPQ_PyAlgo` solver and third-party tools.
 
-To install the `CFPQ_eval` tool, refer to [eval_install.md](eval_install.md).
+To install the `CFPQ_eval` tool, refer to [eval_install.md](eval_install.md).  
+For our evaluation results, refer to [main project README](../README.md#evaluation).
 
 ## Running the Tool
 
