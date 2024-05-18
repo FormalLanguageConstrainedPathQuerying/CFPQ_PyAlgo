@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Tuple, List
 
-from graphblas.core.dtypes import DataType
-from graphblas.core.matrix import Matrix
-from graphblas.core.operator import Monoid
+from pygraphblas import Matrix
+from pygraphblas.binaryop import BinaryOp
+from pygraphblas.types import Type
 
 from cfpq_matrix.optimized_matrix import OptimizedMatrix
 
@@ -60,7 +60,7 @@ class BlockMatrixSpace(ABC):
         pass
 
     @abstractmethod
-    def reduce_hyper_vector_or_cell(self, hyper_vector_or_cell: Matrix, op: Monoid) -> Matrix:
+    def reduce_hyper_vector_or_cell(self, hyper_vector_or_cell: Matrix, op: BinaryOp) -> Matrix:
         """
         If `hyper_vector_or_cell` is a hyper vector, then sum of its blocks is returned.
         If `hyper_vector_or_cell` is a cell, then underlying matrix is return.
@@ -75,14 +75,14 @@ class BlockMatrixSpace(ABC):
         pass
 
     @abstractmethod
-    def create_hyper_vector(self, typ: DataType, orientation: BlockMatrixOrientation) -> Matrix:
+    def create_hyper_vector(self, typ: Type, orientation: BlockMatrixOrientation) -> Matrix:
         pass
 
     @abstractmethod
-    def create_cell(self, typ: DataType) -> Matrix:
+    def create_cell(self, typ: Type) -> Matrix:
         pass
 
-    def create_space_element(self, typ: DataType, is_vector: bool) -> Matrix:
+    def create_space_element(self, typ: Type, is_vector: bool) -> Matrix:
         return (
             self.create_hyper_vector(typ, BlockMatrixOrientation.VERTICAL)
             if is_vector

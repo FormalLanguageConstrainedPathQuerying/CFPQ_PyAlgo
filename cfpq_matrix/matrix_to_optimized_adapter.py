@@ -1,8 +1,9 @@
 from typing import Tuple
 
-from graphblas.core.dtypes import DataType
-from graphblas.core.matrix import Matrix
-from graphblas.core.operator import Monoid, Semiring
+from pygraphblas import Matrix
+from pygraphblas.binaryop import BinaryOp
+from pygraphblas.semiring import Semiring
+from pygraphblas.types import Type
 
 from cfpq_matrix.optimized_matrix import OptimizedMatrix, MatrixFormat
 from cfpq_matrix.subtractable_semiring import SubOp
@@ -24,11 +25,11 @@ class MatrixToOptimizedAdapter(OptimizedMatrix):
 
     @property
     def format(self) -> MatrixFormat:
-        return self.base.ss.config["format"]
+        return self.base.format
 
     @property
-    def dtype(self) -> DataType:
-        return self.base.dtype
+    def dtype(self) -> Type:
+        return self.base.type
 
     def to_unoptimized(self) -> Matrix:
         return self.base
@@ -38,13 +39,13 @@ class MatrixToOptimizedAdapter(OptimizedMatrix):
             other.mxm(self.base, op)
             if swap_operands
             else self.base.mxm(other, op)
-        ).new(self.dtype)
+        )
 
     def rsub(self, other: Matrix, op: SubOp) -> Matrix:
         return op(other, self.base)
 
-    def iadd(self, other: Matrix, op: Monoid):
-        self.base << self.base.ewise_add(other, op=op)
+    def iadd(self, other: Matrix, op: BinaryOp):
+        self.base.eadd(other, add_op=op, out=self.base)
 
     def optimize_similarly(self, other: Matrix) -> OptimizedMatrix:
         return MatrixToOptimizedAdapter(other)

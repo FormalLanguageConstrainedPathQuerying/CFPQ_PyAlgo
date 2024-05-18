@@ -1,20 +1,15 @@
-import weakref
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple
 
-import graphblas
-from graphblas.core.dtypes import DataType
-from graphblas.core.matrix import Matrix
-from graphblas.core.operator import Semiring, Monoid
+from pygraphblas import Matrix
+from pygraphblas.binaryop import BinaryOp
+from pygraphblas.semiring import Semiring
+from pygraphblas.types import Type
 
 from cfpq_matrix.subtractable_semiring import SubOp
 
-MatrixFormat = Optional[str]
-
-# This is a hack that prevents `graphblas` from creating strong reference cycles
-# This hack makes reference-counting garbage collection possible
-old_ss_init = graphblas.core.ss.matrix.ss.__init__
-graphblas.core.ss.matrix.ss.__init__ = lambda self, parent: old_ss_init(self, weakref.proxy(parent))
+# see pygraphblas.lib.GxB_BY_ROW and pygraphblas.lib.GxB_BY_COL
+MatrixFormat = Optional[int]
 
 
 class OptimizedMatrix(ABC):
@@ -39,7 +34,7 @@ class OptimizedMatrix(ABC):
 
     @property
     @abstractmethod
-    def dtype(self) -> DataType:
+    def dtype(self) -> Type:
         pass
 
     @abstractmethod
@@ -57,7 +52,7 @@ class OptimizedMatrix(ABC):
         """
 
     @abstractmethod
-    def iadd(self, other: Matrix, op: Monoid):
+    def iadd(self, other: Matrix, op: BinaryOp):
         """
         Adds `other` to `self` in-place.
         """

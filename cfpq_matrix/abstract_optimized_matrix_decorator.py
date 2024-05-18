@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Tuple
 
-from graphblas.core.dtypes import DataType
-from graphblas.core.matrix import Matrix
+from pygraphblas import Matrix
+from pygraphblas.types import Type
 
 from cfpq_matrix.optimized_matrix import OptimizedMatrix, MatrixFormat
 
@@ -26,7 +26,7 @@ class AbstractOptimizedMatrixDecorator(OptimizedMatrix, ABC):
         return self.base.format
 
     @property
-    def dtype(self) -> DataType:
+    def dtype(self) -> Type:
         return self.base.dtype
 
     def to_unoptimized(self) -> Matrix:

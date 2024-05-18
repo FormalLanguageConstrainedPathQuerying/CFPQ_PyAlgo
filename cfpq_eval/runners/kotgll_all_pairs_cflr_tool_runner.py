@@ -92,7 +92,8 @@ class KotgllAllPairsCflrToolRunner(AbstractAllPairsCflrToolRunner):
         with open(graph_path, 'w', encoding="utf-8") as output_file:
             for symbol, matrix in graph.matrices.items():
                 edge_label = symbol.label
-                (rows, columns, _) = matrix.to_coo()
+                rows = matrix.npI
+                columns = matrix.npJ
                 edges_df = pd.DataFrame({
                     'source': rows,
                     'destination': columns,

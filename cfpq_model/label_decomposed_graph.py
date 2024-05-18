@@ -2,14 +2,14 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Optional, Union, Callable
 
-import graphblas
-import graphblas.core.matrix
 import numpy as np
 import pandas as pd
-from graphblas.core.dtypes import DataType, BOOL
-from graphblas.core.matrix import Matrix
-from graphblas.core.operator import Monoid, Semiring
-from graphblas.exceptions import IndexOutOfBound
+import pygraphblas.types
+from pygraphblas import Matrix
+from pygraphblas.base import IndexOutOfBound
+from pygraphblas.binaryop import BinaryOp
+from pygraphblas.semiring import Semiring
+from pygraphblas.types import Type
 
 from cfpq_matrix.block.block_matrix_space import BlockMatrixSpace
 from cfpq_matrix.block.block_matrix_space_impl import BlockMatrixSpaceImpl
@@ -37,7 +37,7 @@ class LabelDecomposedGraph:
         self,
         vertex_count: int,
         block_matrix_space: BlockMatrixSpace,
-        dtype: DataType,
+        dtype: Type,
         matrices: Dict[Symbol, Matrix],
     ):
         self.vertex_count = vertex_count
@@ -104,10 +104,10 @@ class LabelDecomposedGraph:
                 edge_sources += label_indices * vertex_count
 
                 try:
-                    matrices[symbol] = Matrix.from_coo(
-                        rows=edge_sources,
-                        columns=edge_destinations,
-                        values=True,
+                    matrices[symbol] = Matrix.from_lists(
+                        I=edge_sources.tolist(),
+                        J=edge_destinations.tolist(),
+                        V=True,
                         nrows=block_count * vertex_count if symbol.is_indexed else vertex_count,
                         ncols=vertex_count
                     )
@@ -121,7 +121,7 @@ class LabelDecomposedGraph:
             return LabelDecomposedGraph(
                 vertex_count=vertex_count,
                 block_matrix_space=BlockMatrixSpaceImpl(n=vertex_count, block_count=block_count),
-                dtype=BOOL,
+                dtype=pygraphblas.types.BOOL,
                 matrices=matrices
             )
         except Exception as e:
@@ -139,7 +139,8 @@ class LabelDecomposedGraph:
         with open(path, 'w', encoding="utf-8") as output_file:
             for symbol, matrix in self.matrices.items():
                 edge_label = symbol.label
-                (rows, columns, _) = matrix.to_coo()
+                rows = matrix.npI
+                columns = matrix.npJ
                 if matrix.shape[0] == self.vertex_count:
                     edges_df = pd.DataFrame({
                         'source': rows,
@@ -179,7 +180,7 @@ class OptimizedLabelDecomposedGraph:
         self,
         vertex_count: int,
         block_matrix_space: BlockMatrixSpace,
-        dtype: DataType,
+        dtype: Type,
         matrix_optimizer: Callable[[Matrix], OptimizedMatrix]
     ):
         self.vertex_count = vertex_count
@@ -199,7 +200,7 @@ class OptimizedLabelDecomposedGraph:
             dtype=unoptimized_graph.dtype,
             matrix_optimizer=matrix_optimizer
         )
-        optimized_graph.iadd(unoptimized_graph, op=graphblas.monoid.any)
+        optimized_graph.iadd(unoptimized_graph, op=unoptimized_graph.dtype.ANY)
         return optimized_graph
 
     def empty_copy(self) -> "OptimizedLabelDecomposedGraph":
@@ -225,14 +226,14 @@ class OptimizedLabelDecomposedGraph:
     def nvals(self) -> int:
         return sum(matrix.nvals for matrix in self.matrices.values())
 
-    def iadd_by_symbol(self, symbol: Symbol, matrix: Matrix, op: Monoid):
+    def iadd_by_symbol(self, symbol: Symbol, matrix: Matrix, op: BinaryOp):
         if symbol not in self:
             self.matrices[symbol] = self.block_matrix_space.automize_block_operations(
                 self.matrix_optimizer(self._create_matrix_for_symbol(symbol))
             )
         self.matrices[symbol].iadd(matrix, op)
 
-    def iadd(self, other: LabelDecomposedGraph, op: Monoid):
+    def iadd(self, other: LabelDecomposedGraph, op: BinaryOp):
         for symbol, matrix in other.matrices.items():
             self.iadd_by_symbol(symbol, matrix, op)
         return self
@@ -267,7 +268,7 @@ class OptimizedLabelDecomposedGraph:
                     swap_operands=swap_operands,
                     op=op,
                 )
-                accum.iadd_by_symbol(lhs, mxm, op.monoid)
+                accum.iadd_by_symbol(lhs, mxm, getattr(op.ztype, op.pls))
         return accum
 
     def rmxm(

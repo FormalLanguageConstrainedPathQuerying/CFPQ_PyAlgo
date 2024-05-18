@@ -1,5 +1,6 @@
-from graphblas.core.matrix import Matrix
-from graphblas.core.operator import Monoid, Semiring
+from pygraphblas import Matrix
+from pygraphblas.binaryop import BinaryOp
+from pygraphblas.semiring import Semiring
 
 from cfpq_matrix.abstract_optimized_matrix_decorator import AbstractOptimizedMatrixDecorator
 from cfpq_matrix.optimized_matrix import OptimizedMatrix
@@ -54,10 +55,10 @@ class LazyAddOptimizedMatrix(AbstractOptimizedMatrixDecorator):
         return self.base.to_unoptimized()
 
     def mxm(self, other: Matrix, op: Semiring, swap_operands: bool = False) -> Matrix:
-        self.update_monoid(op.monoid)
+        self.update_monoid(getattr(op.ztype, op.pls))
         return self._map_and_fold(
             mapper=lambda m: m.mxm(other, op=op, swap_operands=swap_operands),
-            combiner=lambda acc, cur: acc.ewise_add(cur, op=op.monoid).new(),
+            combiner=lambda acc, cur: acc.eadd(cur, add_op=getattr(op.ztype, op.pls)),
             nvals_combine_threshold=other.nvals
         )
 
@@ -70,11 +71,11 @@ class LazyAddOptimizedMatrix(AbstractOptimizedMatrixDecorator):
             nvals_combine_threshold=other.nvals
         )
 
-    def iadd(self, other: Matrix, op: Monoid):
+    def iadd(self, other: Matrix, op: BinaryOp):
         self.update_monoid(op)
         other = other.dup()
         if self.format is not None:
-            other.ss.config["format"] = self.format
+            other.format = self.format
         base = self.base
         while True:
             other_nvals = max(other.nvals, self.min_size)
@@ -89,13 +90,14 @@ class LazyAddOptimizedMatrix(AbstractOptimizedMatrixDecorator):
             if i is None:
                 self.matrices.append(base.optimize_similarly(other))
                 return self
-            other << other.ewise_add(
+            other.eadd(
                 self.matrices[i].to_unoptimized(),
-                op=op
+                add_op=op,
+                out=other
             )
             del self.matrices[i]
 
-    def update_monoid(self, op: Monoid):
+    def update_monoid(self, op: BinaryOp):
         if self.last_used_monoid is not op:
             self.force_combine_small_matrices(nvals_combine_threshold=float("inf"))
             self.last_used_monoid = op

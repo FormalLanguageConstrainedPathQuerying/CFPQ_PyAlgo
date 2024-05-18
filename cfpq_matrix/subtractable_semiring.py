@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Callable, Any
 
-from graphblas.core.matrix import Matrix
-from graphblas.core.operator import Semiring
+from pygraphblas import Matrix
+from pygraphblas.semiring import Semiring
 
 SubOp = Callable[[Matrix, Matrix], Matrix]
 

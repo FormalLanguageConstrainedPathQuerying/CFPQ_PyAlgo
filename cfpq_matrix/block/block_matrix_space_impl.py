@@ -1,9 +1,7 @@
 from typing import Tuple, List
 
-import graphblas.ss
-from graphblas.core.matrix import Matrix
-import graphblas.monoid
-from graphblas.core.operator import Monoid
+from pygraphblas import Matrix
+from pygraphblas.binaryop import BinaryOp
 
 from cfpq_matrix.optimized_matrix import OptimizedMatrix
 from cfpq_matrix.block.block_matrix import BlockMatrix, CellBlockMatrix, VectorBlockMatrix
@@ -36,31 +34,39 @@ class BlockMatrixSpaceImpl(BlockMatrixSpace):
             (self.n, self.n * self.block_count): BlockMatrixOrientation.HORIZONTAL
         }[matrix_shape]
 
-    def reduce_hyper_vector_or_cell(self, hyper_vector_or_cell: Matrix, op: Monoid) -> Matrix:
+    def reduce_hyper_vector_or_cell(self, hyper_vector_or_cell: Matrix, op: BinaryOp) -> Matrix:
         if self.is_single_cell(hyper_vector_or_cell.shape):
             return hyper_vector_or_cell
+        if hyper_vector_or_cell.nvals == 0:
+            return self.create_cell(hyper_vector_or_cell.type)
         input_orientation = self.get_block_matrix_orientation(hyper_vector_or_cell.shape)
-        (rows, columns, values) = hyper_vector_or_cell.to_coo()
+        rows = hyper_vector_or_cell.npI
+        columns = hyper_vector_or_cell.npJ
+        values = hyper_vector_or_cell.npV
         if input_orientation == BlockMatrixOrientation.VERTICAL:
             rows = rows % self.n
         elif input_orientation == BlockMatrixOrientation.HORIZONTAL:
             columns = columns % self.n
         else:
             assert False
-        return Matrix.from_coo(
-            rows,
-            columns,
-            values,
+        return Matrix.from_lists(
+            rows.tolist(),
+            columns.tolist(),
+            values.tolist(),
             nrows=self.n,
             ncols=self.n,
-            dup_op=op
+            typ=hyper_vector_or_cell.type,
         )
 
     def hyper_rotate(self, hyper_vector: Matrix, orientation: BlockMatrixOrientation) -> Matrix:
         input_orientation = self.get_block_matrix_orientation(hyper_vector.shape)
         if input_orientation == orientation:
             return hyper_vector
-        (rows, columns, values) = hyper_vector.to_coo()
+        if hyper_vector.nvals == 0:
+            return self.create_hyper_vector(hyper_vector.type, orientation)
+        rows = hyper_vector.npI
+        columns = hyper_vector.npJ
+        values = hyper_vector.npV
         if orientation == BlockMatrixOrientation.VERTICAL:
             rows = rows + (columns // self.n * self.n)
             columns = columns % self.n
@@ -69,18 +75,22 @@ class BlockMatrixSpaceImpl(BlockMatrixSpace):
             rows = rows % self.n
         else:
             assert False
-
-        return Matrix.from_coo(
-            rows,
-            columns,
-            values,
+        return Matrix.from_lists(
+            rows.tolist(),
+            columns.tolist(),
+            values.tolist(),
             nrows=hyper_vector.ncols,
-            ncols=hyper_vector.nrows
+            ncols=hyper_vector.nrows,
+            typ=hyper_vector.type,
         )
 
     def to_block_diag_matrix(self, hyper_vector: Matrix) -> Matrix:
+        if hyper_vector.nvals == 0:
+            return Matrix.sparse(hyper_vector.type, self.n * self.block_count, self.n * self.block_count)
         input_orientation = self.get_block_matrix_orientation(hyper_vector.shape)
-        (rows, columns, values) = hyper_vector.to_coo()
+        rows = hyper_vector.npI
+        columns = hyper_vector.npJ
+        values = hyper_vector.npV
         if input_orientation == BlockMatrixOrientation.VERTICAL:
             columns = columns + (rows // self.n * self.n)
         elif input_orientation == BlockMatrixOrientation.HORIZONTAL:
@@ -88,10 +98,13 @@ class BlockMatrixSpaceImpl(BlockMatrixSpace):
         else:
             assert False
 
-        return Matrix.from_coo(
-            rows, columns, values,
+        return Matrix.from_lists(
+            rows.tolist(),
+            columns.tolist(),
+            values.tolist(),
             nrows=self.n * self.block_count,
-            ncols=self.n * self.block_count
+            ncols=self.n * self.block_count,
+            typ=hyper_vector.type,
         )
 
     def create_hyper_vector(self, typ, orientation: BlockMatrixOrientation) -> Matrix:
@@ -99,15 +112,17 @@ class BlockMatrixSpaceImpl(BlockMatrixSpace):
             BlockMatrixOrientation.VERTICAL: (self.n * self.block_count, self.n),
             BlockMatrixOrientation.HORIZONTAL: (self.n, self.n * self.block_count)
         }[orientation]
-        return Matrix(dtype=typ, nrows=shape[0], ncols=shape[1])
+        return Matrix.sparse(typ=typ, nrows=shape[0], ncols=shape[1])
 
     def create_cell(self, typ) -> Matrix:
-        return Matrix(dtype=typ, nrows=self.n, ncols=self.n)
+        return Matrix.sparse(typ=typ, nrows=self.n, ncols=self.n)
 
     def stack_into_hyper_column(self, matrices: List[Matrix]) -> Matrix:
-        assert len(matrices) == self.block_count
-        tiles = [[m] for m in matrices]
-        return graphblas.ss.concat(tiles)
+        res = self.create_hyper_vector(matrices[0].type, BlockMatrixOrientation.VERTICAL)
+        for i, matrix in enumerate(matrices):
+            for (row, col, value) in matrix:
+                res[i * self.n + row, col] = value
+        return res
 
     def repeat_into_hyper_column(self, matrix: Matrix) -> Matrix:
         return self.stack_into_hyper_column([matrix] * self.block_count)
@@ -120,4 +135,14 @@ class BlockMatrixSpaceImpl(BlockMatrixSpace):
         )
 
     def get_hyper_vector_blocks(self, hyper_vector: Matrix) -> List[Matrix]:
-        return [cell for row in hyper_vector.ss.split(self.n) for cell in row]
+        res = [Matrix.sparse(hyper_vector.type, self.n, self.n) for _ in range(self.block_count)]
+        orientation = self.get_block_matrix_orientation(hyper_vector.shape)
+        if orientation == BlockMatrixOrientation.HORIZONTAL:
+            for (row, col, value) in hyper_vector:
+                res[col // self.n][row, col % self.n] = value
+        elif orientation == BlockMatrixOrientation.VERTICAL:
+            for (row, col, value) in hyper_vector:
+                res[row // self.n][row % self.n, col] = value
+        else:
+            assert False
+        return res

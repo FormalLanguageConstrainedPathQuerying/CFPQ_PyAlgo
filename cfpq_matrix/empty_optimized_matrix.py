@@ -1,5 +1,6 @@
-from graphblas.core.matrix import Matrix
-from graphblas.core.operator import Semiring, Monoid
+from pygraphblas import Matrix
+from pygraphblas.binaryop import BinaryOp
+from pygraphblas.semiring import Semiring
 
 from cfpq_matrix.abstract_optimized_matrix_decorator import AbstractOptimizedMatrixDecorator
 from cfpq_matrix.optimized_matrix import OptimizedMatrix
@@ -18,9 +19,9 @@ class EmptyOptimizedMatrix(AbstractOptimizedMatrixDecorator):
         if self.nvals == 0 or other.nvals == 0:
             if swap_operands:
                 assert self.shape[0] == other.shape[1]
-                return Matrix(self.dtype, self.shape[1], other.shape[0])
+                return Matrix.sparse(self.dtype, self.shape[1], other.shape[0])
             assert self.shape[1] == other.shape[0]
-            return Matrix(self.dtype, self.shape[0], other.shape[1])
+            return Matrix.sparse(self.dtype, self.shape[0], other.shape[1])
         return self.base.mxm(other, op, swap_operands)
 
     def rsub(self, other: Matrix, op: SubOp) -> Matrix:
@@ -28,7 +29,7 @@ class EmptyOptimizedMatrix(AbstractOptimizedMatrixDecorator):
             return other
         return self.base.rsub(other, op)
 
-    def iadd(self, other: Matrix, op: Monoid):
+    def iadd(self, other: Matrix, op: BinaryOp):
         if other.nvals != 0:
             self.base.iadd(other, op=op)
 

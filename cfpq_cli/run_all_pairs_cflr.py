@@ -39,7 +39,7 @@ def run_all_pairs_cflr(
                 if out_dir != "" and not os.path.exists(out_dir):
                     os.makedirs(out_dir)
                 with open(out_path, 'w', encoding="utf-8") as out_file:
-                    for (source, target) in res:
+                    for (source, target, _) in res:
                         out_file.write(f"{source}\t{target}\n")
     except TimeoutException:
         print("AnalysisTime\tNaN")

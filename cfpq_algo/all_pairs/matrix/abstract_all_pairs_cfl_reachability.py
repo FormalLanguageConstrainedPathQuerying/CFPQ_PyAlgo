@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-import graphblas
-from graphblas.core.matrix import Matrix
-from graphblas.core.operator import Semiring, Monoid
+import pygraphblas.types
+from pygraphblas import Matrix
+from pygraphblas.binaryop import BinaryOp
+from pygraphblas.semiring import Semiring
 
 from cfpq_algo.all_pairs.all_pairs_cfl_reachability_algo import AllPairsCflReachabilityAlgoInstance
 from cfpq_algo.setting.algo_setting import AlgoSetting
@@ -22,7 +23,7 @@ class AbstractAllPairsCflReachabilityMatrixAlgoInstance(AllPairsCflReachabilityA
         settings: List[AlgoSetting],
         algebraic_structure: SubtractableSemiring = SubtractableSemiring(
             one=True,
-            semiring=graphblas.semiring.any_pair,
+            semiring=pygraphblas.types.BOOL.ANY_PAIR,
             sub_op=complimentary_mask
         )
     ):
@@ -39,8 +40,8 @@ class AbstractAllPairsCflReachabilityMatrixAlgoInstance(AllPairsCflReachabilityA
         return self.algebraic_structure.semiring
 
     @property
-    def monoid(self) -> Monoid:
-        return self.semiring.monoid
+    def monoid(self) -> BinaryOp:
+        return getattr(self.semiring.ztype, self.semiring.pls)
 
     def solve(self) -> Matrix:
         self.add_epsilon_edges()

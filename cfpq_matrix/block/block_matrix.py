@@ -1,7 +1,8 @@
 from abc import ABC
 
-from graphblas.core.matrix import Matrix
-from graphblas.core.operator import Monoid, Semiring
+from pygraphblas import Matrix
+from pygraphblas.binaryop import BinaryOp
+from pygraphblas.semiring import Semiring
 
 from cfpq_matrix.abstract_optimized_matrix_decorator import AbstractOptimizedMatrixDecorator
 from cfpq_matrix.optimized_matrix import OptimizedMatrix
@@ -47,7 +48,7 @@ class CellBlockMatrix(BlockMatrix):
         assert self.block_matrix_space.is_single_cell(other.shape)
         return self.base.rsub(other, op)
 
-    def iadd(self, other: Matrix, op: Monoid):
+    def iadd(self, other: Matrix, op: BinaryOp):
         self.base.iadd(self.block_matrix_space.reduce_hyper_vector_or_cell(other, op), op)
 
     def __sizeof__(self):
@@ -107,7 +108,7 @@ class VectorBlockMatrix(BlockMatrix):
         other_shape = self.block_matrix_space.get_block_matrix_orientation(other.shape)
         return self.matrices[other_shape].rsub(other, op)
 
-    def iadd(self, other: Matrix, op: Monoid):
+    def iadd(self, other: Matrix, op: BinaryOp):
         if self.block_matrix_space.is_single_cell(other.shape):
             other = self.block_matrix_space.repeat_into_hyper_column(other)
         for (orientation, m) in self.matrices.items():

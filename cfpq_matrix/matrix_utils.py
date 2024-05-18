@@ -1,24 +1,22 @@
 from typing import Any
 
-import graphblas
-from graphblas.core.dtypes import DataType
-from graphblas.core.matrix import Matrix
-from graphblas.core.vector import Vector
+from pygraphblas import Matrix, Vector, descriptor
+from pygraphblas.types import Type
 
 
 def complimentary_mask(matrix: Matrix, mask: Matrix) -> Matrix:
     larger_matrix = matrix if matrix.nvals > mask.nvals else mask
-    zero = Matrix(matrix.dtype, nrows=matrix.nrows, ncols=matrix.ncols)
-    zero.ss.config["format"] = larger_matrix.ss.config["format"]
-    res = Matrix(matrix.dtype, nrows=matrix.nrows, ncols=matrix.ncols)
-    res.ss.config["format"] = larger_matrix.ss.config["format"]
-    res(~mask.S) << zero.ewise_add(matrix, op=graphblas.monoid.any)
+    zero = Matrix.sparse(matrix.type, nrows=matrix.nrows, ncols=matrix.ncols)
+    zero.format = larger_matrix.format
+    res = Matrix.sparse(matrix.type, nrows=matrix.nrows, ncols=matrix.ncols)
+    res.format = larger_matrix.format
+    zero.eadd(matrix, add_op=matrix.type.ANY, mask=mask, desc=descriptor.C & descriptor.S, out=res)
     return res
 
 
-def identity_matrix(one: Any, dtype: DataType, size: int) -> Matrix:
-    return Vector.from_scalar(
-        value=one,
+def identity_matrix(one: Any, dtype: Type, size: int) -> Matrix:
+    return Matrix.from_diag(Vector.dense(
+        typ=dtype,
         size=size,
-        dtype=dtype
-    ).diag()
+        fill=one
+    ))
