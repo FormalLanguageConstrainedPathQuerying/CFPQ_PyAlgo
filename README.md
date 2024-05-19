@@ -18,19 +18,19 @@ For more details, refer to [docs/cli.md](docs/cli.md).
 
 ## Evaluation
 
-The CFPQ_PyAlgo project includes a [CFPQ evaluator](cfpq_eval) tool for evaluating the performance 
+The CFPQ_PyAlgo project includes a [CFPQ evaluator](cfpq_eval/README.md) tool for evaluating the performance 
 of various CFPQ solvers.
 
-For more details on [CFPQ evaluator](cfpq_eval) usage, refer to [docs/eval.md](docs/eval.md).
+For more details on [CFPQ evaluator](cfpq_eval/README.md) usage, refer to [docs/eval.md](docs/eval.md).
 
-We used the [CFPQ evaluator](cfpq_eval) to compare our solver, FastMatrixCFPQ, with five 
+We used the [CFPQ evaluator](cfpq_eval) to compare our solver, [FastMatrixCFPQ](cfpq_cli/README.md), with five 
 state-of-the-art competitors:
 [PEARL](https://figshare.com/articles/dataset/ASE_2023_artifact/23702271),
 [POCR](https://github.com/kisslune/POCR),
 [KotGLL](https://github.com/vadyushkins/kotgll),
 [Graspan](https://github.com/Graspan/Graspan-C), and
 [Gigascale](https://bitbucket.org/jensdietrich/gigascale-pointsto-oopsla2015/src),
-as well as with the previous version of our solver, MatrixCFPQ. 
+as well as with the previous version of our solver, [MatrixCFPQ](src/README.md). 
 The input data was provided by the
 [CFPQ_Data](https://github.com/FormalLanguageConstrainedPathQuerying/CFPQ_Data),
 [CFPQ_JavaGraphMiner](https://github.com/FormalLanguageConstrainedPathQuerying/CFPQ_JavaGraphMiner), and

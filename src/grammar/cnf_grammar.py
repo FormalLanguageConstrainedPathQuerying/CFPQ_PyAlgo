@@ -16,9 +16,11 @@ class CnfGrammar:
         self.eps_rules = []
 
     def __setitem__(self, key, value):
-        if (isinstance(value, tuple) or isinstance(value, list)) and 1 <= len(value) <= 2:
+        if (isinstance(value, tuple) or isinstance(value, list)) and len(value) <= 2:
             self.nonterms.add(key)
-            if len(value) == 1:
+            if len(value) == 0:
+                self.eps_rules.append(key)
+            elif len(value) == 1:
                 self.simple_rules.append((key, value[0]))
                 self.terms.add(value[0])
             else:
@@ -26,7 +28,7 @@ class CnfGrammar:
                 for x in value:
                     self.nonterms.add(x)
         else:
-            raise Exception('value must be str, (str, str) or [str, str]')
+            raise Exception('value must be [], str, (str, str) or [str, str]')
 
     @classmethod
     def from_cfg(cls, cfg: CFG):

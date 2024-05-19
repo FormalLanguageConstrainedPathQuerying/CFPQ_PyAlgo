@@ -34,7 +34,7 @@ python3 -m cfpq_eval.eval_all_pairs_cflr algo_config.csv data_config.csv results
 
 ### Premade Configurations
 
-The `CFPQ_eval` Docker image includes premade configurations located in the `/py_algo/configs` folder.
+The `CFPQ_eval` [Docker image](https://hub.docker.com/r/cfpq/py_algo_eval) includes premade configurations located in the `/py_algo/configs` folder.
 
 ### Algorithm Configuration
 
@@ -42,16 +42,17 @@ The `algo_config.csv` configuration should list algorithms and their settings.
 
 Supported algorithms:
 
-- `IncrementalAllPairsCFLReachabilityMatrix` (this tool)
-- `NonIncrementalAllPairsCFLReachabilityMatrix` (this tool)
+- [`IncrementalAllPairsCFLReachabilityMatrix`](cli.md)
+- [`NonIncrementalAllPairsCFLReachabilityMatrix`](cli.md)
 - [`pocr`](https://github.com/kisslune/POCR)
 - [`pearl`](https://figshare.com/articles/dataset/ASE_2023_artifact/23702271)
 - [`graspan`](https://github.com/Graspan/Graspan-C)
 - [`gigascale`](https://bitbucket.org/jensdietrich/gigascale-pointsto-oopsla2015/src)
 - [`kotgll`](https://github.com/vadyushkins/kotgll)
+- [`legacy_matrix`](../src/README.md)
 
-For Matrix-based algorithms, options described in [cli.md](cli.md)
-can be used to change the performance.
+For first two algorithms, options described in [cli.md](cli.md)
+can be used to configure optimizations.
 
 Here's an algorithm configuration example:
 ```
@@ -82,28 +83,28 @@ memory usage, and output size, will be printed to `stdout`.
 
 Here's an example of a mean execution time summary table:
 ```
-============================================ TIME, SEC (grammar 'c_alias') ============================================
-| graph    | fast matrix   | fast matrix   | matrix cfpq   | pearl   | pocr      | kotgll   | gigascale   | graspan   |
-|          | cfpq          | cfpq (no      |               |         |           |          |             |           |
-|          |               | grammar       |               |         |           |          |             |           |
-|          |               | rewrite)      |               |         |           |          |             |           |
-|:---------|:--------------|:--------------|:--------------|:--------|:----------|:---------|:------------|:----------|
-| init     | 1.2 ± 3%      | 2.9           | 7.0 ± 1%      | -       | 85        | 23 ± 6%  | -           | 16 ± 14%  |
-| mm       | 1.3 ± 2%      | 3.1           | 7.5           | -       | 89 ± 1%   | 25 ± 3%  | -           | 16 ± 5%   |
-| block    | 1.7 ± 2%      | 4.1           | 11 ± 1%       | -       | 123       | 34 ± 3%  | -           | 21 ± 2%   |
-| ipc      | 1.7 ± 4%      | 4.0           | 10 ± 1%       | -       | 121 ± 1%  | 34 ± 1%  | -           | 21 ± 3%   |
-| lib      | 1.7 ± 2%      | 4.0           | 11 ± 1%       | -       | 123 ± 1%  | 34 ± 1%  | -           | 21 ± 3%   |
-| arch     | 1.7 ± 3%      | 4.1           | 11 ± 1%       | -       | 123 ± 1%  | 34 ± 5%  | -           | 22 ± 10%  |
-| crypto   | 1.7 ± 3%      | 4.2           | 11 ± 1%       | -       | 125 ± 1%  | 34 ± 2%  | -           | 22 ± 8%   |
-| security | 1.8 ± 4%      | 4.4           | 11 ± 1%       | -       | 129 ± 1%  | 35 ± 5%  | -           | 22 ± 5%   |
-| sound    | 2.0 ± 2%      | 5.0           | 12            | -       | 140 ± 1%  | 38 ± 5%  | -           | 24 ± 11%  |
-| fs       | 2.5 ± 2%      | 6.9           | 17            | -       | 230 ± 1%  | 53 ± 1%  | -           | 34 ± 3%   |
-| net      | 2.6 ± 3%      | 7.4           | 20            | -       | 221 ± 1%  | 52 ± 1%  | -           | 35 ± 2%   |
-| drivers  | 3.9 ± 2%      | 12 ± 1%       | 28 ± 1%       | -       | 755 ± 1%  | 92 ± 3%  | -           | 69 ± 3%   |
-| kernel   | 6.1 ± 2%      | 13            | 43            | -       | 387 ± 1%  | 118 ± 2% | -           | 69 ± 3%   |
-| apache   | 6.5 ± 1%      | 26 ± 1%       | 84            | -       | OOT       | OOM      | -           | 601 ± 2%  |
-| postgre  | 10 ± 1%       | 36 ± 1%       | 104           | -       | 5398 ± 1% | OOM      | -           | 427 ± 4%  |
-=======================================================================================================================
+==================================== TIME, SEC (grammar 'c_alias') ====================================
+| graph    | fast matrix   | fast matrix   | pearl   | pocr      | kotgll   | gigascale   | graspan   |
+|          | cfpq          | cfpq (no      |         |           |          |             |           |
+|          |               | grammar       |         |           |          |             |           |
+|          |               | rewrite)      |         |           |          |             |           |
+|:---------|:--------------|:--------------|:--------|:----------|:---------|:------------|:----------|
+| init     | 1.2 ± 3%      | 2.9           | -       | 85        | 23 ± 6%  | -           | 16 ± 14%  |
+| mm       | 1.3 ± 2%      | 3.1           | -       | 89 ± 1%   | 25 ± 3%  | -           | 16 ± 5%   |
+| block    | 1.7 ± 2%      | 4.1           | -       | 123       | 34 ± 3%  | -           | 21 ± 2%   |
+| ipc      | 1.7 ± 4%      | 4.0           | -       | 121 ± 1%  | 34 ± 1%  | -           | 21 ± 3%   |
+| lib      | 1.7 ± 2%      | 4.0           | -       | 123 ± 1%  | 34 ± 1%  | -           | 21 ± 3%   |
+| arch     | 1.7 ± 3%      | 4.1           | -       | 123 ± 1%  | 34 ± 5%  | -           | 22 ± 10%  |
+| crypto   | 1.7 ± 3%      | 4.2           | -       | 125 ± 1%  | 34 ± 2%  | -           | 22 ± 8%   |
+| security | 1.8 ± 4%      | 4.4           | -       | 129 ± 1%  | 35 ± 5%  | -           | 22 ± 5%   |
+| sound    | 2.0 ± 2%      | 5.0           | -       | 140 ± 1%  | 38 ± 5%  | -           | 24 ± 11%  |
+| fs       | 2.5 ± 2%      | 6.9           | -       | 230 ± 1%  | 53 ± 1%  | -           | 34 ± 3%   |
+| net      | 2.6 ± 3%      | 7.4           | -       | 221 ± 1%  | 52 ± 1%  | -           | 35 ± 2%   |
+| drivers  | 3.9 ± 2%      | 12 ± 1%       | -       | 755 ± 1%  | 92 ± 3%  | -           | 69 ± 3%   |
+| kernel   | 6.1 ± 2%      | 13            | -       | 387 ± 1%  | 118 ± 2% | -           | 69 ± 3%   |
+| apache   | 6.5 ± 1%      | 26 ± 1%       | -       | OOT       | OOM      | -           | 601 ± 2%  |
+| postgre  | 10 ± 1%       | 36 ± 1%       | -       | 5398 ± 1% | OOM      | -           | 427 ± 4%  |
+=======================================================================================================
 ```
 
 ## Custom Tools Integration

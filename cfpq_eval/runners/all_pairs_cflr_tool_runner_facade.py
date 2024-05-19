@@ -8,6 +8,8 @@ from cfpq_eval.runners.graspan_algo_all_pairs_cflr_tool_runner import (
     GraspanAllPairsCflrToolRunner)
 from cfpq_eval.runners.kotgll_all_pairs_cflr_tool_runner import (
     KotgllAllPairsCflrToolRunner)
+from cfpq_eval.runners.legacy_matrix_all_pairs_cflr_tool_runner import (
+    LegacyMatrixAllPairsCflrToolRunner)
 from cfpq_eval.runners.pearl_algo_all_pairs_cflr_tool_runner import (
     PearlAllPairsCflrToolRunner)
 from cfpq_eval.runners.pocr_algo_all_pairs_cflr_tool_runner import (
@@ -28,6 +30,7 @@ def run_appropriate_all_pairs_cflr_tool(
         "gigascale": GigascaleAllPairsCflrToolRunner,
         "graspan": GraspanAllPairsCflrToolRunner,
         "kotgll": KotgllAllPairsCflrToolRunner,
+        "legacy_matrix": LegacyMatrixAllPairsCflrToolRunner,
     }.get(algo_settings, PyAlgoAllPairsCflrToolRunner)(
         algo_settings, graph_path, grammar_path, timeout_sec
     ).run()
