@@ -1,8 +1,9 @@
 import pytest
 
-from src.problems.AllPaths.algo.tensor.tensor import TensorSimpleAlgo, TensorDynamicAlgo
 
-
-@pytest.fixture(params=[TensorSimpleAlgo, TensorDynamicAlgo])
+# If you use SuiteSparse:GraphBLAS 7, you can add `params=[TensorSimpleAlgo, TensorDynamicAlgo],
+# but for these legacy implementations can't be used with SuiteSparse:GraphBLAS 8,
+# which we now use by default.
+@pytest.fixture(params=[])
 def algo(request):
     return request.param

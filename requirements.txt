@@ -3,8 +3,8 @@ pytest==8.0.1
 pytest-benchmark
 pytest-cov
 cfpq_data==1.0.2
-suitesparse-graphblas==7.4.4.0
-python-graphblas==2023.7.0
+suitesparse-graphblas==8.2.1.0
+python-graphblas==2024.2.0
 pandas==2.0.3
 numpy==1.23.5
 psutil==5.9.8
