@@ -1,6 +1,7 @@
 name: Deploy to DockerHub
 
 on:
+  push:
   workflow_dispatch:
     inputs:
       docker_username:
@@ -36,13 +37,13 @@ jobs:
         run: |
           docker buildx build --load \
             --platform ${{ matrix.platform }} \
-            -t cfpq/py_algo:${{ github.event.inputs.image_tag }}-${{ matrix.platform }} \
+            -t cfpq/py_algo:tmp \
             .
 
       - name: Run tests
         run: |
           docker run --rm \
-            cfpq/py_algo:${{ github.event.inputs.image_tag }}-${{ matrix.platform }} bash -c "
+            cfpq/py_algo:tmp -c "
               echo 'System Info:';
               uname -a;
               pytest test -v -m 'CI'"
