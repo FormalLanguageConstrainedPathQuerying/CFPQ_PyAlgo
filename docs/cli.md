@@ -95,7 +95,7 @@ Each line of the graph file should represent an edge, adhering to the following 
 - `<EDGE_LABEL>` is the label associated with the edge.
 - `[LABEL_INDEX]` is an optional index for labels with subscripts, indicating the subscript value.
 - Symbols must be separated by whitespace
-- Labels with subscripts must end with "\_i". For example, an edge $1 \xrightarrow{x_10} 2$ is denoted as `1	2	x_i	10`.
+- Labels with subscripts must end with "\_i". For example, an edge $1 \xrightarrow{x_9} 2$ is denoted as `1	2	x_i	9`.
 
 ### Example
 ```
