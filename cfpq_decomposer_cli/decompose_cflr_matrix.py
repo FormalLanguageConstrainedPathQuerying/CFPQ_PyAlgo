@@ -13,7 +13,7 @@ from cfpq_algo.all_pairs.matrix.incremental_all_pairs_cfl_reachability_algo impo
 from cfpq_algo.setting.matrix_optimizer_setting import OptimizeEmptyMatrixSetting, OptimizeFormatMatrixSetting, \
     LazyAddMatrixSetting
 from cfpq_cli.time_limit import time_limit, TimeoutException
-from cfpq_matrix.matrix_utils import decompose, decompose_with_residual, block_rotate_to_vertical
+from cfpq_decomposer.high_performance_decomposer import HighPerformanceDecomposer
 from cfpq_model.cnf_grammar_template import CnfGrammarTemplate
 from cfpq_model.label_decomposed_graph import LabelDecomposedGraph
 
@@ -25,7 +25,7 @@ _CFLR_ALGO_SETTINGS = [
 
 def decompose_all_pairs_cflr(solution: Matrix):
     start = time()
-    left, right = decompose(solution)
+    left, right = HighPerformanceDecomposer().decompose(solution)
     finish = time()
     print(f"Decomposition time\t{finish - start}")
     left_right = left.mxm(right, op=graphblas.semiring.any_pair)
