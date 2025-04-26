@@ -9,7 +9,7 @@ from graphblas.core.matrix import Matrix
 from graphblas.core.vector import Vector
 
 from cfpq_decomposer.abstract_decomposer import AbstractDecomposer
-from cfpq_decomposer.constants import HASH_PRIME_MODULUS, HASH_COUNT, MIN_LSH_BUCKET_SIZE, SMALL_BUCKET_ID
+from cfpq_decomposer.constants import HASH_PRIME_MODULUS, HASH_FUNCTIONS_COUNT, MIN_LSH_BUCKET_SIZE, SMALL_BUCKET_ID
 from cfpq_matrix.matrix_utils import drop_zeros_inplace
 
 
@@ -70,7 +70,7 @@ class HighPerformanceDecomposer(AbstractDecomposer):
         hash_weights = np.random.default_rng().integers(
             low=1,
             high=np.iinfo(np.int64).max,
-            size=HASH_COUNT,
+            size=HASH_FUNCTIONS_COUNT,
             dtype=np.int64
         )
         row_hashes = row_signatures_matrix.to_dense(fill_value=0) @ hash_weights
@@ -79,13 +79,13 @@ class HighPerformanceDecomposer(AbstractDecomposer):
     @staticmethod
     def _compute_row_signatures_matrix(matrix: Matrix) -> Matrix:
         num_rows, num_cols = matrix.shape
-        hash_coefficients = np.random.randint(1, HASH_PRIME_MODULUS, size=HASH_COUNT, dtype=np.int64)
-        hash_offsets = np.random.randint(0, HASH_PRIME_MODULUS, size=HASH_COUNT, dtype=np.int64)
+        hash_coefficients = np.random.randint(1, HASH_PRIME_MODULUS, size=HASH_FUNCTIONS_COUNT, dtype=np.int64)
+        hash_offsets = np.random.randint(0, HASH_PRIME_MODULUS, size=HASH_FUNCTIONS_COUNT, dtype=np.int64)
         column_indices = np.arange(num_cols, dtype=np.int64)
         hash_matrix = Matrix.from_dense(
             (column_indices[:, None] * hash_coefficients[None, :] + hash_offsets[None, :]) % HASH_PRIME_MODULUS
         )
-        row_signatures_matrix = Matrix(INT64, num_rows, HASH_COUNT)
+        row_signatures_matrix = Matrix(INT64, num_rows, HASH_FUNCTIONS_COUNT)
         row_signatures_matrix << semiring.min_second(matrix @ hash_matrix)
         return row_signatures_matrix
 
