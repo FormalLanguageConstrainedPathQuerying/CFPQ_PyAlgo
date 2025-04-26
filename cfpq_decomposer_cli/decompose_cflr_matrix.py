@@ -14,6 +14,7 @@ from cfpq_algo.setting.matrix_optimizer_setting import OptimizeEmptyMatrixSettin
     LazyAddMatrixSetting
 from cfpq_cli.time_limit import time_limit, TimeoutException
 from cfpq_decomposer.high_performance_decomposer import HighPerformanceDecomposer
+from cfpq_decomposer.prototype_decomposer import PrototypeDecomposer
 from cfpq_model.cnf_grammar_template import CnfGrammarTemplate
 from cfpq_model.label_decomposed_graph import LabelDecomposedGraph
 
@@ -23,9 +24,10 @@ _CFLR_ALGO_SETTINGS = [
     OptimizeFormatMatrixSetting()
 ]
 
-def decompose_all_pairs_cflr(solution: Matrix):
+def decompose_all_pairs_cflr(solution: Matrix, use_prototype: bool):
     start = time()
-    left, right = HighPerformanceDecomposer().decompose(solution)
+    decomposer = PrototypeDecomposer() if use_prototype else HighPerformanceDecomposer()
+    left, right = decomposer.decompose(solution)
     finish = time()
     print(f"Decomposition time\t{finish - start}")
     left_right = left.mxm(right, op=graphblas.semiring.any_pair)
@@ -40,7 +42,8 @@ def run_and_decompose_all_pairs_cflr(
         graph_path: str,
         grammar_path: str,
         out_path: Optional[str],
-        time_limit_sec: int
+        time_limit_sec: int,
+        use_prototype: bool,
 ):
     algo = IncrementalAllPairsCFLReachabilityMatrixAlgo()
     graph = LabelDecomposedGraph.read_from_pocr_graph_file(graph_path)
@@ -56,7 +59,7 @@ def run_and_decompose_all_pairs_cflr(
             finish = time()
             print(f"AnalysisTime\t{finish - start}")
             print(f"#SEdges\t{res.nvals}")
-            decompose_all_pairs_cflr(res)
+            decompose_all_pairs_cflr(res, use_prototype)
         if out_path is not None:
             out_dir = os.path.dirname(out_path)
             if out_dir != "" and not os.path.exists(out_dir):
@@ -101,12 +104,17 @@ def main(raw_args: List[str]):
                              'to [END_VERTEX], labels along which spell a word from '
                              'the specified Context-Free Language (CFL).'
                         )
+    parser.add_argument('--prototype',
+                        action='store_true',
+                        dest='prototype',
+                        help='Use PrototypeDecomposer instead of HighPerformanceDecomposer.')
     args = parser.parse_args(raw_args)
     run_and_decompose_all_pairs_cflr(
         graph_path=args.graph,
         grammar_path=args.grammar,
         time_limit_sec=args.time_limit,
         out_path=args.out,
+        use_prototype=args.prototype,
     )
 
 
