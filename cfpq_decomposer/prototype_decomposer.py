@@ -1,4 +1,7 @@
 from collections import defaultdict
+from dataclasses import dataclass
+from typing import Dict, List, Set, Tuple, Optional
+
 import random
 
 from graphblas.binary import plus
@@ -7,107 +10,149 @@ from graphblas.core.matrix import Matrix
 from graphblas.core.vector import Vector
 
 from cfpq_decomposer.abstract_decomposer import AbstractDecomposer
-from cfpq_decomposer.constants import HASH_PRIME_MODULUS, HASH_FUNCTIONS_COUNT, PROTOTYPE_MIN_LSH_BUCKET_SIZE, \
-    PROTOTYPE_OUTLIER_THRESHOLD, PROTOTYPE_MIN_VALUES_PER_ROW
+from cfpq_decomposer.constants import (
+    HASH_PRIME_MODULUS,
+    HASH_FUNCTIONS_COUNT,
+    PROTOTYPE_MIN_LSH_BUCKET_SIZE,
+    PROTOTYPE_OUTLIER_THRESHOLD,
+    PROTOTYPE_MIN_VALUES_PER_ROW,
+)
+
+
+@dataclass
+class BucketFactor:
+    membership_vector: Vector
+    column_signature: Vector
 
 
 class PrototypeDecomposer(AbstractDecomposer):
-    def row_based_decompose(self, input_matrix: Matrix):
-        number_of_rows, number_of_columns = input_matrix.shape
-        row_indices, column_indices, _ = input_matrix.to_coo()
+    def row_based_decompose(self, matrix: Matrix) -> Tuple[Matrix, Matrix]:
+        row_to_column_sets = self._extract_row_to_column_sets(matrix)
+        row_minhash_signatures = self._compute_row_minhash_signatures(row_to_column_sets)
+        master_hash_to_rows = self._group_rows_by_master_hash(row_minhash_signatures)
+        bucket_factors = self._build_bucket_factors(master_hash_to_rows, row_to_column_sets, matrix)
+        return self._build_factor_matrices(bucket_factors, matrix)
 
-        row_to_column_sets = defaultdict(set)
-        for row_index, column_index in zip(row_indices, column_indices):
-            row_to_column_sets[row_index].add(column_index)
+    @staticmethod
+    def _extract_row_to_column_sets(matrix: Matrix) -> Dict[int, Set[int]]:
+        row_to_column_sets: Dict[int, Set[int]] = defaultdict(set)
+        rows, cols, _ = matrix.to_coo()
+        for r, c in zip(rows, cols):
+            row_to_column_sets[r].add(c)
+        return row_to_column_sets
 
-        hash_coefficients_and_offsets = []
+    @staticmethod
+    def _generate_hash_coefficients_and_offsets() -> List[Tuple[int, int]]:
+        coefficients_and_offsets: List[Tuple[int, int]] = []
         for _ in range(HASH_FUNCTIONS_COUNT):
             coefficient = random.randint(1, HASH_PRIME_MODULUS - 1)
             offset = random.randint(0, HASH_PRIME_MODULUS - 1)
-            hash_coefficients_and_offsets.append((coefficient, offset))
+            coefficients_and_offsets.append((coefficient, offset))
+        return coefficients_and_offsets
 
-        row_to_minhash_signature = {}
+    @classmethod
+    def _compute_row_minhash_signatures(
+        cls,
+        row_to_column_sets: Dict[int, Set[int]],
+    ) -> Dict[int, Tuple[int, ...]]:
+        hash_params = cls._generate_hash_coefficients_and_offsets()
+        row_minhash_signatures: Dict[int, Tuple[int, ...]] = {}
         for row_index, column_set in row_to_column_sets.items():
             if len(column_set) < PROTOTYPE_MIN_VALUES_PER_ROW:
                 continue
-            signature = []
-            for coefficient, offset in hash_coefficients_and_offsets:
-                min_hash = min((coefficient * col + offset) % HASH_PRIME_MODULUS for col in column_set)
-                signature.append(min_hash)
-            row_to_minhash_signature[row_index] = tuple(signature)
+            signature = tuple(
+                min((coef * col + off) % HASH_PRIME_MODULUS for col in column_set)
+                for coef, off in hash_params
+            )
+            row_minhash_signatures[row_index] = signature
+        return row_minhash_signatures
 
-        row_to_master_hash = {
-            row_index: hash(signature)
-            for row_index, signature in row_to_minhash_signature.items()
-        }
-
-        master_hash_to_rows = defaultdict(list)
-        for row_index, master_hash in row_to_master_hash.items():
-            master_hash_to_rows[master_hash].append(row_index)
-
-        buckets_with_enough_rows = {
+    @staticmethod
+    def _group_rows_by_master_hash(
+        row_minhash_signatures: Dict[int, Tuple[int, ...]],
+    ) -> Dict[int, List[int]]:
+        master_hash_to_rows: Dict[int, List[int]] = defaultdict(list)
+        for row_index, signature in row_minhash_signatures.items():
+            master_hash_to_rows[hash(signature)].append(row_index)
+        return {
             master_hash: rows
             for master_hash, rows in master_hash_to_rows.items()
             if len(rows) >= PROTOTYPE_MIN_LSH_BUCKET_SIZE
         }
 
-        left_factor_column_vectors = []
-        right_factor_row_signatures = []
+    @staticmethod
+    def _build_bucket_factors(
+        master_hash_to_rows: Dict[int, List[int]],
+        row_to_column_sets: Dict[int, Set[int]],
+        matrix: Matrix,
+    ) -> List[BucketFactor]:
+        bucket_factors: List[BucketFactor] = []
+        for bucket_rows in master_hash_to_rows.values():
+            factor = PrototypeDecomposer._build_bucket_factor(bucket_rows, row_to_column_sets, matrix)
+            if factor:
+                bucket_factors.append(factor)
+        return bucket_factors
 
-        for master_hash, bucket_row_indices in buckets_with_enough_rows.items():
-            bucket_size = len(bucket_row_indices)
-            bucket_submatrix = input_matrix[bucket_row_indices, :].new()
-            column_sums = bucket_submatrix.dup(dtype=INT32).reduce_columnwise(plus).new()
+    @staticmethod
+    def _filter_rows_by_frequency(
+        candidate_rows: List[int],
+        row_to_column_sets: Dict[int, Set[int]],
+        matrix: Matrix,
+    ) -> Tuple[Optional[Vector], List[int]]:
+        submatrix = matrix[candidate_rows, :].new()
+        column_sums = submatrix.dup(dtype=INT32).reduce_columnwise(plus).new()
+        threshold = int((1 - PROTOTYPE_OUTLIER_THRESHOLD) * len(candidate_rows))
+        frequency_signature = column_sums.select('>=', threshold).new()
+        if frequency_signature.nvals == 0:
+            return None, []
+        frequent_column_indices = set(frequency_signature.to_coo()[0])
+        surviving_rows = [
+            r
+            for r in candidate_rows
+            if frequent_column_indices <= row_to_column_sets[r]
+        ]
+        return frequency_signature, surviving_rows
 
-            first_threshold = int((1 - PROTOTYPE_OUTLIER_THRESHOLD) * bucket_size)
-            frequent_columns_after_first_filter = column_sums.select('>=', first_threshold).new()
-            if frequent_columns_after_first_filter.nvals == 0:
-                continue
+    @staticmethod
+    def _build_bucket_factor(
+        bucket_rows: List[int],
+        row_to_column_sets: Dict[int, Set[int]],
+        matrix: Matrix,
+    ) -> Optional[BucketFactor]:
+        num_rows, _ = matrix.shape
 
-            frequent_column_indices = set(frequent_columns_after_first_filter.to_coo()[0])
-            first_filtered_rows = [
-                row_index
-                for row_index in bucket_row_indices
-                if frequent_column_indices <= row_to_column_sets[row_index]
-            ]
-            if not first_filtered_rows:
-                continue
+        first_round_signature, rows_after_first_filter = PrototypeDecomposer._filter_rows_by_frequency(
+            bucket_rows, row_to_column_sets, matrix
+        )
+        if first_round_signature is None or len(rows_after_first_filter) < PROTOTYPE_MIN_LSH_BUCKET_SIZE:
+            return None
 
-            filtered_submatrix = input_matrix[first_filtered_rows, :].new()
-            filtered_column_sums = filtered_submatrix.dup(dtype=INT32).reduce_columnwise(plus)
+        second_round_signature, rows_after_second_filter = PrototypeDecomposer._filter_rows_by_frequency(
+            rows_after_first_filter, row_to_column_sets, matrix
+        )
+        if second_round_signature is None or len(rows_after_second_filter) < PROTOTYPE_MIN_LSH_BUCKET_SIZE:
+            return None
 
-            second_threshold = int((1 - PROTOTYPE_OUTLIER_THRESHOLD) * len(first_filtered_rows))
-            frequent_columns_after_second_filter = filtered_column_sums.select('>=', second_threshold).new()
-            if frequent_columns_after_second_filter.nvals == 0:
-                continue
+        membership_vector = Vector(BOOL, size=num_rows)
+        for row_index in rows_after_second_filter:
+            membership_vector[row_index] = True
+        return BucketFactor(
+            membership_vector=membership_vector,
+            column_signature=second_round_signature
+        )
 
-            frequent_filtered_column_indices = set(frequent_columns_after_second_filter.to_coo()[0])
-            second_filtered_rows = [
-                row_index
-                for row_index in first_filtered_rows
-                if frequent_filtered_column_indices <= row_to_column_sets[row_index]
-            ]
-            if len(second_filtered_rows) < PROTOTYPE_MIN_LSH_BUCKET_SIZE:
-                continue
-
-            right_factor_row_signatures.append(frequent_columns_after_second_filter)
-
-            core_membership_vector = Vector(BOOL, size=number_of_rows)
-            for core_row in second_filtered_rows:
-                core_membership_vector[core_row] = True
-            left_factor_column_vectors.append(core_membership_vector)
-
-        bucket_count = len(left_factor_column_vectors)
-        if bucket_count == 0:
-            return Matrix(input_matrix.dtype, number_of_rows, 0), \
-                   Matrix(input_matrix.dtype, 0, number_of_columns)
-
-        left_factor = Matrix(bool, number_of_rows, bucket_count)
-        for idx, column_vector in enumerate(left_factor_column_vectors):
-            left_factor[:, idx] = column_vector
-
-        right_factor = Matrix(bool, bucket_count, number_of_columns)
-        for idx, row_signature in enumerate(right_factor_row_signatures):
-            right_factor[idx, :] = row_signature
-
+    @staticmethod
+    def _build_factor_matrices(
+        bucket_factors: List[BucketFactor],
+        matrix: Matrix,
+    ) -> Tuple[Matrix, Matrix]:
+        num_rows, num_cols = matrix.shape
+        num_buckets = len(bucket_factors)
+        if num_buckets == 0:
+            return Matrix(BOOL, num_rows, 0), Matrix(BOOL, 0, num_cols)
+        left_factor = Matrix(BOOL, num_rows, num_buckets)
+        right_factor = Matrix(BOOL, num_buckets, num_cols)
+        for idx, factor in enumerate(bucket_factors):
+            left_factor[:, idx] = factor.membership_vector
+            right_factor[idx, :] = factor.column_signature
         return left_factor, right_factor
