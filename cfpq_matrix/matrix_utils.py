@@ -261,3 +261,7 @@ def stack(matrix_grid: list[list[Matrix]]) -> Matrix:
         nrows=total_rows,
         ncols=total_columns,
     )
+
+def drop_zeros_inplace(matrix: Matrix) -> Matrix:
+    matrix(matrix.V, replace=True) << matrix
+    return matrix

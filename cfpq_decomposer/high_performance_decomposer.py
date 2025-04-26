@@ -1,79 +1,132 @@
+from dataclasses import dataclass
+from typing import Tuple, Any
+
 import numpy as np
+import numpy.typing as npt
 from graphblas import semiring
 from graphblas.core.dtypes import INT64, BOOL, INT32
 from graphblas.core.matrix import Matrix
+from graphblas.core.vector import Vector
 
 from cfpq_decomposer.abstract_decomposer import AbstractDecomposer
-from cfpq_decomposer.constants import HASH_PRIME_MODULUS, HASH_COUNT, MIN_LSH_BUCKET_SIZE
+from cfpq_decomposer.constants import HASH_PRIME_MODULUS, HASH_COUNT, MIN_LSH_BUCKET_SIZE, SMALL_BUCKET_ID
+from cfpq_matrix.matrix_utils import drop_zeros_inplace
+
+
+@dataclass
+class BuildLeftFactorResult:
+    left_factor: Matrix
+    bucket_sizes: npt.NDArray[np.int64]
+
+
+@dataclass
+class RowGroupingResult:
+    row_to_bucket: npt.NDArray[np.int64]
+    bucket_sizes: npt.NDArray[np.int64]
+
+    @property
+    def num_buckets(self):
+        return self.bucket_sizes.size
+
+    @property
+    def rows_in_buckets(self):
+        return self.row_to_bucket != SMALL_BUCKET_ID
 
 
 class HighPerformanceDecomposer(AbstractDecomposer):
-    def row_based_decompose(self, matrix: Matrix) -> tuple[Matrix, Matrix]:
-        n_rows, n_cols = matrix.shape
+    def row_based_decompose(self, matrix: Matrix) -> Tuple[Matrix, Matrix]:
+        build_left_factor_result = self._build_left_factor(matrix)
+        right_factor = self._build_right_factor(matrix, build_left_factor_result)
+        return build_left_factor_result.left_factor, right_factor
 
-        a = np.random.randint(1, HASH_PRIME_MODULUS, size=HASH_COUNT, dtype=np.int64)
-        b = np.random.randint(0, HASH_PRIME_MODULUS, size=HASH_COUNT, dtype=np.int64)
+    @staticmethod
+    def _build_left_factor(matrix: Matrix) -> BuildLeftFactorResult:
+        num_rows, num_cols = matrix.shape
 
-        cols = np.arange(n_cols, dtype=np.int64)
-        H_vals = ((cols[:, None] * a[None, :]) + b[None, :]) % HASH_PRIME_MODULUS
+        row_grouping_result = HighPerformanceDecomposer._group_rows_to_buckets(matrix)
 
-        H_gb = Matrix.from_dense(H_vals)
+        row_to_bucket = row_grouping_result.row_to_bucket
+        bucket_sizes = row_grouping_result.bucket_sizes
+        rows_in_buckets = row_grouping_result.rows_in_buckets
 
-        S = Matrix(INT64, n_rows, HASH_COUNT)
-        S << semiring.min_second(matrix @ H_gb)
-
-        r, c, v = S.to_coo()
-        signature = np.zeros((n_rows, HASH_COUNT), dtype=np.int64)
-        signature[r, c] = v
-
-        weights = np.random.default_rng().integers(
-            low=1, high=np.iinfo(np.uint64).max,
-            size=signature.shape[1], dtype=np.uint64
+        left_factor = Matrix.from_coo(
+            rows=np.nonzero(rows_in_buckets)[0].astype(np.uint64),
+            columns=row_to_bucket[rows_in_buckets].astype(np.uint64),
+            values=np.ones(bucket_sizes.sum(), dtype=bool),
+            dtype=BOOL,
+            nrows=num_rows,
+            ncols=row_grouping_result.num_buckets
         )
+        return BuildLeftFactorResult(left_factor, bucket_sizes)
 
-        row_hashes = (signature.astype(np.uint64) @ weights)  # shape (n_rows,)
+    @staticmethod
+    def _group_rows_to_buckets(matrix: Matrix) -> RowGroupingResult:
+        row_hashes = HighPerformanceDecomposer._compute_row_hashes(matrix)
+        return HighPerformanceDecomposer._group_row_hashes_to_buckets(row_hashes)
 
-        _, inv, counts = np.unique(
+    @staticmethod
+    def _compute_row_hashes(matrix: Matrix) -> npt.NDArray[Any]:
+        row_signatures_matrix = HighPerformanceDecomposer._compute_row_signatures_matrix(matrix)
+        hash_weights = np.random.default_rng().integers(
+            low=1,
+            high=np.iinfo(np.int64).max,
+            size=HASH_COUNT,
+            dtype=np.int64
+        )
+        row_hashes = row_signatures_matrix.to_dense(fill_value=0) @ hash_weights
+        return row_hashes
+
+    @staticmethod
+    def _compute_row_signatures_matrix(matrix: Matrix) -> Matrix:
+        num_rows, num_cols = matrix.shape
+        hash_coefficients = np.random.randint(1, HASH_PRIME_MODULUS, size=HASH_COUNT, dtype=np.int64)
+        hash_offsets = np.random.randint(0, HASH_PRIME_MODULUS, size=HASH_COUNT, dtype=np.int64)
+        column_indices = np.arange(num_cols, dtype=np.int64)
+        hash_matrix = Matrix.from_dense(
+            (column_indices[:, None] * hash_coefficients[None, :] + hash_offsets[None, :]) % HASH_PRIME_MODULUS
+        )
+        row_signatures_matrix = Matrix(INT64, num_rows, HASH_COUNT)
+        row_signatures_matrix << semiring.min_second(matrix @ hash_matrix)
+        return row_signatures_matrix
+
+    @staticmethod
+    def _group_row_hashes_to_buckets(row_hashes: npt.NDArray[Any]) -> RowGroupingResult:
+
+        _, row_to_bucket, new_bucket_sizes = np.unique(
             row_hashes, return_inverse=True, return_counts=True
         )
+        bucket_validity = new_bucket_sizes >= MIN_LSH_BUCKET_SIZE
+        valid_bucket_ids = np.nonzero(bucket_validity)[0]
 
-        valid = counts >= MIN_LSH_BUCKET_SIZE
-        row_bucket = np.where(valid[inv], inv, -1)
+        old_bucket_id_to_new_bucket_id = np.full_like(new_bucket_sizes, SMALL_BUCKET_ID, dtype=np.int64)
+        old_bucket_id_to_new_bucket_id[valid_bucket_ids] = np.arange(valid_bucket_ids.size, dtype=np.int64)
 
-        valid_ids = np.nonzero(valid)[0]
-        b = len(valid_ids)
-        lut = np.full_like(counts, -1, dtype=np.int64)
-        lut[valid_ids] = np.arange(b, dtype=np.int64)
-        new_bucket = np.where(row_bucket >= 0, lut[row_bucket], -1)
-
-        keep = new_bucket >= 0
-        LEFT = Matrix.from_coo(
-            rows=np.nonzero(keep)[0].astype(np.uint64),
-            columns=new_bucket[keep].astype(np.uint64),
-            values=np.ones(int(keep.sum()), dtype=bool),
-            dtype=BOOL,
-            nrows=n_rows,
-            ncols=b
+        new_row_to_bucket = np.where(
+            bucket_validity[row_to_bucket],
+            old_bucket_id_to_new_bucket_id[row_to_bucket],
+            SMALL_BUCKET_ID,
         )
+        new_bucket_sizes = new_bucket_sizes[valid_bucket_ids]
 
-        LEFT_int = LEFT.dup(dtype=INT32)
-        M_int = matrix.dup(dtype=INT32)
+        return RowGroupingResult(row_to_bucket=new_row_to_bucket, bucket_sizes=new_bucket_sizes)
 
-        O = Matrix(INT32, b, n_cols)
-        O << semiring.plus_times(LEFT_int.T @ M_int)
+    @staticmethod
+    def _build_right_factor(matrix: Matrix, build_left_factor_result: BuildLeftFactorResult) -> Matrix:
+        """
+        This function essentially computes the value of
+        `semiring.and_implies(build_left_factor_result.left_factor @ matrix).new()`.
 
-        bucket_sizes = counts[valid_ids].astype(np.int32)
+        However, `semiring.and_implies` is not a valid semiring,
+        so we have to simulate it by performing multiple operations.
+        """
+        left_factor = build_left_factor_result.left_factor
+        bucket_sizes = build_left_factor_result.bucket_sizes
 
-        orow, ocol, oval = O.to_coo()
-        keep_core = oval >= bucket_sizes[orow]
+        num_rows, num_cols = matrix.shape
+        num_valid_buckets = bucket_sizes.size
 
-        RIGHT = Matrix.from_coo(
-            rows=orow[keep_core].astype(np.uint64),
-            columns=ocol[keep_core].astype(np.uint64),
-            values=np.ones(int(keep_core.sum()), dtype=bool),
-            dtype=BOOL,
-            nrows=b,
-            ncols=n_cols
-        )
+        occurrence_matrix = Matrix(INT32, num_valid_buckets, num_cols)
+        occurrence_matrix << semiring.plus_times(left_factor.dup(dtype=INT32).T @ matrix.dup(dtype=INT32))
 
-        return LEFT, RIGHT
+        right_factor = (occurrence_matrix.T == Vector.from_dense(bucket_sizes)).T.new()
+        return drop_zeros_inplace(right_factor)
