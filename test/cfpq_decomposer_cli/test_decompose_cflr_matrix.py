@@ -15,7 +15,20 @@ GRAMMAR_PATH = find_grammar_file(DATA_PATH)
 
 
 @pytest.mark.CI
-@pytest.mark.parametrize("args", [[], ["--prototype"]], ids=["default", "prototype"])
+@pytest.mark.parametrize(
+    "args",
+    [
+        [],
+        pytest.param(
+            ["--prototype"],
+            id="prototype",
+            marks=pytest.mark.skip(
+                reason="--prototype is too slow and already covered by unit tests"
+            ),
+        ),
+    ],
+    ids=["default", "prototype"],
+)
 def test_cli_decompose_cflr_matrix_modes(args, capsys):
     decompose_main([GRAPH_PATH, GRAMMAR_PATH] + args)
     captured = capsys.readouterr()

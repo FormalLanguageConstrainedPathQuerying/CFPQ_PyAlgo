@@ -62,7 +62,7 @@ class AbstractDecomposer(Decomposer, ABC):
             nvals_after = residual.nvals
             nvals_delta = nvals_before - nvals_after
             reduction_ratio = (nvals_delta / nvals_before) if nvals_before else 0
-            size_ratio = (l1.nvals + r1.nvals + l2.nvals + r2.nvals / nvals_delta) if nvals_delta else float("inf")
+            size_ratio = ((l1.nvals + r1.nvals + l2.nvals + r2.nvals) / nvals_delta) if nvals_delta else float("inf")
 
             if reduction_ratio < MIN_REDUCTION_RATIO or size_ratio > MAX_SIZE_RATIO or residual.nvals == 0:
                 break
