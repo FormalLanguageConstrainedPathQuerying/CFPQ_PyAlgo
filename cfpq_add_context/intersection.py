@@ -5,7 +5,6 @@ from graphblas.core.vector import Vector
 from graphblas.core.operator import Semiring, Monoid, SelectOp
 from graphblas.core.dtypes import UINT64
 from graphblas import op, semiring
-from numba import njit, jit
 import gen_automata
 
 import labels
@@ -41,15 +40,6 @@ def bfs (matrix, sources):
     
     return reachable
 
-
-def filter_reachable_op(reachable_vertices):
-    _reachable_vertices = set(reachable_vertices)
-    def inner(x,i,j,k):        
-        return i in _reachable_vertices and j in _reachable_vertices
-    return inner
-
-SelectOp.register_new("filter_reachable", filter_reachable_op, parameterized=True, is_udt=True)
-
 def filter_not_zero_op(x,i,j,k):
     return x > 0
 
@@ -63,25 +53,10 @@ def intersection (graph, automata) :
     print_matrix_to_dot(intersection, "kron.dot")
     
     sources = [i * automata.nrows for i in range(0,graph.nrows)]
-    #reachable = frozenset(bfs(intersection, sources).to_coo(values=False)[0])
-    #reachable_vertices = set(bfs(intersection, sources).to_coo(values=False)[0])
 
     reachable_vertices_mask = bfs(intersection, sources).diag(name="reachable_vertices_mask")
     
-    #def filter_reachable_op(x,i,j,k):
-    #    return i in reachable_vertices and j in reachable_vertices
-
-    #SelectOp.register_new("filter_reachable", filter_reachable_op, is_udt=True)
-
-    #print("reachable = ", reachable_vertices)
-    #print("num of reachable = ", len(reachable_vertices))
-    #edges = intersection.to_edgelist()
-    #edges = zip(edges[0],edges[1])
-    #new_edges = [(_edg[0],_edg[1],_lbl) for (_edg,_lbl) in  edges if _edg[0] in reachable_vertices and _edg[1] in reachable_vertices]
-    #result = Matrix.from_edgelist(new_edges, dtype=intersection.dtype, nrows=intersection.nrows, ncols=intersection.ncols, name = "filtered intersection")
     result = Matrix(intersection.dtype, intersection.nrows, intersection.ncols, name = "filtered intersection")
-    #result << intersection.select(graphblas.select.filter_reachable(reachable_vertices=reachable_vertices))
-    #result << intersection.select(graphblas.select.filter_reachable)
     result << reachable_vertices_mask @ intersection
     print_matrix_to_dot(result, "kron_filtered.dot")
     return result
@@ -95,7 +70,6 @@ def test():
 
     i = intersection(graph, automata)
     
-    #print_matrix_to_dot(intersection, "kron.dot")
 
 def test2():
     graph_edges = [(0,0,(labels.mk_open_context(1))),(0,1,(labels.mk_open_context(1))),(1,1,(labels.mk_close_context(1)))]
@@ -146,6 +120,10 @@ def test7():
     i = intersection(graph, automata)
 
 def test8():
-    automata1 = gen_automata.generate(1)
-    automata2 = gen_automata.generate(1)
-    i = intersection(automata1, automata2)
+    graph_edges = [(0,0,1),(0,1,2),(1,1,3),(0,2,4),(2,0,5),(2,2,3)]    
+    
+    graph1 = Matrix.from_edgelist(graph_edges,dtype=UINT64, nrows=6, ncols=6, name="graph1")
+    graph2 = Matrix.from_edgelist(graph_edges,dtype=UINT64, nrows=6, ncols=6, name="graph2")
+
+    i = graph1.kronecker(graph2)
+    print_matrix_to_dot(i, "kron_build.dot")

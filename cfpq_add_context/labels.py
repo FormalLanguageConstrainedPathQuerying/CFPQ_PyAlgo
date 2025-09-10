@@ -16,6 +16,12 @@ ALL_OPEN_CONTEXTS =           0b111111111111111111111000000000000000000000000000
 SIGMA_WITHOUT_OPEN_CONTEXTS = 0b0000000000000000000001111111111111111111111111111111111111111111
 NOTHING =                     0b0000000000000000000000000000000000000000000000000000000000000000
 
+ASSIGN = 1
+ASSIGN_R = 2
+ALLOC = 3
+ALLOC_R = 4
+OFFSET = 5
+
 def intersection_op (x:int, y:int) -> int:
     return (NOTHING - (x == y or (x & y == x and (y == SIGMA or y == SIGMA_WITHOUT_CONTEXTS or y == ALL_OPEN_CONTEXTS or y == SIGMA_WITHOUT_OPEN_CONTEXTS)))) & x
 
@@ -28,3 +34,7 @@ def mk_close_context(x:int) -> int :
     return NOTHING | (x << 22)
 def mk_other(x:int) -> int : 
     return NOTHING | x
+def mk_load(i):
+    return mk_other(2 * i + OFFSET)
+def mk_store (i):
+    return mk_other(2 * i + 1 + OFFSET)
