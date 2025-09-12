@@ -13,18 +13,23 @@ from cfpq_algo.setting.preprocessor_setting import preprocess_graph_and_grammar
 from cfpq_cli.time_limit import time_limit, TimeoutException
 from cfpq_model.cnf_grammar_template import CnfGrammarTemplate
 from cfpq_model.label_decomposed_graph import LabelDecomposedGraph
+from cfpq_add_context.add_contexts import add_context
 
 
 def run_all_pairs_cflr(
         algo_name: str,
         graph_path: str,
         grammar_path: str,
+        add_contexts: bool,
         time_limit_sec: Optional[int],
         out_path: Optional[str],
         settings: List[AlgoSetting]
 ):
     algo = get_all_pairs_cfl_reachability_algo(algo_name)
-    graph = LabelDecomposedGraph.read_from_pocr_graph_file(graph_path)
+    if add_contexts:
+        graph = add_context(graph_path)
+    else:
+        graph = LabelDecomposedGraph.read_from_pocr_graph_file(graph_path)
     grammar = CnfGrammarTemplate.read_from_pocr_cnf_file(grammar_path)
     graph, grammar = preprocess_graph_and_grammar(graph, grammar, settings)
     try:
@@ -78,6 +83,9 @@ def main(raw_args: List[str]):
                              'to [END_VERTEX], labels along which spell a word from '
                              'the specified Context-Free Language (CFL).'
                         )
+    parser.add_argument('--add_contexts', dest='add_contexts', default=False,
+                        help='Specifies whether approximation of context sensitivity should be added.'
+                        )
     settings_manager = AlgoSettingsManager()
     settings_manager.add_args(parser)
     args = parser.parse_args(raw_args)
@@ -85,6 +93,7 @@ def main(raw_args: List[str]):
         algo_name=args.algo,
         graph_path=args.graph,
         grammar_path=args.grammar,
+        add_contexts=args.add_contexts,
         time_limit_sec=args.time_limit,
         out_path=args.out,
         settings=settings_manager.read_args(args)

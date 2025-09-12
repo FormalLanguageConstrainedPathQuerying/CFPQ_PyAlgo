@@ -3,8 +3,8 @@ import graphblas
 from graphblas.core.matrix import Matrix
 from graphblas.core.dtypes import UINT64
 
-import labels
-from utils import print_matrix_to_dot
+import cfpq_add_context.labels as labels
+from cfpq_add_context.utils import print_matrix_to_dot
 
 
 
@@ -15,8 +15,12 @@ def load_graph(file_path):
         _context = 0
         nonlocal number_of_contexts
         if len(data_arr) == 4:
-            if "load" in data_arr[2]:
+            if "load_r" in data_arr[2]:
+                return labels.mk_load_r(int(data_arr[3]))
+            elif "load" in data_arr[2]:
                 return labels.mk_load(int(data_arr[3]))
+            elif "store_r" in data_arr[2]:
+                return labels.mk_store_r(int(data_arr[3]))
             else:
                 return labels.mk_store(int(data_arr[3]))
         elif data_arr[2] == "assign":
@@ -29,9 +33,9 @@ def load_graph(file_path):
             return labels.mk_other(labels.ALLOC_R)
         elif "open" in data_arr[2]:
             if "_r_" in data_arr[2]:
-                _context = 2 * int(data_arr[2].split('_')[2])
+                _context = 2 * (1 + int(data_arr[2].split('_')[2]))
             else:
-                _context =  2 * int(data_arr[2].split('_')[1]) + 1
+                _context =  2 * (1 + int(data_arr[2].split('_')[1])) + 1
             number_of_contexts = max(number_of_contexts, _context)
             return labels.mk_open_context(_context)
         else:
@@ -57,6 +61,6 @@ def load_graph(file_path):
     with open (file_path,'r') as file:
         edges = [handle_line(line) for line in file if len(line.strip()) > 0]
         result = Matrix.from_edgelist(edges, dtype=UINT64, nrows=nvertices + 1, ncols=nvertices + 1, name="graph")
-        print_matrix_to_dot(result, "graph.dot")
+        #print_matrix_to_dot(result, "graph.dot")
         return (result, (number_of_contexts // 2) + 1)
             

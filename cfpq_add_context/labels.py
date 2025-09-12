@@ -1,6 +1,6 @@
 import graphblas
 
-from graphblas.core.operator import Monoid, BinaryOp
+from graphblas.core.operator import Monoid, BinaryOp, SelectOp, UnaryOp
 from graphblas import binary
 
 '''
@@ -13,6 +13,7 @@ from graphblas import binary
 SIGMA =                       0b1111111111111111111111111111111111111111111111111111111111111111
 SIGMA_WITHOUT_CONTEXTS =      0b0000000000000000000000000000000000000000001111111111111111111111
 ALL_OPEN_CONTEXTS =           0b1111111111111111111110000000000000000000000000000000000000000000
+ALL_CLOSE_CONTEXTS =          0b0000000000000000000001111111111111111111110000000000000000000000
 SIGMA_WITHOUT_OPEN_CONTEXTS = 0b0000000000000000000001111111111111111111111111111111111111111111
 NOTHING =                     0b0000000000000000000000000000000000000000000000000000000000000000
 
@@ -35,6 +36,62 @@ def mk_close_context(x:int) -> int :
 def mk_other(x:int) -> int : 
     return NOTHING | x
 def mk_load(i):
-    return mk_other(2 * i + OFFSET)
+    return mk_other(4 * i + OFFSET)
+def mk_load_r(i):
+    return mk_other(4 * i + 1+ OFFSET)
 def mk_store (i):
-    return mk_other(2 * i + 1 + OFFSET)
+    return mk_other(4 * i + 2 + OFFSET)
+def mk_store_r (i):
+    return mk_other(4 * i + 3 + OFFSET)
+
+
+def select_alloc_op(x,i,j,k):
+    return x & SIGMA_WITHOUT_CONTEXTS == ALLOC
+
+def select_alloc_r_op(x,i,j,k):
+    return x & SIGMA_WITHOUT_CONTEXTS == ALLOC_R
+
+def select_assign_op(x,i,j,k):
+    return x & SIGMA_WITHOUT_CONTEXTS == ASSIGN or (x & ALL_OPEN_CONTEXTS > 0 and x & ALL_OPEN_CONTEXTS % 2 == 1) or (x & ALL_OPEN_CONTEXTS > 0 and x & ALL_CLOSE_CONTEXTS % 2 == 1)
+
+def select_assign_r_op(x,i,j,k):
+    return x & SIGMA_WITHOUT_CONTEXTS == ASSIGN_R or (x & ALL_OPEN_CONTEXTS > 0 and x & ALL_OPEN_CONTEXTS % 2 == 0) or (x & ALL_OPEN_CONTEXTS > 0 and x & ALL_CLOSE_CONTEXTS % 2 == 0)
+
+def select_load_op(x,i,j,k):
+    return x & SIGMA_WITHOUT_CONTEXTS >= OFFSET and ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET) % 4 == 0
+
+def select_load_r_op(x,i,j,k):
+    return x & SIGMA_WITHOUT_CONTEXTS >= OFFSET and ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET) % 4 == 1
+
+def select_store_op(x,i,j,k):
+    return x & SIGMA_WITHOUT_CONTEXTS >= OFFSET and ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET) % 4 == 2
+
+def select_store_r_op(x,i,j,k):
+    return x & SIGMA_WITHOUT_CONTEXTS >= OFFSET and ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET) % 4 == 3
+
+SelectOp.register_new("select_alloc", select_alloc_op)
+SelectOp.register_new("select_alloc_r", select_alloc_r_op)
+SelectOp.register_new("select_assign", select_assign_op)
+SelectOp.register_new("select_assign_r", select_assign_r_op)
+SelectOp.register_new("select_load", select_load_op)
+SelectOp.register_new("select_store", select_store_op)
+SelectOp.register_new("select_load_r", select_load_r_op)
+SelectOp.register_new("select_store_r", select_store_r_op)
+
+def decode_load_op(x):
+    return ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET) // 4
+
+def decode_load_r_op(x):
+    return ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET - 1) // 4
+
+def decode_store_op(x):
+    return ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET - 2) // 4
+
+def decode_store_r_op(x):
+    return ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET - 3) // 4
+
+
+UnaryOp.register_new("decode_load", decode_load_op)
+UnaryOp.register_new("decode_load_r", decode_load_r_op)
+UnaryOp.register_new("decode_store", decode_store_op)
+UnaryOp.register_new("decode_store_r", decode_store_r_op)

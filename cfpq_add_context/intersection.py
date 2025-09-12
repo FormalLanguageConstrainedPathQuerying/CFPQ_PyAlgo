@@ -5,10 +5,11 @@ from graphblas.core.vector import Vector
 from graphblas.core.operator import Semiring, Monoid, SelectOp
 from graphblas.core.dtypes import UINT64
 from graphblas import op, semiring
-import gen_automata
+import cfpq_add_context.gen_automata
+import time
 
-import labels
-from utils import print_matrix_to_dot
+import cfpq_add_context.labels
+from cfpq_add_context.utils import print_matrix_to_dot
 
 def kronecker (graph, automata):
     result = Matrix(graph.dtype, graph.nrows * automata.nrows, graph.ncols * automata.ncols, name="intersection")
@@ -17,7 +18,6 @@ def kronecker (graph, automata):
 
 def bfs (matrix, sources):
     n = matrix.nrows
-    print ("n = ", n)
     
     reachable = Vector.from_coo(sources, True, size=n, name="reachable")
     frontier = Vector.from_coo(sources, True, size=n, name="frontier")
@@ -29,7 +29,7 @@ def bfs (matrix, sources):
         new_frontier = Vector(bool, size=n)
         new_frontier(~reachable.S) << semiring.any_first(frontier @ matrix)
         
-        print("new_frontier nvals = ",  new_frontier.nvals)
+        #print("new_frontier nvals = ",  new_frontier.nvals)
 
         if new_frontier.nvals == 0:
             break
@@ -46,11 +46,25 @@ def filter_not_zero_op(x,i,j,k):
 SelectOp.register_new("filter_not_zero", filter_not_zero_op)
 
 def intersection (graph, automata) :
+    intersection_start = time.perf_counter()
+    
     intersection = kronecker(graph, automata)
+    
+    intersection_end = time.perf_counter()
+    print("Intersection done in ", intersection_end - intersection_start)
+    print("Vertices in intersection before zeroes removing: ", intersection.ncols)
+    print("Edges in intersection before zeroes removing: ", intersection.nvals)
+    
     #TODO remove when moved to patched kronecker
     intersection << intersection.select(graphblas.select.filter_not_zero)
 
-    print_matrix_to_dot(intersection, "kron.dot")
+    zeroes_removing_from_intersection_end = time.perf_counter()
+    print("Removing of zeroes from intersection done in ", zeroes_removing_from_intersection_end - intersection_end)
+    print("Vertices in intersection after zeroes removing: ", intersection.ncols)
+    print("Edges in intersection after zeroes removing: ", intersection.nvals)
+
+
+    #print_matrix_to_dot(intersection, "kron.dot")
     
     sources = [i * automata.nrows for i in range(0,graph.nrows)]
 
@@ -58,7 +72,11 @@ def intersection (graph, automata) :
     
     result = Matrix(intersection.dtype, intersection.nrows, intersection.ncols, name = "filtered intersection")
     result << reachable_vertices_mask @ intersection
-    print_matrix_to_dot(result, "kron_filtered.dot")
+    
+    unreachable_vertices_removing_end = time.perf_counter()
+    print("Removing of unreachable vertices done in ", unreachable_vertices_removing_end - zeroes_removing_from_intersection_end)
+
+    #print_matrix_to_dot(result, "kron_filtered.dot")
     return result
 
 

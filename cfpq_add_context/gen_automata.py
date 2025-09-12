@@ -3,8 +3,8 @@ import graphblas
 from graphblas.core.matrix import Matrix
 from graphblas.core.dtypes import UINT64
 
-from labels import SIGMA, SIGMA_WITHOUT_CONTEXTS, SIGMA_WITHOUT_OPEN_CONTEXTS, ALL_OPEN_CONTEXTS, mk_close_context, mk_open_context
-from utils import print_matrix_to_dot
+from cfpq_add_context.labels import SIGMA, SIGMA_WITHOUT_CONTEXTS, SIGMA_WITHOUT_OPEN_CONTEXTS, ALL_OPEN_CONTEXTS, mk_close_context, mk_open_context
+from cfpq_add_context.utils import print_matrix_to_dot
 
 def generate (number_of_contexts):
     number_of_contexts = number_of_contexts * 2 # with reversed edges
