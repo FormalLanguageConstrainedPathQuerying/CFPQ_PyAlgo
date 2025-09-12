@@ -41,7 +41,7 @@ def load_graph(file_path):
 
             number_of_contexts = max(number_of_contexts, _context)
             return res
-        else:
+        elif "close" in data_arr[2]:
             if "_r_" in data_arr[2]:
                 _context = int(data_arr[2].split('_')[2])
                 res = labels.mk_close_context_from_pass_r(_context)
@@ -51,6 +51,7 @@ def load_graph(file_path):
 
             number_of_contexts = max(number_of_contexts, _context)
             return res
+        else: print("ERROR:", data_arr[2])
 
     def handle_line(line):
         nonlocal nvertices

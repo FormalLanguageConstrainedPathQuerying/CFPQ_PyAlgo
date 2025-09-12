@@ -11,9 +11,9 @@ def generate (number_of_contexts):
     nvertices = number_of_contexts * 2 + number_of_contexts * number_of_contexts * 4 + 1
     final = nvertices
     first_level = [i for i in range(1, number_of_contexts * 2 + 1)]
+    #print("First level: ", first_level)
     second_level = [i for i in range(number_of_contexts * 2 + 1, nvertices)]
     def mk_open_context(i):
-        i = i - 1
         if (i // number_of_contexts == 0):
             return mk_open_context_from_pass(i % number_of_contexts)
         else:
@@ -28,13 +28,13 @@ def generate (number_of_contexts):
              [
                 edg 
                 for on_first_level in first_level 
-                for edg in ((start, on_first_level, mk_open_context(on_first_level)),(on_first_level, start, mk_close_context(on_first_level)))
+                for edg in ((start, on_first_level, mk_open_context(on_first_level - 1)),(on_first_level, start, mk_close_context(on_first_level - 1)))
              ] + 
              [
                 edg 
                 for on_first_level in first_level 
                 for on_second_level in range(on_first_level * (number_of_contexts * 2) + 1, on_first_level * number_of_contexts * 2 + number_of_contexts * 2 + 1) 
-                for edg in ((on_first_level, on_second_level, mk_open_context(1 + on_second_level % (number_of_contexts * 2))),(on_second_level, on_first_level, mk_close_context(1 + on_second_level % (number_of_contexts * 2))))
+                for edg in ((on_first_level, on_second_level, mk_open_context(on_second_level % (number_of_contexts * 2))),(on_second_level, on_first_level, mk_close_context(on_second_level % (number_of_contexts * 2))))
              ] +
              [(i,i,SIGMA_WITHOUT_CONTEXTS) for i in first_level + second_level] +
              [(i,final,ALL_OPEN_CONTEXTS) for i in second_level]

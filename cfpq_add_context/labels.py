@@ -81,6 +81,14 @@ def select_store_op(x,i,j,k):
 def select_store_r_op(x,i,j,k):
     return x & SIGMA_WITHOUT_CONTEXTS >= OFFSET and ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET) % 4 == 3
 
+def select_not_reversed_op(x,i,j,k):
+    return ( (x & SIGMA_WITHOUT_CONTEXTS == ALLOC) or 
+             (x & SIGMA_WITHOUT_CONTEXTS == ASSIGN or (x & ALL_OPEN_CONTEXTS > 0 and ((x & ALL_OPEN_CONTEXTS) >> 43) % 2 == 1) or (x & ALL_CLOSE_CONTEXTS > 0 and ((x & ALL_CLOSE_CONTEXTS) >> 22) % 2 == 1)) or 
+             (x & SIGMA_WITHOUT_CONTEXTS >= OFFSET and ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET) % 4 == 0) or 
+             (x & SIGMA_WITHOUT_CONTEXTS >= OFFSET and ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET) % 4 == 2)
+    )
+
+
 SelectOp.register_new("select_alloc", select_alloc_op)
 SelectOp.register_new("select_alloc_r", select_alloc_r_op)
 SelectOp.register_new("select_assign", select_assign_op)
@@ -89,6 +97,7 @@ SelectOp.register_new("select_load", select_load_op)
 SelectOp.register_new("select_store", select_store_op)
 SelectOp.register_new("select_load_r", select_load_r_op)
 SelectOp.register_new("select_store_r", select_store_r_op)
+SelectOp.register_new("select_not_reversed", select_not_reversed_op)
 
 def decode_load_op(x):
     return ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET) // 4
