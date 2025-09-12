@@ -21,6 +21,6 @@ def generate (number_of_contexts):
     
     result = Matrix.from_edgelist(edges, dtype=UINT64, nrows=nvertices + 1, ncols=nvertices + 1, name="automata")
     
-    print_matrix_to_dot(result, "atm.dot")
+    #print_matrix_to_dot(result, "atm.dot")
 
     return result

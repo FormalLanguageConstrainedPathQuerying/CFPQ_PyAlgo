@@ -60,7 +60,8 @@ def load_graph(file_path):
 
     with open (file_path,'r') as file:
         edges = [handle_line(line) for line in file if len(line.strip()) > 0]
-        result = Matrix.from_edgelist(edges, dtype=UINT64, nrows=nvertices + 1, ncols=nvertices + 1, name="graph")
+        #TODO Remove dup_op! It is a hack to avoid edges duplication.
+        result = Matrix.from_edgelist(edges, dtype=UINT64, nrows=nvertices + 1, ncols=nvertices + 1, name="graph",dup_op="max")
         #print_matrix_to_dot(result, "graph.dot")
         return (result, (number_of_contexts // 2) + 1)
             
