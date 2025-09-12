@@ -27,15 +27,19 @@ def to_label_decomposed_graph(graph):
     vertex_count = graph.nrows
     alloc = Matrix(BOOL, graph.ncols, graph.nrows, name = "alloc_after_intersection")
     alloc << graph.select(graphblas.select.select_alloc)
+    print("Boolean matrix for alloc nvals: ", alloc.nvals)
     
     alloc_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "alloc_r_after_intersection")
     alloc_r << graph.select(graphblas.select.select_alloc_r)
+    print("Boolean matrix for alloc_r nvals: ", alloc_r.nvals)
 
     assign = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_after_intersection")
     assign << graph.select(graphblas.select.select_assign)
+    print("Boolean matrix for assign nvals: ", assign.nvals)
     
     assign_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_r_after_intersection")
     assign_r << graph.select(graphblas.select.select_assign_r)
+    print("Boolean matrix for assign_r nvals: ", assign_r.nvals)
 
     load_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "load_i_after_intersection")
     load_i << graph.select(graphblas.select.select_load).apply(graphblas.unary.decode_load)
@@ -54,9 +58,17 @@ def to_label_decomposed_graph(graph):
     block_count = max(store_block_count, load_block_count)
 
     boolean_decompose_load = indexed_to_boolean_decomposition(load_i, block_count)
+    print("Boolean matrix for load nvals: ", boolean_decompose_load.nvals)
+
     boolean_decompose_load_r = indexed_to_boolean_decomposition(load_r_i, block_count)
+    print("Boolean matrix for load_r nvals: ", boolean_decompose_load_r.nvals)
+
     boolean_decompose_store = indexed_to_boolean_decomposition(store_i, block_count)
+    print("Boolean matrix for store nvals: ", boolean_decompose_store.nvals)
+
     boolean_decompose_store_r = indexed_to_boolean_decomposition(store_r_i, block_count)
+    print("Boolean matrix for store_r nvals: ", boolean_decompose_store_r.nvals)
+    
 
     matrices: Dict[Symbol, Matrix] = {}
 
@@ -103,6 +115,10 @@ def add_context(file_path):
     print("Vertices in intersection: ", result.ncols)
     print("Edges in intersection: ", result.nvals)
     
-    return to_label_decomposed_graph(result)
+    decomposed_result = to_label_decomposed_graph(result)
+    decomposition_end = time.perf_counter()
+    print("Graph decomposition competed in ", decomposition_end - intersection_end)
+
+    return decomposed_result
 
 

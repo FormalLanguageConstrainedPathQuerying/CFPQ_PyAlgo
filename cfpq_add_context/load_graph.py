@@ -40,9 +40,9 @@ def load_graph(file_path):
             return labels.mk_open_context(_context)
         else:
             if "_r_" in data_arr[2]:
-                _context = 2 * int(data_arr[2].split('_')[2])
+                _context = 2 * (1 + int(data_arr[2].split('_')[2]))
             else:
-                _context = 2 * int(data_arr[2].split('_')[1]) + 1
+                _context = 2 * (1 + int(data_arr[2].split('_')[1])) + 1
             number_of_contexts = max(number_of_contexts, _context)
             return labels.mk_close_context(_context)
 
@@ -63,5 +63,5 @@ def load_graph(file_path):
         #TODO Remove dup_op! It is a hack to avoid edges duplication.
         result = Matrix.from_edgelist(edges, dtype=UINT64, nrows=nvertices + 1, ncols=nvertices + 1, name="graph",dup_op="max")
         #print_matrix_to_dot(result, "graph.dot")
-        return (result, (number_of_contexts // 2) + 1)
+        return (result, (number_of_contexts // 2))
             

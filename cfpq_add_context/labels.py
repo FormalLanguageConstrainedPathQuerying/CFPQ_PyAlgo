@@ -38,7 +38,7 @@ def mk_other(x:int) -> int :
 def mk_load(i):
     return mk_other(4 * i + OFFSET)
 def mk_load_r(i):
-    return mk_other(4 * i + 1+ OFFSET)
+    return mk_other(4 * i + 1 + OFFSET)
 def mk_store (i):
     return mk_other(4 * i + 2 + OFFSET)
 def mk_store_r (i):
@@ -52,10 +52,10 @@ def select_alloc_r_op(x,i,j,k):
     return x & SIGMA_WITHOUT_CONTEXTS == ALLOC_R
 
 def select_assign_op(x,i,j,k):
-    return x & SIGMA_WITHOUT_CONTEXTS == ASSIGN or (x & ALL_OPEN_CONTEXTS > 0 and x & ALL_OPEN_CONTEXTS % 2 == 1) or (x & ALL_OPEN_CONTEXTS > 0 and x & ALL_CLOSE_CONTEXTS % 2 == 1)
+    return x & SIGMA_WITHOUT_CONTEXTS == ASSIGN or (x & ALL_OPEN_CONTEXTS > 0 and ((x & ALL_OPEN_CONTEXTS) >> 43) % 2 == 1) or (x & ALL_CLOSE_CONTEXTS > 0 and ((x & ALL_CLOSE_CONTEXTS) >> 22) % 2 == 1)
 
 def select_assign_r_op(x,i,j,k):
-    return x & SIGMA_WITHOUT_CONTEXTS == ASSIGN_R or (x & ALL_OPEN_CONTEXTS > 0 and x & ALL_OPEN_CONTEXTS % 2 == 0) or (x & ALL_OPEN_CONTEXTS > 0 and x & ALL_CLOSE_CONTEXTS % 2 == 0)
+    return x & SIGMA_WITHOUT_CONTEXTS == ASSIGN_R or (x & ALL_OPEN_CONTEXTS > 0 and ((x & ALL_OPEN_CONTEXTS) >> 43) % 2 == 0) or (x & ALL_CLOSE_CONTEXTS > 0 and ((x & ALL_CLOSE_CONTEXTS) >> 22) % 2 == 0)
 
 def select_load_op(x,i,j,k):
     return x & SIGMA_WITHOUT_CONTEXTS >= OFFSET and ((x & SIGMA_WITHOUT_CONTEXTS) - OFFSET) % 4 == 0
