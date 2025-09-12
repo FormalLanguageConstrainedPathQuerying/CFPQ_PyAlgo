@@ -33,18 +33,24 @@ def load_graph(file_path):
             return labels.mk_other(labels.ALLOC_R)
         elif "open" in data_arr[2]:
             if "_r_" in data_arr[2]:
-                _context = 2 * (1 + int(data_arr[2].split('_')[2]))
+                _context = int(data_arr[2].split('_')[2])
+                res = labels.mk_open_context_from_ret_r(_context)
             else:
-                _context =  2 * (1 + int(data_arr[2].split('_')[1])) + 1
+                _context =  int(data_arr[2].split('_')[1])
+                res = labels.mk_open_context_from_pass(_context)
+
             number_of_contexts = max(number_of_contexts, _context)
-            return labels.mk_open_context(_context)
+            return res
         else:
             if "_r_" in data_arr[2]:
-                _context = 2 * (1 + int(data_arr[2].split('_')[2]))
+                _context = int(data_arr[2].split('_')[2])
+                res = labels.mk_close_context_from_pass_r(_context)
             else:
-                _context = 2 * (1 + int(data_arr[2].split('_')[1])) + 1
+                _context = int(data_arr[2].split('_')[1])
+                res = labels.mk_close_context_from_ret(_context)
+
             number_of_contexts = max(number_of_contexts, _context)
-            return labels.mk_close_context(_context)
+            return res
 
     def handle_line(line):
         nonlocal nvertices
@@ -63,5 +69,5 @@ def load_graph(file_path):
         #TODO Remove dup_op! It is a hack to avoid edges duplication.
         result = Matrix.from_edgelist(edges, dtype=UINT64, nrows=nvertices + 1, ncols=nvertices + 1, name="graph",dup_op="max")
         #print_matrix_to_dot(result, "graph.dot")
-        return (result, (number_of_contexts // 2))
+        return (result, (number_of_contexts + 1))
             

@@ -29,10 +29,22 @@ def intersection_op (x:int, y:int) -> int:
 BinaryOp.register_new("intersection_op", intersection_op)
 Monoid.register_new("labels_intersection", binary.intersection_op, identity=NOTHING)
 
-def mk_open_context(x:int) -> int : 
-    return NOTHING | (x << 43)
-def mk_close_context(x:int) -> int : 
-    return NOTHING | (x << 22)
+#def mk_open_context(x:int) -> int : 
+#    return NOTHING | (x << 43)
+#def mk_close_context(x:int) -> int : 
+#    return NOTHING | (x << 22)
+
+def mk_open_context_from_pass(x:int) -> int : 
+    return NOTHING | ((2 * (x + 1) + 1) << 43)
+def mk_close_context_from_ret(x:int) -> int : 
+    return NOTHING | ((2 * (x + 1) + 1) << 22)
+
+def mk_open_context_from_ret_r(x:int) -> int : 
+    return NOTHING | ((2 * (x + 1)) << 43)
+def mk_close_context_from_pass_r(x:int) -> int : 
+    return NOTHING | ((2 * (x + 1)) << 22)
+
+
 def mk_other(x:int) -> int : 
     return NOTHING | x
 def mk_load(i):
