@@ -9,6 +9,7 @@ from graphblas.core.matrix import Matrix
 from cfpq_matrix.block.block_matrix_space_impl import BlockMatrixSpaceImpl
 from cfpq_model.cnf_grammar_template import Symbol
 from cfpq_model.label_decomposed_graph import LabelDecomposedGraph
+from cfpq_add_context.utils import print_matrix_to_dot
 
 import time
 
@@ -39,7 +40,10 @@ def to_label_decomposed_graph(graph):
     
     assign_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_r_after_intersection")
     assign_r << graph.select(graphblas.select.select_assign_r)
+    assign_r << assign_r + graph.select(graphblas.select.select_pass_and_return).T
     print("Boolean matrix for assign_r nvals: ", assign_r.nvals)
+
+    #print_matrix_to_dot(assign_r,"assign_r.dot")
 
     load_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "load_i_after_intersection")
     load_i << graph.select(graphblas.select.select_load).apply(graphblas.unary.decode_load)
