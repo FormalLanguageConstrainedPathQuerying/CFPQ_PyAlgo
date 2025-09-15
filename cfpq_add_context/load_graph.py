@@ -25,8 +25,8 @@ def load_graph(file_path):
                 return labels.mk_store(int(data_arr[3]))
         elif data_arr[2] == "assign":
             return labels.mk_other(labels.ASSIGN)
-        elif data_arr[2] == "assign_r":
-            return labels.mk_other(labels.ASSIGN_R)
+        #elif data_arr[2] == "assign_r":
+        #    return labels.mk_other(labels.ASSIGN_R)
         elif data_arr[2] == "alloc":
             return labels.mk_other(labels.ALLOC)
         elif data_arr[2] == "alloc_r":
@@ -66,7 +66,7 @@ def load_graph(file_path):
         return (_from, _to, _lbl)
 
     with open (file_path,'r') as file:
-        edges = [handle_line(line) for line in file if len(line.strip()) > 0]
+        edges = [handle_line(line) for line in file if len(line.strip()) > 0 and not("_r") in line]
         #TODO Remove dup_op! It is a hack to avoid edges duplication.
         result = Matrix.from_edgelist(edges, dtype=UINT64, nrows=nvertices + 1, ncols=nvertices + 1, name="graph",dup_op="max")
         #print_matrix_to_dot(result, "graph.dot")

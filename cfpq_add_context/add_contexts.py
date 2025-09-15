@@ -31,7 +31,8 @@ def to_label_decomposed_graph(graph):
     print("Boolean matrix for alloc nvals: ", alloc.nvals)
     
     alloc_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "alloc_r_after_intersection")
-    alloc_r << graph.select(graphblas.select.select_alloc_r)
+    #alloc_r << graph.select(graphblas.select.select_alloc_r)
+    alloc_r << alloc.T
     print("Boolean matrix for alloc_r nvals: ", alloc_r.nvals)
 
     assign = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_after_intersection")
@@ -39,8 +40,9 @@ def to_label_decomposed_graph(graph):
     print("Boolean matrix for assign nvals: ", assign.nvals)
     
     assign_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_r_after_intersection")
-    assign_r << graph.select(graphblas.select.select_assign_r)
-    assign_r << assign_r + graph.select(graphblas.select.select_pass_and_return).T
+    #assign_r << graph.select(graphblas.select.select_assign_r)
+    #assign_r << assign_r + graph.select(graphblas.select.select_pass_and_return).T
+    assign_r << assign.T
     print("Boolean matrix for assign_r nvals: ", assign_r.nvals)
 
     #print_matrix_to_dot(assign_r,"assign_r.dot")
@@ -49,13 +51,15 @@ def to_label_decomposed_graph(graph):
     load_i << graph.select(graphblas.select.select_load).apply(graphblas.unary.decode_load)
 
     load_r_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "load_r_i_after_intersection")
-    load_r_i << graph.select(graphblas.select.select_load_r).apply(graphblas.unary.decode_load_r)
+    #load_r_i << graph.select(graphblas.select.select_load_r).apply(graphblas.unary.decode_load_r)
+    load_r_i << load_i.T
 
     store_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "store_i_after_intersection")
     store_i << graph.select(graphblas.select.select_store).apply(graphblas.unary.decode_store)
 
     store_r_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "store_r_i_after_intersection")
-    store_r_i << graph.select(graphblas.select.select_store_r).apply(graphblas.unary.decode_store_r)
+    #store_r_i << graph.select(graphblas.select.select_store_r).apply(graphblas.unary.decode_store_r)
+    store_r_i << store_i.T
 
     store_block_count = store_i.reduce_scalar("max").get(0) + 1
     load_block_count = load_i.reduce_scalar("max").get(0) + 1
