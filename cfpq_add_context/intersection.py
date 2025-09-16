@@ -66,14 +66,14 @@ def intersection (graph, automata) :
 
     #print_matrix_to_dot(intersection, "kron.dot")
 
-    entrypoints = Vector(bool,graph.nrows, name="entrypoints")
-    entrypoints << graph.select(graphblas.select.select_not_reversed).reduce_columnwise(graphblas.monoid.lor)
-    entrypoints = set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])
+    #entrypoints = Vector(bool,graph.nrows, name="entrypoints")
+    #entrypoints << graph.select(graphblas.select.select_not_reversed).reduce_columnwise(graphblas.monoid.lor)
+    #entrypoints = set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])
 
     #print("entypoints:", entrypoints)
     
-    #sources = [i * automata.nrows for i in range(0,graph.nrows)]
-    sources = [i * automata.nrows for i in entrypoints]
+    sources = [i * automata.nrows for i in range(0,graph.nrows)]
+    #sources = [i * automata.nrows for i in entrypoints]
     
 
     reachable_vertices_mask = bfs(intersection, sources).diag(name="reachable_vertices_mask")
