@@ -127,6 +127,22 @@ def add_context(file_path):
     decomposition_end = time.perf_counter()
     print("Graph decomposition competed in ", decomposition_end - intersection_end)
 
-    return decomposed_result
+    return (decomposed_result, graph.ncols)
+
+def normalize(solver_result, initial_graph_nvertices):
+    
+    normalization_start = time.perf_counter()
+    
+    c = solver_result.ncols // initial_graph_nvertices
+    start_vertices = set([i * c for i in range(0,initial_graph_nvertices)])
+    edges = solver_result.to_edgelist()
+    edges = zip(edges[0], edges[1])
+    new_edges = set([(_edg[0] // c, _edg[1] // c) for (_edg, _lbl) in edges if _edg[0] in start_vertices])
+    result = Matrix.from_edgelist(new_edges, values=True, dtype=BOOL, nrows = initial_graph_nvertices,
+                                             ncols=initial_graph_nvertices, name = "normalized_solver_result")
+    normalization_end = time.perf_counter()
+    print("Normalization of solver result done in ", normalization_end - normalization_start)
+    
+    return result
 
 

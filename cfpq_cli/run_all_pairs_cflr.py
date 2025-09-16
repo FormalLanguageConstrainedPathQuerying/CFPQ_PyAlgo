@@ -13,7 +13,7 @@ from cfpq_algo.setting.preprocessor_setting import preprocess_graph_and_grammar
 from cfpq_cli.time_limit import time_limit, TimeoutException
 from cfpq_model.cnf_grammar_template import CnfGrammarTemplate
 from cfpq_model.label_decomposed_graph import LabelDecomposedGraph
-from cfpq_add_context.add_contexts import add_context
+from cfpq_add_context.add_contexts import add_context, normalize
 
 
 def run_all_pairs_cflr(
@@ -27,16 +27,20 @@ def run_all_pairs_cflr(
 ):
     algo = get_all_pairs_cfl_reachability_algo(algo_name)
     if add_contexts:
-        graph = add_context(graph_path)
+        graph,initial_graph_nvertices = add_context(graph_path)
     else:
         graph = LabelDecomposedGraph.read_from_pocr_graph_file(graph_path)
+    print ("graph = ", graph)
     grammar = CnfGrammarTemplate.read_from_pocr_cnf_file(grammar_path)
     graph, grammar = preprocess_graph_and_grammar(graph, grammar, settings)
     try:
         with time_limit(time_limit_sec):
             start = time()
             res = algo.solve(graph=graph, grammar=grammar, settings=settings)
+            if add_contexts:
+                res = normalize(res, initial_graph_nvertices)
             finish = time()
+            print("result: ", res)
             print(f"AnalysisTime\t{finish - start}")
             print(f"#SEdges\t{res.nvals}")
             if out_path is not None:
