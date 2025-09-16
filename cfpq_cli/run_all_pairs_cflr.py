@@ -20,10 +20,10 @@ def run_all_pairs_cflr(
         algo_name: str,
         graph_path: str,
         grammar_path: str,
-        add_contexts: bool,
         time_limit_sec: Optional[int],
         out_path: Optional[str],
-        settings: List[AlgoSetting]
+        settings: List[AlgoSetting],
+        add_contexts: bool = False,
 ):
     algo = get_all_pairs_cfl_reachability_algo(algo_name)
     if add_contexts:
