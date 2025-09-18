@@ -40,10 +40,10 @@ def run_all_pairs_cflr(
             res = algo.solve(graph=graph, grammar=grammar, settings=settings)
             if add_contexts:
                 res = normalize(res, initial_graph_nvertices)
-            if not ((len(expected_path) > 0) and (verify(res, expected_path))):
-                print("Incorrect result !!!")
+            if (len(expected_path) > 0)   and not (verify(res, expected_path)):
+                print("!!! Incorrect result !!!")
             finish = time()
-            print("result: ", res)
+            #print("result: ", res)
             print(f"AnalysisTime\t{finish - start}")
             print(f"#SEdges\t{res.nvals}")
             if out_path is not None:

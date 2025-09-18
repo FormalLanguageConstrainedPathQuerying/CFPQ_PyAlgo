@@ -66,15 +66,7 @@ def intersection (graph, automata) :
 
     #print_matrix_to_dot(intersection, "kron.dot")
 
-    #entrypoints = Vector(bool,graph.nrows, name="entrypoints")
-    #entrypoints << graph.select(graphblas.select.select_not_reversed).reduce_columnwise(graphblas.monoid.lor)
-    #entrypoints = set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])
-
-    #print("entypoints:", entrypoints)
-    
-    sources = [i * automata.nrows for i in range(0,graph.nrows)]
-    #sources = [i * automata.nrows for i in entrypoints]
-    
+    sources = [i * automata.nrows for i in range(0, graph.nrows)]    
 
     reachable_vertices_mask = bfs(intersection, sources).diag(name="reachable_vertices_mask")
     
@@ -84,7 +76,7 @@ def intersection (graph, automata) :
     unreachable_vertices_removing_end = time.perf_counter()
     print("Removing of unreachable vertices done in ", unreachable_vertices_removing_end - zeroes_removing_from_intersection_end)
 
-    print_matrix_to_dot(result, "kron_filtered.dot")
+    #print_matrix_to_dot(result, "kron_filtered.dot")
     return result
 
 

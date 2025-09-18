@@ -52,10 +52,6 @@ def load_graph(file_path):
 
     with open (file_path,'r') as file:
         raw_edges = [get_raw_edge(line) for line in file if len(line.strip()) > 0 and not("_r") in line]
-        #nvertices = 0
-        #for (_from, _to, line) in raw_edges:
-        #    _max = max(_from,_to)
-        #    nvertices = max(nvertices, _max)
         
         nvertices = nvertices + 1
         
@@ -75,8 +71,6 @@ def load_graph(file_path):
                 edges[(v_from, v_to)] = get_edge_lbl(terminal)
         
         edges = [(i[0],i[1],edges[i]) for i in edges]
-        #TODO Remove dup_op! It is a hack to avoid edges duplication.
-        #result = Matrix.from_edgelist(edges, dtype=UINT64, nrows=nvertices + 1, ncols=nvertices + 1, name="graph",dup_op="max")
         
         result = Matrix.from_edgelist(edges, dtype=UINT64, nrows=nvertices, ncols=nvertices, name="graph")
         #print_matrix_to_dot(result, "graph.dot")
