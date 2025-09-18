@@ -14,6 +14,7 @@ from cfpq_cli.time_limit import time_limit, TimeoutException
 from cfpq_model.cnf_grammar_template import CnfGrammarTemplate
 from cfpq_model.label_decomposed_graph import LabelDecomposedGraph
 from cfpq_add_context.add_contexts import add_context, normalize
+from cfpq_add_context.utils import verify
 
 
 def run_all_pairs_cflr(
@@ -24,13 +25,13 @@ def run_all_pairs_cflr(
         out_path: Optional[str],
         settings: List[AlgoSetting],
         add_contexts: bool = False,
+        expected_path: str = "",
 ):
     algo = get_all_pairs_cfl_reachability_algo(algo_name)
     if add_contexts:
         graph,initial_graph_nvertices = add_context(graph_path)
     else:
         graph = LabelDecomposedGraph.read_from_pocr_graph_file(graph_path)
-    print ("graph = ", graph)
     grammar = CnfGrammarTemplate.read_from_pocr_cnf_file(grammar_path)
     graph, grammar = preprocess_graph_and_grammar(graph, grammar, settings)
     try:
@@ -39,6 +40,8 @@ def run_all_pairs_cflr(
             res = algo.solve(graph=graph, grammar=grammar, settings=settings)
             if add_contexts:
                 res = normalize(res, initial_graph_nvertices)
+            if not ((len(expected_path) > 0) and (verify(res, expected_path))):
+                print("Incorrect result !!!")
             finish = time()
             print("result: ", res)
             print(f"AnalysisTime\t{finish - start}")
@@ -90,6 +93,9 @@ def main(raw_args: List[str]):
     parser.add_argument('--add_contexts', dest='add_contexts', default=False,
                         help='Specifies whether approximation of context sensitivity should be added.'
                         )
+    parser.add_argument('--expected_path', dest='expected_path', default="",
+                        help='If specified, it will be checked wether solver\'s result is overapproximation of represented in the file.'
+                        )
     settings_manager = AlgoSettingsManager()
     settings_manager.add_args(parser)
     args = parser.parse_args(raw_args)
@@ -98,6 +104,7 @@ def main(raw_args: List[str]):
         graph_path=args.graph,
         grammar_path=args.grammar,
         add_contexts=args.add_contexts,
+        expected_path=args.expected_path,
         time_limit_sec=args.time_limit,
         out_path=args.out,
         settings=settings_manager.read_args(args)
