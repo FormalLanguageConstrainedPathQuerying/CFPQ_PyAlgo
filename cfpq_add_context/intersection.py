@@ -56,7 +56,7 @@ def intersection (graph, automata) :
     print("Edges in intersection before zeroes removing: ", intersection.nvals)
     
     #TODO remove when moved to patched kronecker
-    intersection << intersection.select(graphblas.select.filter_not_zero)
+    #intersection << intersection.select(graphblas.select.filter_not_zero)
 
     zeroes_removing_from_intersection_end = time.perf_counter()
     print("Removing of zeroes from intersection done in ", zeroes_removing_from_intersection_end - intersection_end)
