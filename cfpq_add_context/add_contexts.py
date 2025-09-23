@@ -4,7 +4,8 @@ from cfpq_add_context.load_graph import load_graph
 from cfpq_add_context.intersection import intersection
 from cfpq_add_context.gen_automata import generate
 from graphblas.core.dtypes import BOOL, UINT64
-from graphblas.core.matrix import Matrix
+from graphblas.core.matrix import Matrix, Vector
+from graphblas import op
 
 from cfpq_matrix.block.block_matrix_space_impl import BlockMatrixSpaceImpl
 from cfpq_model.cnf_grammar_template import Symbol
@@ -24,6 +25,21 @@ def indexed_to_boolean_decomposition(graph, block_count):
                                              ncols=vertex_count, name = "boolean_decomposition_of_indexed")
     return result
 
+def transitive_reduction(assigns, mask):
+    result = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "reduced_assigns")
+    result << Matrix.mxm(mask, assigns, "land_lor")
+    count = 1
+    closure = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "closure")
+    unused_assigns = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "unused_assigns")
+    unused_assigns(~result.S) << assigns
+    closure << unused_assigns
+    while closure.nvals > 0:
+        print ("Closure nvals = ", closure.nvals)
+        closure << Matrix.mxm(closure, unused_assigns, "land_lor")
+        result("lor") << Matrix.mxm(closure, mask, "land_lor")
+        closure(~result) << closure 
+    return result
+
 def to_label_decomposed_graph(graph):
     vertex_count = graph.nrows
     alloc = Matrix(BOOL, graph.ncols, graph.nrows, name = "alloc_after_intersection")
@@ -33,16 +49,6 @@ def to_label_decomposed_graph(graph):
     alloc_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "alloc_r_after_intersection")
     alloc_r << alloc.T
     print("Boolean matrix for alloc_r nvals: ", alloc_r.nvals)
-
-    assign = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_after_intersection")
-    assign << graph.select(graphblas.select.select_assign)
-    print("Boolean matrix for assign nvals: ", assign.nvals)
-    
-    assign_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_r_after_intersection")
-    assign_r << assign.T
-    print("Boolean matrix for assign_r nvals: ", assign_r.nvals)
-
-    #print_matrix_to_dot(assign_r,"assign_r.dot")
 
     load_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "load_i_after_intersection")
     load_i << graph.select(graphblas.select.select_load).apply(graphblas.unary.decode_load)
@@ -55,6 +61,50 @@ def to_label_decomposed_graph(graph):
 
     store_r_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "store_r_i_after_intersection")
     store_r_i << store_i.T
+
+    mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
+    mask_v(op.lor) << alloc.reduce_columnwise("lor")  
+    mask_v(op.lor) << alloc.reduce_rowwise("lor")
+    
+    mask_v(op.lor) << load_i.reduce_columnwise("lor")
+    mask_v(op.lor) << load_i.reduce_rowwise("lor")
+
+    mask_v(op.lor) << store_i.reduce_columnwise("lor")
+    mask_v(op.lor) << store_i.reduce_rowwise("lor")
+
+    entrypoints = Vector(bool,graph.nrows, name="entrypoints")
+    entrypoints << graph.reduce_columnwise(op.lor)
+    mask_v(op.lor) << Vector.from_coo(list(set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])), values=True, dtype = BOOL)
+
+    assign_mask = mask_v.diag(name = "assign_mask")
+    
+
+    assign = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_after_intersection")
+    assign << graph.select(graphblas.select.select_assign)
+    print("Boolean matrix for assign nvals: ", assign.nvals)
+    
+    
+    assign << transitive_reduction(assign, assign_mask)
+
+    #assign_res = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_after_transitive_reduction")
+    #assign_1 = Matrix.mxm(assign_mask, assign, "land_lor")
+    #print("Boolean matrix for assign of length 1 nvals: ", assign_1.nvals)
+    #assign_to_use(~assign_1) << assign
+    #_continue = True
+    #while _continue:
+    #    assign_i = Matrix.mxm(assign_to_use, assign_to_use, "land_lor")
+    #    print("Boolean matrix for assign of length 1 nvals: ", assign_i.nvals)
+    #    assign_i_use = Matrix.mxm(assign_mask, assign_i, "land_lor")
+    #    assign_res("lor") << assign_i_use
+
+    
+    assign_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_r_after_intersection")
+    assign_r << assign.T
+    print("Boolean matrix for assign_r nvals: ", assign_r.nvals)
+
+    #print_matrix_to_dot(assign_r,"assign_r.dot")
+
+    
 
     store_block_count = store_i.reduce_scalar("max").get(0) + 1
     load_block_count = load_i.reduce_scalar("max").get(0) + 1
