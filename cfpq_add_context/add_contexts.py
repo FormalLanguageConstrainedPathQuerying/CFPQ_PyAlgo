@@ -29,15 +29,16 @@ def transitive_reduction(assigns, mask):
     result = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "reduced_assigns")
     result << Matrix.mxm(mask, assigns, "land_lor")
     count = 1
-    closure = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "closure")
+    #closure = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "closure")
     unused_assigns = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "unused_assigns")
     unused_assigns(~result.S) << assigns
-    closure << unused_assigns
+    closure = unused_assigns
     while closure.nvals > 0:
         print ("Closure nvals = ", closure.nvals)
         closure << Matrix.mxm(closure, unused_assigns, "land_lor")
         result("lor") << Matrix.mxm(closure, mask, "land_lor")
-        closure(~result) << closure 
+        new_closure = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "closure")
+        new_closure(~result) << closure
     return result
 
 def to_label_decomposed_graph(graph):
