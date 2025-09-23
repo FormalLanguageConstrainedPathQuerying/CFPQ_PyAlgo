@@ -113,6 +113,7 @@ def main(raw_args: List[str]):
         expected_path=args.expected_path,
         time_limit_sec=args.time_limit,
         out_path=args.out,
+        max_num_of_contexts=args.max_num_of_contexts,
         settings=settings_manager.read_args(args)
     )
     settings_manager.report_unused()
