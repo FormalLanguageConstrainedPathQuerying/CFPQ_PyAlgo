@@ -56,12 +56,13 @@ def to_label_decomposed_graph(graph):
     alloc_r << alloc.T
     print("Boolean matrix for alloc_r nvals: ", alloc_r.nvals)
 
-    print("mask start")
-    mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
-    mask_v(op.lor) << alloc.reduce_columnwise("lor")  
-    mask_v(op.lor) << alloc.reduce_rowwise("lor")
+    #print("mask start")
+    #mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
+    #mask_v(op.lor) << alloc.reduce_columnwise("lor")  
+    #mask_v(op.lor) << alloc.reduce_rowwise("lor")
 
-    print("entrypoints start")
+    #print("entrypoints start")
+
     #entrypoints = Vector(bool,graph.nrows, name="entrypoints")
     #entrypoints << graph.reduce_columnwise(op.lor)
     #mask_v(op.lor) << Vector.from_coo(list(set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])), values=True, dtype = BOOL)
@@ -74,11 +75,11 @@ def to_label_decomposed_graph(graph):
     store_i << graph.select(graphblas.select.select_store).apply(graphblas.unary.decode_store)
     print("Matrix for store_i nvals: ", store_i.nvals)
 
-    mask_v(op.lor) << load_i.reduce_columnwise("lor")
-    mask_v(op.lor) << load_i.reduce_rowwise("lor")
+    #mask_v(op.lor) << load_i.reduce_columnwise("lor")
+    #mask_v(op.lor) << load_i.reduce_rowwise("lor")
 
-    mask_v(op.lor) << store_i.reduce_columnwise("lor")
-    mask_v(op.lor) << store_i.reduce_rowwise("lor")
+    #mask_v(op.lor) << store_i.reduce_columnwise("lor")
+    #mask_v(op.lor) << store_i.reduce_rowwise("lor")
 
     store_block_count = store_i.reduce_scalar("max").get(0) + 1
     load_block_count = load_i.reduce_scalar("max").get(0) + 1
@@ -106,7 +107,7 @@ def to_label_decomposed_graph(graph):
 
     
     
-    assign_mask = mask_v.diag(name = "assign_mask")
+    #assign_mask = mask_v.diag(name = "assign_mask")
     
     assign = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_after_intersection")
     assign << graph.select(graphblas.select.select_assign)
@@ -133,17 +134,6 @@ def to_label_decomposed_graph(graph):
 
     #print_matrix_to_dot(assign_r,"assign_r.dot")
 
-    
-
-    
-
-    
-
-    
-
-    
-    
-
     matrices: Dict[Symbol, Matrix] = {}
 
     matrices[Symbol('alloc')] = alloc
@@ -164,10 +154,10 @@ def to_label_decomposed_graph(graph):
                 matrices=matrices
             )
 
-def add_context(file_path):
+def add_context(file_path, max_num_of_contexts):
     load_graph_start = time.perf_counter()
     
-    graph,number_of_contexts = load_graph(file_path)
+    graph,number_of_contexts = load_graph(file_path, max_num_of_contexts)
     
     load_graph_end = time.perf_counter()
     print("Graph loaded in ", load_graph_end - load_graph_start)

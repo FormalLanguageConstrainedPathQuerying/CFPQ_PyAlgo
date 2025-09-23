@@ -8,7 +8,7 @@ from cfpq_add_context.utils import print_matrix_to_dot
 
 
 
-def load_graph(file_path):
+def load_graph(file_path, max_num_of_contexts = 30):
     nvertices = 0
     number_of_contexts = 0
     def get_edge_lbl(terminal):
@@ -25,13 +25,13 @@ def load_graph(file_path):
         elif data_arr[0] == "alloc":
             return labels.mk_other(labels.ALLOC)
         elif "open" in data_arr[0]:
-            _context =  int(data_arr[0].split('_')[1])
+            _context =  int(data_arr[0].split('_')[1]) % max_num_of_contexts
             res = labels.mk_open_context_from_pass(_context)
 
             number_of_contexts = max(number_of_contexts, _context)
             return res
         elif "close" in data_arr[0]:
-            _context = int(data_arr[0].split('_')[1])
+            _context = int(data_arr[0].split('_')[1]) % max_num_of_contexts
             res = labels.mk_close_context_from_ret(_context)
             number_of_contexts = max(number_of_contexts, _context)
             return res

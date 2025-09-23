@@ -26,10 +26,12 @@ def run_all_pairs_cflr(
         settings: List[AlgoSetting],
         add_contexts: bool = False,
         expected_path: str = "",
+        max_num_of_contexts = 30,
 ):
+    total_start = time()
     algo = get_all_pairs_cfl_reachability_algo(algo_name)
     if add_contexts:
-        graph,initial_graph_nvertices = add_context(graph_path)
+        graph,initial_graph_nvertices = add_context(graph_path, max_num_of_contexts)
     else:
         graph = LabelDecomposedGraph.read_from_pocr_graph_file(graph_path)
     grammar = CnfGrammarTemplate.read_from_pocr_cnf_file(grammar_path)
@@ -53,6 +55,8 @@ def run_all_pairs_cflr(
                 with open(out_path, 'w', encoding="utf-8") as out_file:
                     for (source, target) in res:
                         out_file.write(f"{source}\t{target}\n")
+            print ("Graph name: ", graph_path)
+            print("Total execution time = ", time() - total_start)
     except TimeoutException:
         print("AnalysisTime\tNaN")
         print("#SEdges\tNaN")
@@ -83,6 +87,8 @@ def main(raw_args: List[str]):
                              '`Count:\\n <START_NON_TERMINAL>`.')
     parser.add_argument('--time-limit', dest='time_limit', default=None, type=int,
                         help='Sets a time limit in seconds.')
+    parser.add_argument('--max-num-of-contexts', dest='max_num_of_contexts', default=30, type=int,
+                        help='Sets a maximal number of contexts.')
     parser.add_argument('--out', dest='out', default=None,
                         help='Specifies the output file for saving vertex pairs. '
                              'The line format is: `[START_VERTEX]\t[END_VERTEX]`. '
