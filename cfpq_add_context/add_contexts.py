@@ -65,7 +65,7 @@ def to_label_decomposed_graph(graph):
     #entrypoints = Vector(bool,graph.nrows, name="entrypoints")
     #entrypoints << graph.reduce_columnwise(op.lor)
     #mask_v(op.lor) << Vector.from_coo(list(set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])), values=True, dtype = BOOL)
-    
+
     load_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "load_i_after_intersection")
     load_i << graph.select(graphblas.select.select_load).apply(graphblas.unary.decode_load)
     print("Matrix for load_i nvals: ", load_i.nvals)
@@ -113,7 +113,7 @@ def to_label_decomposed_graph(graph):
     print("Boolean matrix for assign nvals: ", assign.nvals)
     
     
-    assign << transitive_reduction(assign, assign_mask)
+    # !!! assign << transitive_reduction(assign, assign_mask)
 
     #assign_res = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_after_transitive_reduction")
     #assign_1 = Matrix.mxm(assign_mask, assign, "land_lor")
