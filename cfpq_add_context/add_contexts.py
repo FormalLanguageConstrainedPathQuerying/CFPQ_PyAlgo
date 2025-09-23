@@ -56,35 +56,56 @@ def to_label_decomposed_graph(graph):
     alloc_r << alloc.T
     print("Boolean matrix for alloc_r nvals: ", alloc_r.nvals)
 
-    load_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "load_i_after_intersection")
-    load_i << graph.select(graphblas.select.select_load).apply(graphblas.unary.decode_load)
-
-    load_r_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "load_r_i_after_intersection")
-    load_r_i << load_i.T
-
-    store_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "store_i_after_intersection")
-    store_i << graph.select(graphblas.select.select_store).apply(graphblas.unary.decode_store)
-
-    store_r_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "store_r_i_after_intersection")
-    store_r_i << store_i.T
-
     mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
     mask_v(op.lor) << alloc.reduce_columnwise("lor")  
     mask_v(op.lor) << alloc.reduce_rowwise("lor")
-    
+
+    entrypoints = Vector(bool,graph.nrows, name="entrypoints")
+    entrypoints << graph.reduce_columnwise(op.lor)
+    mask_v(op.lor) << Vector.from_coo(list(set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])), values=True, dtype = BOOL)
+
+    load_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "load_i_after_intersection")
+    load_i << graph.select(graphblas.select.select_load).apply(graphblas.unary.decode_load)
+    print("Matrix for load_i nvals: ", load_i.nvals)
+
+    store_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "store_i_after_intersection")
+    store_i << graph.select(graphblas.select.select_store).apply(graphblas.unary.decode_store)
+    print("Matrix for store_i nvals: ", store_i.nvals)
+
     mask_v(op.lor) << load_i.reduce_columnwise("lor")
     mask_v(op.lor) << load_i.reduce_rowwise("lor")
 
     mask_v(op.lor) << store_i.reduce_columnwise("lor")
     mask_v(op.lor) << store_i.reduce_rowwise("lor")
 
-    entrypoints = Vector(bool,graph.nrows, name="entrypoints")
-    entrypoints << graph.reduce_columnwise(op.lor)
-    mask_v(op.lor) << Vector.from_coo(list(set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])), values=True, dtype = BOOL)
+    store_block_count = store_i.reduce_scalar("max").get(0) + 1
+    load_block_count = load_i.reduce_scalar("max").get(0) + 1
+    block_count = max(store_block_count, load_block_count)    
 
+    boolean_decompose_load = indexed_to_boolean_decomposition(load_i, block_count)
+    print("Boolean matrix for load nvals: ", boolean_decompose_load.nvals)
+
+    boolean_decompose_store = indexed_to_boolean_decomposition(store_i, block_count)
+    print("Boolean matrix for store nvals: ", boolean_decompose_store.nvals)
+
+    load_r_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "load_r_i_after_intersection")
+    load_r_i << load_i.T
+    print("Matrix for load_r_i nvals: ", load_r_i.nvals)
+
+    boolean_decompose_load_r = indexed_to_boolean_decomposition(load_r_i, block_count)
+    print("Boolean matrix for load_r nvals: ", boolean_decompose_load_r.nvals)
+
+    store_r_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "store_r_i_after_intersection")
+    store_r_i << store_i.T
+    print("Matrix for store_r_i nvals: ", store_r_i.nvals)
+
+    boolean_decompose_store_r = indexed_to_boolean_decomposition(store_r_i, block_count)
+    print("Boolean matrix for store_r nvals: ", boolean_decompose_store_r.nvals)
+
+    
+    
     assign_mask = mask_v.diag(name = "assign_mask")
     
-
     assign = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_after_intersection")
     assign << graph.select(graphblas.select.select_assign)
     print("Boolean matrix for assign nvals: ", assign.nvals)
@@ -103,30 +124,22 @@ def to_label_decomposed_graph(graph):
     #    assign_i_use = Matrix.mxm(assign_mask, assign_i, "land_lor")
     #    assign_res("lor") << assign_i_use
 
-    
     assign_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_r_after_intersection")
     assign_r << assign.T
     print("Boolean matrix for assign_r nvals: ", assign_r.nvals)
+    
 
     #print_matrix_to_dot(assign_r,"assign_r.dot")
 
     
 
-    store_block_count = store_i.reduce_scalar("max").get(0) + 1
-    load_block_count = load_i.reduce_scalar("max").get(0) + 1
-    block_count = max(store_block_count, load_block_count)
+    
 
-    boolean_decompose_load = indexed_to_boolean_decomposition(load_i, block_count)
-    print("Boolean matrix for load nvals: ", boolean_decompose_load.nvals)
+    
 
-    boolean_decompose_load_r = indexed_to_boolean_decomposition(load_r_i, block_count)
-    print("Boolean matrix for load_r nvals: ", boolean_decompose_load_r.nvals)
+    
 
-    boolean_decompose_store = indexed_to_boolean_decomposition(store_i, block_count)
-    print("Boolean matrix for store nvals: ", boolean_decompose_store.nvals)
-
-    boolean_decompose_store_r = indexed_to_boolean_decomposition(store_r_i, block_count)
-    print("Boolean matrix for store_r nvals: ", boolean_decompose_store_r.nvals)
+    
     
 
     matrices: Dict[Symbol, Matrix] = {}
