@@ -46,7 +46,7 @@ def transitive_reduction(assigns, mask):
             break
     return result
 
-def to_label_decomposed_graph(graph):
+def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
     vertex_count = graph.nrows
     alloc = Matrix(BOOL, graph.ncols, graph.nrows, name = "alloc_after_intersection")
     alloc << graph.select(graphblas.select.select_alloc)
@@ -56,16 +56,17 @@ def to_label_decomposed_graph(graph):
     alloc_r << alloc.T
     print("Boolean matrix for alloc_r nvals: ", alloc_r.nvals)
 
-    #print("mask start")
-    #mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
-    #mask_v(op.lor) << alloc.reduce_columnwise("lor")  
-    #mask_v(op.lor) << alloc.reduce_rowwise("lor")
+    print("mask start")
+    mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
+    mask_v(op.lor) << alloc.reduce_columnwise("lor")  
+    mask_v(op.lor) << alloc.reduce_rowwise("lor")
 
-    #print("entrypoints start")
+    print("entrypoints start")
 
     #entrypoints = Vector(bool,graph.nrows, name="entrypoints")
     #entrypoints << graph.reduce_columnwise(op.lor)
     #mask_v(op.lor) << Vector.from_coo(list(set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])), values=True, dtype = BOOL)
+    mask_v(op.lor) << Vector.from_coo([i * automata_size for i in range(0, initial_graph_size)], values=True, dtype = BOOL, size= graph.ncols)
 
     load_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "load_i_after_intersection")
     load_i << graph.select(graphblas.select.select_load).apply(graphblas.unary.decode_load)
@@ -75,11 +76,11 @@ def to_label_decomposed_graph(graph):
     store_i << graph.select(graphblas.select.select_store).apply(graphblas.unary.decode_store)
     print("Matrix for store_i nvals: ", store_i.nvals)
 
-    #mask_v(op.lor) << load_i.reduce_columnwise("lor")
-    #mask_v(op.lor) << load_i.reduce_rowwise("lor")
+    mask_v(op.lor) << load_i.reduce_columnwise("lor")
+    mask_v(op.lor) << load_i.reduce_rowwise("lor")
 
-    #mask_v(op.lor) << store_i.reduce_columnwise("lor")
-    #mask_v(op.lor) << store_i.reduce_rowwise("lor")
+    mask_v(op.lor) << store_i.reduce_columnwise("lor")
+    mask_v(op.lor) << store_i.reduce_rowwise("lor")
 
     store_block_count = store_i.reduce_scalar("max").get(0) + 1
     load_block_count = load_i.reduce_scalar("max").get(0) + 1
@@ -107,14 +108,14 @@ def to_label_decomposed_graph(graph):
 
     
     
-    #assign_mask = mask_v.diag(name = "assign_mask")
+    assign_mask = mask_v.diag(name = "assign_mask")
     
     assign = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_after_intersection")
     assign << graph.select(graphblas.select.select_assign)
     print("Boolean matrix for assign nvals: ", assign.nvals)
     
     
-    # !!! assign << transitive_reduction(assign, assign_mask)
+    assign << transitive_reduction(assign, assign_mask)
 
     #assign_res = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_after_transitive_reduction")
     #assign_1 = Matrix.mxm(assign_mask, assign, "land_lor")
@@ -179,7 +180,7 @@ def add_context(file_path, max_num_of_contexts):
     print("Vertices in intersection: ", result.ncols)
     print("Edges in intersection: ", result.nvals)
     
-    decomposed_result = to_label_decomposed_graph(result)
+    decomposed_result = to_label_decomposed_graph(result, automata.nrows, graph.nrows)
     decomposition_end = time.perf_counter()
     print("Graph decomposition competed in ", decomposition_end - intersection_end)
 
