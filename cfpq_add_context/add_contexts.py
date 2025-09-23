@@ -56,14 +56,16 @@ def to_label_decomposed_graph(graph):
     alloc_r << alloc.T
     print("Boolean matrix for alloc_r nvals: ", alloc_r.nvals)
 
+    print("mask start")
     mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
     mask_v(op.lor) << alloc.reduce_columnwise("lor")  
     mask_v(op.lor) << alloc.reduce_rowwise("lor")
 
-    entrypoints = Vector(bool,graph.nrows, name="entrypoints")
-    entrypoints << graph.reduce_columnwise(op.lor)
-    mask_v(op.lor) << Vector.from_coo(list(set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])), values=True, dtype = BOOL)
-
+    print("entrypoints start")
+    #entrypoints = Vector(bool,graph.nrows, name="entrypoints")
+    #entrypoints << graph.reduce_columnwise(op.lor)
+    #mask_v(op.lor) << Vector.from_coo(list(set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])), values=True, dtype = BOOL)
+    
     load_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "load_i_after_intersection")
     load_i << graph.select(graphblas.select.select_load).apply(graphblas.unary.decode_load)
     print("Matrix for load_i nvals: ", load_i.nvals)
