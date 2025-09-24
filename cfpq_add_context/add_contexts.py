@@ -28,23 +28,23 @@ def indexed_to_boolean_decomposition(graph, block_count):
 def transitive_reduction(assigns, mask):
     result = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "reduced_assigns")
     result << Matrix.mxm(mask, assigns, "any_pair")
-    #total = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "closure")
+    total = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "closure")
     unused_assigns = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "unused_assigns")
     unused_assigns(~result.S) << assigns
     closure = unused_assigns
-    #total("any") << closure
-    while closure.nvals > 0:
-    #while True:
+    total("any") << closure
+    #while closure.nvals > 0:
+    while True:
         print ("Closure nvals = ", closure.nvals)
         closure << Matrix.mxm(closure, unused_assigns, "any_pair")
         result("any") << Matrix.mxm(closure, mask, "any_pair")
         new_closure = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "closure")
         new_closure(~result.S) << closure
-        #nnz = total.nvals
-     #   total("any") << closure
+        nnz = total.nvals
+        total("any") << closure
         closure = new_closure
-      #  if total.nvals == nnz:
-       #     break
+        if total.nvals == nnz:
+            break
     return result
 
 def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
