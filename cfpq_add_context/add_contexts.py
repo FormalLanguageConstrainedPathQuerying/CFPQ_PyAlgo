@@ -202,8 +202,8 @@ def normalize(solver_result, initial_graph_nvertices):
     # start_vertices = set([i * atm_size for i in range(0,initial_graph_nvertices)])
     edges = solver_result.to_edgelist()
     edges = zip(edges[0], edges[1])
-    #new_edges = set([(_edg[0] // atm_size, _edg[1] // atm_size) for (_edg, _lbl) in edges if _edg[0] in start_vertices])
-    new_edges = set([(_edg[0] // atm_size, _edg[1] // atm_size) for (_edg, _lbl) in edges])
+    new_edges = set([(_edg[0] // atm_size, _edg[1] // atm_size) for (_edg, _lbl) in edges if _edg[0] in start_vertices])
+    #new_edges = set([(_edg[0] // atm_size, _edg[1] // atm_size) for (_edg, _lbl) in edges])
     result = Matrix.from_edgelist(new_edges, values=True, dtype=BOOL, nrows = initial_graph_nvertices,
                                              ncols=initial_graph_nvertices, name = "normalized_solver_result")
     normalization_end = time.perf_counter()
