@@ -46,11 +46,11 @@ def transitive_reduction(assigns, vertices_with_other_edges):
         filter(~x.S) << endpoints
 
         #print("Filter: ", filter)        
-        to_result = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "to_result")
-        to_result << (Matrix.mxm(new_frontier, filter, "any_pair"))
+        #to_result = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "to_result")
+        #to_result << (Matrix.mxm(new_frontier, filter, "any_pair"))
         #print("To result: ", to_result)
 
-        result("any") << to_result
+        result("any") << (Matrix.mxm(new_frontier, filter, "any_pair"))
 
         print ("Result nvals = ", result.nvals)
 
@@ -194,12 +194,14 @@ def add_context(file_path, max_num_of_contexts):
 
     return (decomposed_result, graph.ncols)
 
+
 def normalize(solver_result, initial_graph_nvertices):
     
     normalization_start = time.perf_counter()
     
     atm_size = solver_result.ncols // initial_graph_nvertices
     start_vertices = set([i * atm_size for i in range(0,initial_graph_nvertices)])
+    solver_result.Select(lambda (x,i,j,k): i % atm_size == 0)
     edges = solver_result.to_edgelist()
     edges = zip(edges[0], edges[1])
     new_edges = set([(_edg[0] // atm_size, _edg[1] // atm_size) for (_edg, _lbl) in edges if _edg[0] in start_vertices])
