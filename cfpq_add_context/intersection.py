@@ -34,7 +34,7 @@ def bfs (matrix, sources):
         if new_frontier.nvals == 0:
             break
 
-        reachable(op.land) << new_frontier
+        reachable("any") << new_frontier
         
         frontier = new_frontier
     
