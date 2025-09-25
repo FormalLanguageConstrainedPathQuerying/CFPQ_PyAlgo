@@ -199,7 +199,7 @@ def normalize(solver_result, initial_graph_nvertices):
     normalization_start = time.perf_counter()
     
     atm_size = solver_result.ncols // initial_graph_nvertices
-    # start_vertices = set([i * atm_size for i in range(0,initial_graph_nvertices)])
+    start_vertices = set([i * atm_size for i in range(0,initial_graph_nvertices)])
     edges = solver_result.to_edgelist()
     edges = zip(edges[0], edges[1])
     new_edges = set([(_edg[0] // atm_size, _edg[1] // atm_size) for (_edg, _lbl) in edges if _edg[0] in start_vertices])
