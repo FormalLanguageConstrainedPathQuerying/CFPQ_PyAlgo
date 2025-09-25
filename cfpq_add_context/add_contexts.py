@@ -6,6 +6,7 @@ from cfpq_add_context.gen_automata import generate
 from graphblas.core.dtypes import BOOL, UINT64
 from graphblas.core.matrix import Matrix, Vector
 from graphblas import op
+from graphblas.core.operator import Monoid, BinaryOp, SelectOp, UnaryOp
 
 from cfpq_matrix.block.block_matrix_space_impl import BlockMatrixSpaceImpl
 from cfpq_model.cnf_grammar_template import Symbol
@@ -194,6 +195,12 @@ def add_context(file_path, max_num_of_contexts):
 
     return (decomposed_result, graph.ncols)
 
+def select_result(atm_size):
+    def inner(x,i,j,k):
+        return i % atm_size == 0
+    return inner
+
+SelectOp.register_new("select_result", select_result, parameterized = True)
 
 def normalize(solver_result, initial_graph_nvertices):
     
@@ -201,7 +208,7 @@ def normalize(solver_result, initial_graph_nvertices):
     
     atm_size = solver_result.ncols // initial_graph_nvertices
     start_vertices = set([i * atm_size for i in range(0,initial_graph_nvertices)])
-    solver_result.Select(lambda (x,i,j,k): i % atm_size == 0)
+    solver_result = solver_result.select(graphblas.select.select_result(atm_size))
     edges = solver_result.to_edgelist()
     edges = zip(edges[0], edges[1])
     new_edges = set([(_edg[0] // atm_size, _edg[1] // atm_size) for (_edg, _lbl) in edges if _edg[0] in start_vertices])
