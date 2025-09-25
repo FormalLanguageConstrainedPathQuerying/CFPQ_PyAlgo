@@ -51,7 +51,7 @@ def transitive_reduction(assigns, vertices_with_other_edges):
         #to_result << (Matrix.mxm(new_frontier, filter, "any_pair"))
         #print("To result: ", to_result)
 
-        result("any") << (Matrix.mxm(filter, new_frontier, "any_pair"))
+        result("any") << (Matrix.mxm(new_frontier, filter, "any_pair"))
 
         print ("Result nvals = ", result.nvals)
 
