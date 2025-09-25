@@ -15,8 +15,6 @@ from cfpq_add_context.utils import print_matrix_to_dot
 import time
 
 def indexed_to_boolean_decomposition(graph, block_count):
-    #print("graph = ", graph)
-    #print("block count = ", block_count )
     vertex_count = graph.nrows
     edges = graph.to_edgelist()
     edges = zip(edges[0], edges[1])
@@ -27,20 +25,30 @@ def indexed_to_boolean_decomposition(graph, block_count):
 
 def transitive_reduction(assigns, vertices_with_other_edges):
     result = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "reduced_assigns")
-    filter = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "filter")
+    endpoints = vertices_with_other_edges.diag(name = "endpoints") 
+    assigns_transposed = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "assigns_transposed")
+    assigns_transposed("any") << assigns.T
     frontier = vertices_with_other_edges.diag(name = "frontier")
-    filter("any") << frontier
+    #filter("any") << frontier
     visited = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "visited")
     visited("any") << frontier
     while True:
         print ("Frontier nvals = ", frontier.nvals)
-        
+        #print("Frontier: ", frontier)
         if frontier.nvals == 0:
             break
-        new_frontier = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "new_frontier")
+        new_frontier = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "new_frontier")        
         new_frontier(~visited.S) << Matrix.mxm(frontier, assigns, "any_pair")
+        #print("New frontier: ", new_frontier)
+        filter = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "filter")
+        #print("Endpoints: ", endpoints)
+        x = new_frontier.reduce_rowwise("any").diag() 
+        filter(~x.S) << endpoints
+
+        #print("Filter: ", filter)        
         to_result = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "to_result")
-        to_result << (Matrix.mxm(filter, new_frontier, "any_pair"))
+        to_result << (Matrix.mxm(new_frontier, filter, "any_pair"))
+        #print("To result: ", to_result)
 
         result("any") << to_result
 
@@ -50,6 +58,7 @@ def transitive_reduction(assigns, vertices_with_other_edges):
         
         new_frontier_2 = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "new_frontier_2")
         new_frontier_2(~result.S) << new_frontier
+        #print("New frontier 2: ", new_frontier_2)
         frontier = new_frontier_2
 
     return result
@@ -128,21 +137,9 @@ def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
     
     assign << transitive_reduction(assign, mask_v)
 
-    #assign_res = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_after_transitive_reduction")
-    #assign_1 = Matrix.mxm(assign_mask, assign, "land_lor")
-    #print("Boolean matrix for assign of length 1 nvals: ", assign_1.nvals)
-    #assign_to_use(~assign_1) << assign
-    #_continue = True
-    #while _continue:
-    #    assign_i = Matrix.mxm(assign_to_use, assign_to_use, "land_lor")
-    #    print("Boolean matrix for assign of length 1 nvals: ", assign_i.nvals)
-    #    assign_i_use = Matrix.mxm(assign_mask, assign_i, "land_lor")
-    #    assign_res("lor") << assign_i_use
-
     assign_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_r_after_intersection")
     assign_r << assign.T
     print("Boolean matrix for assign_r nvals: ", assign_r.nvals)
-    
 
     #print_matrix_to_dot(assign_r,"assign_r.dot")
 
@@ -215,3 +212,7 @@ def normalize(solver_result, initial_graph_nvertices):
     return result
 
 
+def transitive_reduction_test():
+    m = Matrix.from_edgelist([(0,1),(1,2),(1,3)],values=True,dtype=BOOL,nrows=4,ncols=4)
+    v = Vector.from_coo([0,2,3],values=True)
+    return transitive_reduction(m,v)
