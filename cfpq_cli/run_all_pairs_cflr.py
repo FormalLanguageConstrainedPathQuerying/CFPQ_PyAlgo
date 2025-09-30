@@ -27,11 +27,12 @@ def run_all_pairs_cflr(
         add_contexts: bool = False,
         expected_path: str = "",
         max_num_of_contexts = 30,
+        depth=1,
 ):
     total_start = time()
     algo = get_all_pairs_cfl_reachability_algo(algo_name)
     if add_contexts:
-        graph,initial_graph_nvertices = add_context(graph_path, max_num_of_contexts)
+        graph,initial_graph_nvertices = add_context(graph_path, max_num_of_contexts,depth)
     else:
         graph = LabelDecomposedGraph.read_from_pocr_graph_file(graph_path)
     grammar = CnfGrammarTemplate.read_from_pocr_cnf_file(grammar_path)
@@ -89,6 +90,8 @@ def main(raw_args: List[str]):
                         help='Sets a time limit in seconds.')
     parser.add_argument('--max-num-of-contexts', dest='max_num_of_contexts', default=30, type=int,
                         help='Sets a maximal number of contexts.')
+    parser.add_argument('--depth-of-contexts', dest='depth', default=1, type=int,
+                        help='Sets a maximal depth of contexts.')
     parser.add_argument('--out', dest='out', default=None,
                         help='Specifies the output file for saving vertex pairs. '
                              'The line format is: `[START_VERTEX]\t[END_VERTEX]`. '
@@ -114,6 +117,7 @@ def main(raw_args: List[str]):
         time_limit_sec=args.time_limit,
         out_path=args.out,
         max_num_of_contexts=args.max_num_of_contexts,
+        depth = args.depth,
         settings=settings_manager.read_args(args)
     )
     settings_manager.report_unused()

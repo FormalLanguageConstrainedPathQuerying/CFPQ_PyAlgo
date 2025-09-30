@@ -164,7 +164,7 @@ def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
                 matrices=matrices
             )
 
-def add_context(file_path, max_num_of_contexts):
+def add_context(file_path, max_num_of_contexts, depth):
     load_graph_start = time.perf_counter()
     
     graph,number_of_contexts = load_graph(file_path, max_num_of_contexts)
@@ -175,7 +175,7 @@ def add_context(file_path, max_num_of_contexts):
     print("Edges in graph: ", graph.nvals)
     print("Numer of contexts: ", number_of_contexts)
     
-    automata = generate(number_of_contexts)
+    automata = generate(number_of_contexts, depth)
     
     automata_generation_end = time.perf_counter()
     print("Automata generated in ", automata_generation_end - load_graph_end)
