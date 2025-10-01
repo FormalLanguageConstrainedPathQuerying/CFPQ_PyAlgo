@@ -16,6 +16,7 @@ from cfpq_model.label_decomposed_graph import LabelDecomposedGraph
 from cfpq_add_context.add_contexts import add_context, normalize
 from cfpq_add_context.utils import verify
 
+import graphblas
 
 def run_all_pairs_cflr(
         algo_name: str,
@@ -27,8 +28,10 @@ def run_all_pairs_cflr(
         add_contexts: bool = False,
         expected_path: str = "",
         max_num_of_contexts = 30,
+        trace_graphblas = False,
         depth=1,
 ):
+    if trace_graphblas: graphblas.ss.burble.enable()
     total_start = time()
     algo = get_all_pairs_cfl_reachability_algo(algo_name)
     if add_contexts:
@@ -102,6 +105,9 @@ def main(raw_args: List[str]):
     parser.add_argument('--add_contexts', dest='add_contexts', default=False,
                         help='Specifies whether approximation of context sensitivity should be added.'
                         )
+    parser.add_argument('--trace-graphblas', dest='trace_graphblas', default=False,
+                        help='Turn GraphBLAS burble on.'
+                        )                        
     parser.add_argument('--expected_path', dest='expected_path', default="",
                         help='If specified, it will be checked wether solver\'s result is overapproximation of represented in the file.'
                         )
@@ -113,6 +119,7 @@ def main(raw_args: List[str]):
         graph_path=args.graph,
         grammar_path=args.grammar,
         add_contexts=args.add_contexts,
+        trace_graphblas=args.trace_graphblas,
         expected_path=args.expected_path,
         time_limit_sec=args.time_limit,
         out_path=args.out,
