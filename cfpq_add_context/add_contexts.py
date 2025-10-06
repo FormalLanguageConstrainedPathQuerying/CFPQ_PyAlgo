@@ -75,10 +75,10 @@ def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
     print("Boolean matrix for alloc_r nvals: ", alloc_r.nvals)
 
     print("mask start")
-    #mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
+    mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
     ####exit_mask_v = Vector(BOOL, graph.ncols, name = "exit_mask_vector")
-    #mask_v("any") << alloc.reduce_columnwise("any")
-    #mask_v("any") << alloc.reduce_rowwise("any")
+    mask_v("any") << alloc.reduce_columnwise("any")
+    mask_v("any") << alloc.reduce_rowwise("any")
 
     print("entrypoints start")
 
@@ -97,11 +97,11 @@ def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
     store_i << graph.select(graphblas.select.select_store).apply(graphblas.unary.decode_store)
     print("Matrix for store_i nvals: ", store_i.nvals)
 
-    #mask_v("any") << load_i.reduce_columnwise("any")
-    #mask_v("any") << load_i.reduce_rowwise("any")
+    mask_v("any") << load_i.reduce_columnwise("any")
+    mask_v("any") << load_i.reduce_rowwise("any")
 
-    #mask_v("any") << store_i.reduce_columnwise("any")
-    #mask_v("any") << store_i.reduce_rowwise("any")
+    mask_v("any") << store_i.reduce_columnwise("any")
+    mask_v("any") << store_i.reduce_rowwise("any")
 
     store_block_count = store_i.reduce_scalar("max").get(0) + 1
     load_block_count = load_i.reduce_scalar("max").get(0) + 1
@@ -137,7 +137,7 @@ def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
     print("Boolean matrix for assign nvals: ", assign.nvals)
     
     
-    #assign << transitive_reduction(assign, mask_v)
+    assign << transitive_reduction(assign, mask_v)
 
     assign_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_r_after_intersection")
     assign_r << assign.T
