@@ -41,7 +41,7 @@ def generate (number_of_contexts, depth):
              [(i,i,SIGMA_WITHOUT_CONTEXTS) for i in range(1,final)] +
              [(i,final,ALL_OPEN_CONTEXTS) for i in current_level]+
              [(final,final,SIGMA)])
-    print("edges: ", edges)
+    #print("edges: ", edges)
     result = Matrix.from_edgelist(edges, dtype=UINT64, nrows=final + 1, ncols=final + 1, name="automata")
     
     print_matrix_to_dot(result, "atm.dot")
