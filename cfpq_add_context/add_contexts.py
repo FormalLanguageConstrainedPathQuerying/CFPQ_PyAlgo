@@ -75,18 +75,19 @@ def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
     print("Boolean matrix for alloc_r nvals: ", alloc_r.nvals)
 
     print("mask start")
-    mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
-    #exit_mask_v = Vector(BOOL, graph.ncols, name = "exit_mask_vector")
-    mask_v("any") << alloc.reduce_columnwise("any")
-    mask_v("any") << alloc.reduce_rowwise("any")
+    #mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
+    ####exit_mask_v = Vector(BOOL, graph.ncols, name = "exit_mask_vector")
+    #mask_v("any") << alloc.reduce_columnwise("any")
+    #mask_v("any") << alloc.reduce_rowwise("any")
 
     print("entrypoints start")
 
-    entrypoints = Vector(bool,graph.nrows, name="entrypoints")
-    entrypoints << graph.reduce_columnwise(op.lor)
-    #mask_v(op.lor) << Vector.from_coo(list(set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])), values=True, dtype = BOOL)
+    #entrypoints = Vector(bool,graph.nrows, name="entrypoints")
+    #entrypoints << graph.reduce_columnwise(op.lor)
     
-    mask_v("any") << Vector.from_coo([i * automata_size for i in range(0, initial_graph_size)], values=True, dtype = BOOL, size = graph.ncols)
+    ####mask_v(op.lor) << Vector.from_coo(list(set(range(0,graph.nrows)).difference(entrypoints.to_coo(values=False)[0])), values=True, dtype = BOOL)
+    
+    #mask_v("any") << Vector.from_coo([i * automata_size for i in range(0, initial_graph_size)], values=True, dtype = BOOL, size = graph.ncols)
 
     load_i = Matrix(UINT64, graph.ncols, graph.nrows, name = "load_i_after_intersection")
     load_i << graph.select(graphblas.select.select_load).apply(graphblas.unary.decode_load)
@@ -96,11 +97,11 @@ def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
     store_i << graph.select(graphblas.select.select_store).apply(graphblas.unary.decode_store)
     print("Matrix for store_i nvals: ", store_i.nvals)
 
-    mask_v("any") << load_i.reduce_columnwise("any")
-    mask_v("any") << load_i.reduce_rowwise("any")
+    #mask_v("any") << load_i.reduce_columnwise("any")
+    #mask_v("any") << load_i.reduce_rowwise("any")
 
-    mask_v("any") << store_i.reduce_columnwise("any")
-    mask_v("any") << store_i.reduce_rowwise("any")
+    #mask_v("any") << store_i.reduce_columnwise("any")
+    #mask_v("any") << store_i.reduce_rowwise("any")
 
     store_block_count = store_i.reduce_scalar("max").get(0) + 1
     load_block_count = load_i.reduce_scalar("max").get(0) + 1
@@ -136,7 +137,7 @@ def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
     print("Boolean matrix for assign nvals: ", assign.nvals)
     
     
-    assign << transitive_reduction(assign, mask_v)
+    #assign << transitive_reduction(assign, mask_v)
 
     assign_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_r_after_intersection")
     assign_r << assign.T
@@ -164,6 +165,25 @@ def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
                 matrices=matrices
             )
 
+def remap_vertices(graph):
+    first_free_v_id = 0
+    edges = graph.to_edgelist()
+    edges = zip(edges[0], edges[1])
+    old_vertex_to_new_vertex={}
+    def get_new_v_id(v_id):
+        nonlocal first_free_v_id
+        new_id = old_vertex_to_new_vertex.get(v_id)
+        if new_id == None:
+            old_vertex_to_new_vertex[v_id] = first_free_v_id
+            new_id = first_free_v_id
+            first_free_v_id = first_free_v_id + 1
+        return new_id
+            
+    new_edges = [(get_new_v_id(_from), get_new_v_id(_to), _lbl) for ((_from,_to),_lbl) in edges]
+    result = Matrix.from_edgelist(new_edges, dtype=graph.dtype, nrows = first_free_v_id,
+                                             ncols=first_free_v_id, name = "remapped_graph")
+    return result
+
 def add_context(file_path, max_num_of_contexts, depth):
     load_graph_start = time.perf_counter()
     
@@ -188,10 +208,17 @@ def add_context(file_path, max_num_of_contexts, depth):
     print("Graph and automata intersection competed in ", intersection_end - automata_generation_end)
     print("Vertices in intersection: ", result.ncols)
     print("Edges in intersection: ", result.nvals)
+
+    result = remap_vertices(result)
+    vertices_remapping_end = time.perf_counter()
     
+    print("Vertices remapping competed in ", vertices_remapping_end - intersection_end)
+    print("Vertices in intersection: ", result.ncols)
+    print("Edges in intersection: ", result.nvals)
+
     decomposed_result = to_label_decomposed_graph(result, automata.nrows, graph.nrows)
     decomposition_end = time.perf_counter()
-    print("Graph decomposition completed in ", decomposition_end - intersection_end)
+    print("Graph decomposition completed in ", decomposition_end - vertices_remapping_end)
 
     return (decomposed_result, graph.ncols)
 
@@ -213,8 +240,9 @@ def normalize(solver_result, initial_graph_nvertices):
     edges = zip(edges[0], edges[1])
     new_edges = set([(_edg[0] // atm_size, _edg[1] // atm_size) for (_edg, _lbl) in edges if _edg[0] in start_vertices])
     #new_edges = set([(_edg[0] // atm_size, _edg[1] // atm_size) for (_edg, _lbl) in edges])
-    result = Matrix.from_edgelist(new_edges, values=True, dtype=BOOL, nrows = initial_graph_nvertices,
-                                             ncols=initial_graph_nvertices, name = "normalized_solver_result")
+    #result = Matrix.from_edgelist(new_edges, values=True, dtype=BOOL, nrows = initial_graph_nvertices,
+    #                                        ncols=initial_graph_nvertices, name = "normalized_solver_result")
+    result = solver_result
     normalization_end = time.perf_counter()
     print("Normalization of solver result done in ", normalization_end - normalization_start)
     
