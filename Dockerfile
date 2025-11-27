@@ -1,4 +1,4 @@
-FROM python:3.9-slim-buster
+FROM python:3.9-slim
 
 ADD . /CFPQ_PyAlgo
 
@@ -16,12 +16,12 @@ RUN apt update \
 WORKDIR /CFPQ_PyAlgo
 RUN git submodule update --init
 
-ENV GraphBLAS_ROOT /usr
+ENV GraphBLAS_ROOT=/usr
 WORKDIR /CFPQ_PyAlgo/deps/GraphBLAS/build
 RUN cmake .. -DCMAKE_INSTALL_PREFIX=/usr \
     && make -j$(nproc) \
-    && make install \
-    && pip install --no-binary suitesparse-graphblas suitesparse-graphblas
+    && make install
+RUN pip install --no-binary suitesparse-graphblas==5.1.3.0 suitesparse-graphblas==5.1.3.0
 
 WORKDIR /CFPQ_PyAlgo/deps/CFPQ_Data
 RUN python3 setup.py install
