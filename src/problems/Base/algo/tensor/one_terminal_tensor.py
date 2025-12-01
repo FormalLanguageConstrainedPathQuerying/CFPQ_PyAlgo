@@ -1,4 +1,4 @@
-from pygraphblas import Matrix, BOOL, Scalar
+from pygraphblas import Matrix, BOOL, Scalar, Vector, descriptor
 
 from src.graph.one_terminal_graph import OneTerminalGraph
 from src.problems.utils import ResultAlgo
@@ -67,6 +67,15 @@ class OneTerminalTensorAlgo:
                           iter)
 
 
+def ms_bfs(sources: Matrix, kron: Matrix, visited: Matrix):
+    with BOOL.ANY_PAIR:
+        front = visited @ sources
+        while front.nvals > 0:
+            new_front = front.mxm(kron)
+            front = new_front.union(visited, mask=visited, desc=descriptor.C)
+            visited += front
+
+
 class OneTerminalDynamicTensorAlgo(OneTerminalTensorAlgo):
 
     def solve(self, start_nonterm: str, graph: OneTerminalGraph):
@@ -90,6 +99,7 @@ class OneTerminalDynamicTensorAlgo(OneTerminalTensorAlgo):
         first_iter = True
 
         updates = Matrix.sparse(element_type, graph_size, graph_size)
+        start_states = list(rsa.start_state.values())
         while changed:
             changed = False
             iter += 1
@@ -98,21 +108,28 @@ class OneTerminalDynamicTensorAlgo(OneTerminalTensorAlgo):
                 kron = rsa.matrix.kronecker(graph.adjacency_matrix,
                                             op=rsa.times_op,
                                             cast=BOOL)
-                transitive_closure(kron)
+                graph_diag = Matrix.from_diag(Vector.dense(BOOL, graph_size, fill=True))
+                ms_bfs_sources = Matrix.sparse(BOOL, nrows=kron.ncols, ncols=kron.ncols)
+                for v in start_states:
+                    start = v * graph_size
+                    ms_bfs_sources[start: start + graph_size - 1, start:start + graph_size - 1] = graph_diag
+                ms_bfs_visited = ms_bfs_sources.dup()
+                ms_bfs(ms_bfs_sources, kron, ms_bfs_visited)
                 prev_kron = kron
-                kron_updates = kron
+                visited_updates = ms_bfs_visited.dup()
             else:
                 kron = rsa.matrix.kronecker(updates,
                                             op=rsa.times_op,
                                             cast=BOOL)
                 updates = Matrix.sparse(element_type, graph_size, graph_size)
+                ms_bfs_sources = Matrix.from_diag(kron.reduce_vector())
                 with BOOL.ANY_PAIR:
                     kron = prev_kron + kron
-                transitive_closure(kron)
-                kron_updates = (kron - prev_kron).nonzero()
+                visited_updates = ms_bfs_visited.dup()
+                ms_bfs(ms_bfs_sources, kron, ms_bfs_visited)
+                visited_updates = (ms_bfs_visited - visited_updates).nonzero()
                 prev_kron = kron
 
-            # update
             for nonterm in rsa.nonterm_to_num:
                 block = Matrix.sparse(BOOL, graph_size, graph_size)
                 start = rsa.start_state[nonterm]
@@ -120,7 +137,7 @@ class OneTerminalDynamicTensorAlgo(OneTerminalTensorAlgo):
                     start_i = start * graph_size
                     start_j = finish * graph_size
 
-                    block += kron_updates[start_i:start_i + graph_size - 1, start_j:start_j + graph_size - 1]
+                    block += visited_updates[start_i:start_i + graph_size - 1, start_j:start_j + graph_size - 1]
 
                 with element_type.BOR:
                     updates += block.cast(element_type).apply_first(

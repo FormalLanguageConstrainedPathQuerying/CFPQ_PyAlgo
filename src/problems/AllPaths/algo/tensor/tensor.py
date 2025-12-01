@@ -1,7 +1,7 @@
 from pathlib import Path
 from cfpq_data import RSM
 from pyformlang.cfg import CFG
-from pygraphblas import Matrix, BOOL
+from pygraphblas import Matrix, BOOL, Vector, descriptor
 from src.graph.graph import Graph
 from typing import Iterable, Union
 
@@ -39,6 +39,15 @@ def transitive_closure(m: Matrix):
         with BOOL.ANY_PAIR:
             degree = degree @ m
             m += degree
+
+
+def ms_bfs(sources: Matrix, kron: Matrix, visited: Matrix):
+    with BOOL.ANY_PAIR:
+        front = visited @ sources
+        while front.nvals > 0:
+            new_front = front.mxm(kron)
+            front = new_front.union(visited, mask=visited, desc=descriptor.C)
+            visited += front
 
 
 class TensorSimpleAlgo(AllPathsProblem):
@@ -117,6 +126,7 @@ class TensorDynamicAlgo(AllPathsProblem):
     def solve(self):
         restore_eps_paths(self.grammar.start_and_finish, self.graph)
 
+        graph_size = self.graph.matrices_size
         sizeKron = self.graph.matrices_size * self.grammar.matrices_size
 
         prev_kron = Matrix.sparse(BOOL, sizeKron, sizeKron)
@@ -124,6 +134,7 @@ class TensorDynamicAlgo(AllPathsProblem):
         block = LabelGraph(self.graph.matrices_size)
         changed = True
         first_iter = True
+        start_states = [self.grammar.start_state[nonterm] for nonterm in self.grammar.nonterminals]
         while changed:
             changed = False
             iter += 1
@@ -133,19 +144,27 @@ class TensorDynamicAlgo(AllPathsProblem):
             if first_iter:
                 for label in self.grammar.labels:
                     kron += self.grammar[label].kronecker(self.graph[label])
+                graph_diag = Matrix.from_diag(Vector.dense(BOOL, graph_size, fill=True))
+                ms_bfs_sources = Matrix.sparse(BOOL, nrows=kron.ncols, ncols=kron.ncols)
+                for v in start_states:
+                    start = v * graph_size
+                    ms_bfs_sources[start: start + graph_size - 1, start:start + graph_size - 1] = graph_diag
+                ms_bfs_visited = ms_bfs_sources.dup()
+                ms_bfs(ms_bfs_sources, kron, ms_bfs_visited)
+                prev_kron = kron
+                visited_updates = ms_bfs_visited.dup()
+
             else:
                 for nonterminal in block.matrices:
                     kron += self.grammar[nonterminal].kronecker(block[nonterminal])
                     block[nonterminal] = Matrix.sparse(BOOL, self.graph.matrices_size, self.graph.matrices_size)
-
-            transitive_closure(kron)
-
-            if not first_iter:
-                part = prev_kron.mxm(kron, semiring=BOOL.ANY_PAIR)
+                ms_bfs_sources = Matrix.from_diag(kron.reduce_vector())
                 with BOOL.ANY_PAIR:
-                    kron += prev_kron + part @ prev_kron + part + kron @ prev_kron
-
-            prev_kron = kron
+                    kron = prev_kron + kron
+                visited_updates = ms_bfs_visited.dup()
+                ms_bfs(ms_bfs_sources, kron, ms_bfs_visited)
+                visited_updates = (ms_bfs_visited - visited_updates).nonzero()
+                prev_kron = kron
 
             for nonterminal in self.grammar.nonterminals:
                 control_sum = self.graph[nonterminal].nvals
@@ -159,10 +178,10 @@ class TensorDynamicAlgo(AllPathsProblem):
                     # block[nonterminal] += kron[start_i:start_i + self.graph.matrices_size - 1,
                     #                       start_j:start_j + self.graph.matrices_size - 1]
                     if first_iter:
-                        block[nonterminal] += kron[start_i:start_i + self.graph.matrices_size - 1,
+                        block[nonterminal] += visited_updates[start_i:start_i + self.graph.matrices_size - 1,
                                                   start_j:start_j + self.graph.matrices_size - 1]
                     else:
-                        new_edges = kron[start_i:start_i + self.graph.matrices_size - 1,
+                        new_edges = visited_updates[start_i:start_i + self.graph.matrices_size - 1,
                                          start_j:start_j + self.graph.matrices_size - 1]
                         part = new_edges - block[nonterminal]
                         block[nonterminal] += part.select('==', True)
