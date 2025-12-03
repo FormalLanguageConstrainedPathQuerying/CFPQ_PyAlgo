@@ -176,3 +176,86 @@ class RecursiveAutomaton:
 
         rsa.terminals = rsa.labels.difference(rsa.nonterminals)
         return rsa
+
+    @classmethod
+    def from_rsm_deter(cls, rsm: RSM):
+        """
+        Build RSA from a given cfpq_data Recursive State Machine
+        @param rsm: RSM on which RSA is built
+        @return: initialized class
+        """
+        rsa = RecursiveAutomaton()
+        rsa.start_nonterm = rsm.start_symbol.to_text()
+        current_state = 0
+        transtion_by_label = dict()
+        
+        
+        sorted_boxes = sorted(rsm.boxes, key=lambda x: x[0].to_text())
+        
+        for nonterm, dfa in sorted_boxes: 
+            mapping_state = dict()
+            nonterm_text = nonterm.to_text()
+            rsa.nonterminals.add(nonterm_text)
+            rsa.labels = rsa.labels.union(dfa.symbols)
+            rsa.boxes[nonterm_text] = []
+
+            
+            sorted_labels = sorted(dfa.symbols, key=str)
+            for label in sorted_labels:
+                if label not in transtion_by_label:
+                    transtion_by_label.update({label: []})
+
+            dfa_dict = dfa.to_dict()
+            
+            
+            sorted_dfa_states = sorted(dfa_dict.keys(), key=str)
+            
+            for state in sorted_dfa_states:  
+                if state not in mapping_state:
+                    mapping_state[state] = current_state
+                    rsa.boxes[nonterm_text].append(current_state)
+                    current_state += 1
+
+                
+                transitions = dfa_dict[state]
+                sorted_trans_symbols = sorted(transitions.keys(), key=str)
+                
+                for trans in sorted_trans_symbols:
+                    target_state = transitions[trans]
+                    if target_state not in mapping_state:
+                        mapping_state[target_state] = current_state
+                        rsa.boxes[nonterm_text].append(current_state)
+                        current_state += 1
+                    transtion_by_label[trans].append((mapping_state[state], mapping_state[target_state]))
+            
+            rsa.states[nonterm_text] = []
+            rsa.start_state[nonterm_text] = mapping_state[dfa.start_state]
+            rsa.finish_states[nonterm_text] = []
+            
+            
+            sorted_final_states = sorted(dfa.final_states, key=str)
+            for final_state in sorted_final_states:
+                rsa.states[nonterm_text].append((mapping_state[dfa.start_state], mapping_state[final_state]))
+                rsa.finish_states[nonterm_text].append(mapping_state[final_state])
+                if mapping_state[dfa.start_state] == mapping_state[final_state]:
+                    rsa.start_and_finish.add(nonterm_text)
+
+        rsa.matrices_size = current_state
+        
+        
+        sorted_matrix_labels = sorted(transtion_by_label.keys(), key=str)
+        for label in sorted_matrix_labels:
+            rsa.matrices[label] = Matrix.sparse(BOOL, rsa.matrices_size, rsa.matrices_size)
+            
+            
+            sorted_transitions = sorted(transtion_by_label[label], key=lambda x: (x[0], x[1]))
+            for trans in sorted_transitions:
+                rsa.matrices[label][trans[0], trans[1]] = True
+
+                if trans[0] in rsa.out_states:
+                    rsa.out_states[trans[0]].append((trans[1], label))
+                else:
+                    rsa.out_states[trans[0]] = [(trans[1], label)]
+
+        rsa.terminals = rsa.labels.difference(rsa.nonterminals)
+        return rsa
