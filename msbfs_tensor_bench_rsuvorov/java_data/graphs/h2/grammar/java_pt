@@ -1,0 +1,20 @@
+3
+PointsTo
+0
+1
+FlowsTo
+2
+3
+Alias
+4
+6
+6
+0 alloc 1
+0 assign 0
+2 alloc_r 3
+3 assign_r 3
+4 PointsTo 5
+5 FlowsTo 6
+2
+0 load_[] [] Alias [] store_[] 0
+3 store_[]_r [] Alias [] load_[]_r 3
