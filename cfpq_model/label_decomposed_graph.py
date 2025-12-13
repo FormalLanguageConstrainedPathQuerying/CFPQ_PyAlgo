@@ -262,9 +262,16 @@ class OptimizedLabelDecomposedGraph:
             if swap_operands:
                 rhs1, rhs2 = rhs2, rhs1
             if rhs1 in self.matrices and rhs2 in other.matrices:
+                #if lhs in self.matrices: 
+                #    print ("!!! Mask: ")
+                #    print(self.matrices[lhs])
+                #    print("-------------------")
+                #    print(self.matrices[rhs1].shape)
+                #    print(other.matrices[rhs2].shape)
                 mxm = self.matrices[rhs1].mxm(
                     other.matrices[rhs2],
                     swap_operands=swap_operands,
+                    mask=(self.matrices[lhs].to_mask() if lhs in self.matrices  and other.matrices[rhs2].shape == self.matrices[rhs1].shape else None),   #Matrix(dtype=self.matrices[rhs1].dtype, nrows=self.matrices[rhs1].nrows, ncols = self.matrices[rhs2].ncols)),
                     op=op,
                 )
                 accum.iadd_by_symbol(lhs, mxm, op.monoid)

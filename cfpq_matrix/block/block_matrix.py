@@ -23,15 +23,23 @@ class BlockMatrix(AbstractOptimizedMatrixDecorator, ABC):
             self.base.optimize_similarly(other)
         )
 
+    def to_mask(self):
+        if self.block_matrix_space.is_single_cell(self.shape):
+            print ("@@@@@@@")
+            print (self.shape)
+            return self.base.to_mask()
+        else:
+            return None
+
 
 class CellBlockMatrix(BlockMatrix):
     def __init__(self, base: OptimizedMatrix, block_matrix_space: BlockMatrixSpace):
         assert block_matrix_space.is_single_cell(base.shape)
         super().__init__(base, block_matrix_space)
 
-    def mxm(self, other: Matrix, op: Semiring, swap_operands: bool = False) -> Matrix:
+    def mxm(self, other: Matrix, op: Semiring, mask:Matrix, swap_operands: bool = False) -> Matrix:
         if self.block_matrix_space.is_single_cell(other.shape):
-            return self.base.mxm(other, op, swap_operands=swap_operands)
+            return self.base.mxm(other, op, mask, swap_operands=swap_operands)
         return self.base.mxm(
             self.block_matrix_space.hyper_rotate(
                 other,
@@ -40,6 +48,7 @@ class CellBlockMatrix(BlockMatrix):
                 else BlockMatrixOrientation.HORIZONTAL
             ),
             op=op,
+            mask=mask,
             swap_operands=swap_operands,
         )
 
@@ -83,13 +92,13 @@ class VectorBlockMatrix(BlockMatrix):
         self.discard_base_on_reformat = False
         return self.matrices[desired_orientation]
 
-    def mxm(self, other: Matrix, op: Semiring, swap_operands: bool = False) -> Matrix:
+    def mxm(self, other: Matrix, op: Semiring, mask:Matrix, swap_operands: bool = False) -> Matrix:
         if self.block_matrix_space.is_single_cell(other.shape):
             return self._force_init_orientation(
                 BlockMatrixOrientation.HORIZONTAL
                 if swap_operands
                 else BlockMatrixOrientation.VERTICAL
-            ).mxm(other, op, swap_operands=swap_operands)
+            ).mxm(other, op, mask, swap_operands=swap_operands)
         return self._force_init_orientation(
             BlockMatrixOrientation.VERTICAL
             if swap_operands
@@ -97,6 +106,7 @@ class VectorBlockMatrix(BlockMatrix):
         ).mxm(
             self.block_matrix_space.to_block_diag_matrix(other),
             op=op,
+            mask=mask,
             swap_operands=swap_operands
         )
 

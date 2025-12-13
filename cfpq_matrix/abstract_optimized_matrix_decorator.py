@@ -31,3 +31,6 @@ class AbstractOptimizedMatrixDecorator(OptimizedMatrix, ABC):
 
     def to_unoptimized(self) -> Matrix:
         return self.base.to_unoptimized()
+
+    def to_mask(self) -> Matrix:
+        return self.base.to_mask()

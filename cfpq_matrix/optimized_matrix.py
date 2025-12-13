@@ -47,7 +47,7 @@ class OptimizedMatrix(ABC):
         pass
 
     @abstractmethod
-    def mxm(self, other: Matrix, op: Semiring, swap_operands: bool = False) -> Matrix:
+    def mxm(self, other: Matrix, op: Semiring, mask: Matrix, swap_operands: bool = False) -> Matrix:
         pass
 
     @abstractmethod

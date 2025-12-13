@@ -23,6 +23,9 @@ class LazyAddOptimizedMatrix(AbstractOptimizedMatrixDecorator):
     def nvals(self) -> int:
         return sum(m.nvals for m in self.matrices)
 
+    def to_mask(self) -> Matrix:
+        return self.matrices[0].to_mask()
+
     def _map_and_fold(
             self,
             mapper,
@@ -53,10 +56,10 @@ class LazyAddOptimizedMatrix(AbstractOptimizedMatrixDecorator):
         self.force_combine_small_matrices(nvals_combine_threshold=float("inf"))
         return self.base.to_unoptimized()
 
-    def mxm(self, other: Matrix, op: Semiring, swap_operands: bool = False) -> Matrix:
+    def mxm(self, other: Matrix, op: Semiring, mask:Matrix, swap_operands: bool = False) -> Matrix:
         self.update_monoid(op.monoid)
         return self._map_and_fold(
-            mapper=lambda m: m.mxm(other, op=op, swap_operands=swap_operands),
+            mapper=lambda m: m.mxm(other, op=op, mask=mask, swap_operands=swap_operands),
             combiner=lambda acc, cur: acc.ewise_add(cur, op=op.monoid).new(),
             nvals_combine_threshold=other.nvals
         )

@@ -14,14 +14,14 @@ class EmptyOptimizedMatrix(AbstractOptimizedMatrixDecorator):
     def base(self) -> OptimizedMatrix:
         return self._base
 
-    def mxm(self, other: Matrix, op: Semiring, swap_operands: bool = False) -> Matrix:
+    def mxm(self, other: Matrix, op: Semiring, mask:Matrix, swap_operands: bool = False) -> Matrix:
         if self.nvals == 0 or other.nvals == 0:
             if swap_operands:
                 assert self.shape[0] == other.shape[1]
                 return Matrix(self.dtype, self.shape[1], other.shape[0])
             assert self.shape[1] == other.shape[0]
             return Matrix(self.dtype, self.shape[0], other.shape[1])
-        return self.base.mxm(other, op, swap_operands)
+        return self.base.mxm(other, op, mask, swap_operands)
 
     def rsub(self, other: Matrix, op: SubOp) -> Matrix:
         if self.nvals == 0 or other.nvals == 0:

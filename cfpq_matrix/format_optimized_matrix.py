@@ -30,6 +30,11 @@ class FormatOptimizedMatrix(AbstractOptimizedMatrixDecorator):
     def base(self) -> OptimizedMatrix:
         return self._base
 
+    def to_mask(self) -> Matrix:
+        print ("#####")
+        #print (self.matrices[0].to_mask())
+        return list(self.matrices.values())[0].to_mask()
+
     def _force_init_format(self, desired_format: str) -> OptimizedMatrix:
         if desired_format not in self.matrices:
             base_matrix = self.base.to_unoptimized().dup()
@@ -42,7 +47,7 @@ class FormatOptimizedMatrix(AbstractOptimizedMatrixDecorator):
         res = self.matrices[desired_format]
         return res
 
-    def mxm(self, other: Matrix, op: Semiring, swap_operands: bool = False) -> Matrix:
+    def mxm(self, other: Matrix, op: Semiring, mask: Matrix, swap_operands: bool = False) -> Matrix:
         left_nvals = other.nvals if swap_operands else self.nvals
         right_nvals = self.nvals if swap_operands else other.nvals
         desired_format = "by_row" if left_nvals < right_nvals else "by_col"
@@ -50,8 +55,8 @@ class FormatOptimizedMatrix(AbstractOptimizedMatrixDecorator):
         if desired_format in self.matrices or other.nvals < self.nvals / self.reformat_threshold:
             other.ss.config["format"] = desired_format
             reformatted_self = self._force_init_format(desired_format)
-            return reformatted_self.mxm(other, op, swap_operands=swap_operands)
-        return self.base.mxm(other, op, swap_operands=swap_operands)
+            return reformatted_self.mxm(other, op, mask, swap_operands=swap_operands)
+        return self.base.mxm(other, op, mask, swap_operands=swap_operands)
 
     def rsub(self, other: Matrix, op: SubOp) -> Matrix:
         return self.matrices.get(other.ss.config["format"], self.base).rsub(other, op)
