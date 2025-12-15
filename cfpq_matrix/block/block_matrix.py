@@ -24,10 +24,7 @@ class BlockMatrix(AbstractOptimizedMatrixDecorator, ABC):
         )
 
     def to_mask(self):
-        if self.block_matrix_space.is_single_cell(self.shape):
-            return self.base.to_mask()
-        else:
-            return None
+        return self.base.to_mask()
 
 
 class CellBlockMatrix(BlockMatrix):
@@ -38,6 +35,8 @@ class CellBlockMatrix(BlockMatrix):
     def mxm(self, other: Matrix, op: Semiring, mask:Matrix, swap_operands: bool = False) -> Matrix:
         if self.block_matrix_space.is_single_cell(other.shape):
             return self.base.mxm(other, op, mask, swap_operands=swap_operands)
+        if not mask is None:
+            mask = self.block_matrix_space.repeat_into_hyper_column(mask)
         return self.base.mxm(
             self.block_matrix_space.hyper_rotate(
                 other,
@@ -92,6 +91,8 @@ class VectorBlockMatrix(BlockMatrix):
 
     def mxm(self, other: Matrix, op: Semiring, mask:Matrix, swap_operands: bool = False) -> Matrix:
         if self.block_matrix_space.is_single_cell(other.shape):
+            if not mask is None:
+                mask = self.block_matrix_space.hyper_rotate(self.block_matrix_space.repeat_into_hyper_column(mask),BlockMatrixOrientation.HORIZONTAL)
             return self._force_init_orientation(
                 BlockMatrixOrientation.HORIZONTAL
                 if swap_operands
