@@ -262,14 +262,14 @@ class OptimizedLabelDecomposedGraph:
             if swap_operands:
                 rhs1, rhs2 = rhs2, rhs1
             if rhs1 in self.matrices and rhs2 in other.matrices:
-                if swap_operands:
-                    mask = (accum.matrices[lhs].to_mask() 
-                            if lhs in accum.matrices and other.matrices[rhs2].shape == self.matrices[rhs1].shape 
-                            else None)
-                else:
-                    mask = (self.matrices[lhs].to_mask() 
-                            if lhs in self.matrices and other.matrices[rhs2].shape == self.matrices[rhs1].shape 
-                            else None)
+                #if swap_operands:
+                mask = (accum.matrices[lhs].to_mask() 
+                        if lhs in accum.matrices and other.matrices[rhs2].shape == self.matrices[rhs1].shape 
+                        else None)
+                #else:
+                #    mask = (self.matrices[lhs].to_mask() 
+                #            if lhs in self.matrices and other.matrices[rhs2].shape == self.matrices[rhs1].shape 
+                #            else None)
 
                 mxm = self.matrices[rhs1].mxm(
                     other.matrices[rhs2],
