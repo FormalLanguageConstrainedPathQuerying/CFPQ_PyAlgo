@@ -24,7 +24,7 @@ class LazyAddOptimizedMatrix(AbstractOptimizedMatrixDecorator):
         return sum(m.nvals for m in self.matrices)
 
     def to_mask(self) -> Matrix:
-        return self.matrices[0].to_mask()
+        return (max(self.matrices, key = lambda m: m.nvals)).to_mask()
 
     def _map_and_fold(
             self,

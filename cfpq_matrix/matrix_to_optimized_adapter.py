@@ -39,21 +39,16 @@ class MatrixToOptimizedAdapter(OptimizedMatrix):
     def mxm(self, other: Matrix, op: Semiring, mask: Matrix, swap_operands: bool = False) -> Matrix:
         if swap_operands:
             if not mask is None:
-                #print("It would be nice to apply mask in swap operands") 
                 print("Mask applied, swap operands.")
                 result = Matrix(self.dtype,nrows=other.shape[0],ncols=self.shape[1])
-                #mask_t = Matrix(mask.dtype, ncols=mask.ncols, nrows=mask.nrows)
-                #mask_t << mask.T 
-                #result(~mask) << other.mxm(self.base, op)
-                result(~mask) << other.mxm(self.base, op).new(self.dtype)
+                result(~mask.S) << other.mxm(self.base, op).new(self.dtype)
                 return result
-                #return other.mxm(self.base, op).new(self.dtype)
             else: return other.mxm(self.base, op).new(self.dtype)
         else:
             if not mask is None:
                 print("Mask applied.")
                 result = Matrix(self.dtype,nrows=self.shape[0],ncols=other.shape[1])
-                result(~mask) << self.base.mxm(other, op).new(self.dtype)
+                result(~mask.S) << self.base.mxm(other, op).new(self.dtype)
                 return result
             else: return self.base.mxm(other, op).new(self.dtype)
         

@@ -31,8 +31,6 @@ class FormatOptimizedMatrix(AbstractOptimizedMatrixDecorator):
         return self._base
 
     def to_mask(self) -> Matrix:
-        print ("#####")
-        #print (self.matrices[0].to_mask())
         return list(self.matrices.values())[0].to_mask()
 
     def _force_init_format(self, desired_format: str) -> OptimizedMatrix:

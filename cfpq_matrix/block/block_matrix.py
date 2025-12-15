@@ -25,8 +25,6 @@ class BlockMatrix(AbstractOptimizedMatrixDecorator, ABC):
 
     def to_mask(self):
         if self.block_matrix_space.is_single_cell(self.shape):
-            print ("@@@@@@@")
-            print (self.shape)
             return self.base.to_mask()
         else:
             return None
