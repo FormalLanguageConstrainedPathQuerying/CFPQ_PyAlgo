@@ -35,8 +35,6 @@ class CellBlockMatrix(BlockMatrix):
     def mxm(self, other: Matrix, op: Semiring, mask:Matrix, swap_operands: bool = False) -> Matrix:
         if self.block_matrix_space.is_single_cell(other.shape):
             return self.base.mxm(other, op, mask, swap_operands=swap_operands)
-        if not mask is None:
-            mask = self.block_matrix_space.repeat_into_hyper_column(mask)
         return self.base.mxm(
             self.block_matrix_space.hyper_rotate(
                 other,
@@ -45,7 +43,7 @@ class CellBlockMatrix(BlockMatrix):
                 else BlockMatrixOrientation.HORIZONTAL
             ),
             op=op,
-            mask=mask,
+            mask=None,
             swap_operands=swap_operands,
         )
 
@@ -90,14 +88,12 @@ class VectorBlockMatrix(BlockMatrix):
         return self.matrices[desired_orientation]
 
     def mxm(self, other: Matrix, op: Semiring, mask:Matrix, swap_operands: bool = False) -> Matrix:
-        if self.block_matrix_space.is_single_cell(other.shape):
-            if not mask is None:
-                mask = self.block_matrix_space.hyper_rotate(self.block_matrix_space.repeat_into_hyper_column(mask),BlockMatrixOrientation.HORIZONTAL)
+        if self.block_matrix_space.is_single_cell(other.shape):            
             return self._force_init_orientation(
                 BlockMatrixOrientation.HORIZONTAL
                 if swap_operands
                 else BlockMatrixOrientation.VERTICAL
-            ).mxm(other, op, mask, swap_operands=swap_operands)
+            ).mxm(other, op, None, swap_operands=swap_operands)
         return self._force_init_orientation(
             BlockMatrixOrientation.VERTICAL
             if swap_operands
@@ -105,7 +101,7 @@ class VectorBlockMatrix(BlockMatrix):
         ).mxm(
             self.block_matrix_space.to_block_diag_matrix(other),
             op=op,
-            mask=mask,
+            mask=None,
             swap_operands=swap_operands
         )
 
