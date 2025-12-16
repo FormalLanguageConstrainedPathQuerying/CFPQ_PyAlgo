@@ -29,27 +29,18 @@ def transitive_reduction(assigns, vertices_with_other_edges):
     endpoints = vertices_with_other_edges.diag(name = "endpoints") 
     assigns_transposed = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "assigns_transposed")
     assigns_transposed("any") << assigns.T
-    frontier = vertices_with_other_edges.diag(name = "frontier")
-    #filter("any") << frontier
+    frontier = vertices_with_other_edges.diag(name = "frontier")    
     visited = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "visited")
     visited("any") << frontier
     while True:
-        print ("Frontier nvals = ", frontier.nvals)
-        #print("Frontier: ", frontier)
+        print ("Frontier nvals = ", frontier.nvals)        
         if frontier.nvals == 0:
             break
         new_frontier = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "new_frontier")        
-        new_frontier(~visited.S) << Matrix.mxm(frontier, assigns, "any_pair")
-        #print("New frontier: ", new_frontier)
-        filter = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "filter")
-        #print("Endpoints: ", endpoints)
+        new_frontier(~visited.S) << Matrix.mxm(frontier, assigns, "any_pair")        
+        filter = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "filter")        
         x = new_frontier.reduce_rowwise("any").diag() 
         filter(~x.S) << endpoints
-
-        #print("Filter: ", filter)        
-        #to_result = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "to_result")
-        #to_result << (Matrix.mxm(new_frontier, filter, "any_pair"))
-        #print("To result: ", to_result)
 
         result("any") << (Matrix.mxm(new_frontier, filter, "any_pair"))
 
@@ -59,12 +50,12 @@ def transitive_reduction(assigns, vertices_with_other_edges):
         
         new_frontier_2 = Matrix(BOOL, assigns.ncols, assigns.ncols, name = "new_frontier_2")
         new_frontier_2(~result.S) << new_frontier
-        #print("New frontier 2: ", new_frontier_2)
+        
         frontier = new_frontier_2
 
     return result
 
-def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
+def to_label_decomposed_graph(graph, automata_size, initial_graph_size, do_transitive_reduction=False):
     vertex_count = graph.nrows
     alloc = Matrix(BOOL, graph.ncols, graph.nrows, name = "alloc_after_intersection")
     alloc << graph.select(graphblas.select.select_alloc)
@@ -74,11 +65,11 @@ def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
     alloc_r << alloc.T
     print("Boolean matrix for alloc_r nvals: ", alloc_r.nvals)
 
-    print("mask start")
-    mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
-    ####exit_mask_v = Vector(BOOL, graph.ncols, name = "exit_mask_vector")
-    mask_v("any") << alloc.reduce_columnwise("any")
-    mask_v("any") << alloc.reduce_rowwise("any")
+    if (do_transitive_reduction):
+        print("mask start")
+        mask_v = Vector(BOOL, graph.ncols, name = "mask_vector")
+        mask_v("any") << alloc.reduce_columnwise("any")
+        mask_v("any") << alloc.reduce_rowwise("any")
 
     print("entrypoints start")
 
@@ -97,11 +88,12 @@ def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
     store_i << graph.select(graphblas.select.select_store).apply(graphblas.unary.decode_store)
     print("Matrix for store_i nvals: ", store_i.nvals)
 
-    mask_v("any") << load_i.reduce_columnwise("any")
-    mask_v("any") << load_i.reduce_rowwise("any")
+    if (do_transitive_reduction):
+        mask_v("any") << load_i.reduce_columnwise("any")
+        mask_v("any") << load_i.reduce_rowwise("any")
 
-    mask_v("any") << store_i.reduce_columnwise("any")
-    mask_v("any") << store_i.reduce_rowwise("any")
+        mask_v("any") << store_i.reduce_columnwise("any")
+        mask_v("any") << store_i.reduce_rowwise("any")
 
     store_block_count = store_i.reduce_scalar("max").get(0) + 1
     load_block_count = load_i.reduce_scalar("max").get(0) + 1
@@ -136,8 +128,8 @@ def to_label_decomposed_graph(graph, automata_size, initial_graph_size):
     assign << graph.select(graphblas.select.select_assign)
     print("Boolean matrix for assign nvals: ", assign.nvals)
     
-    
-    assign << transitive_reduction(assign, mask_v)
+    if (do_transitive_reduction):
+        assign << transitive_reduction(assign, mask_v)
 
     assign_r = Matrix(BOOL, graph.ncols, graph.nrows, name = "assign_r_after_intersection")
     assign_r << assign.T
@@ -184,7 +176,7 @@ def remap_vertices(graph):
                                              ncols=first_free_v_id, name = "remapped_graph")
     return result
 
-def add_context(file_path, max_num_of_contexts, depth):
+def add_context(file_path, max_num_of_contexts, depth, do_transitive_reduction):
     load_graph_start = time.perf_counter()
     
     graph,number_of_contexts = load_graph(file_path, max_num_of_contexts)
@@ -216,7 +208,7 @@ def add_context(file_path, max_num_of_contexts, depth):
     print("Vertices in intersection: ", result.ncols)
     print("Edges in intersection: ", result.nvals)
 
-    decomposed_result = to_label_decomposed_graph(result, automata.nrows, graph.nrows)
+    decomposed_result = to_label_decomposed_graph(result, automata.nrows, graph.nrows, do_transitive_reduction)
     decomposition_end = time.perf_counter()
     print("Graph decomposition completed in ", decomposition_end - vertices_remapping_end)
 

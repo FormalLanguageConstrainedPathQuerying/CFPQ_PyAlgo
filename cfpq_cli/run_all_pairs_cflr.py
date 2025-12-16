@@ -29,13 +29,14 @@ def run_all_pairs_cflr(
         expected_path: str = "",
         max_num_of_contexts = 30,
         trace_graphblas = False,
+        do_transitive_reduction = False,
         depth=1,
 ):
     if trace_graphblas: graphblas.ss.burble.enable()
     total_start = time()
     algo = get_all_pairs_cfl_reachability_algo(algo_name)
     if add_contexts:
-        graph,initial_graph_nvertices = add_context(graph_path, max_num_of_contexts,depth)
+        graph,initial_graph_nvertices = add_context(graph_path, max_num_of_contexts, depth, do_transitive_reduction)
     else:
         graph = LabelDecomposedGraph.read_from_pocr_graph_file(graph_path)
     grammar = CnfGrammarTemplate.read_from_pocr_cnf_file(grammar_path)
@@ -108,6 +109,9 @@ def main(raw_args: List[str]):
     parser.add_argument('--trace-graphblas', dest='trace_graphblas', default=False,
                         help='Turn GraphBLAS burble on.'
                         )                        
+    parser.add_argument('--do-transitive-reduction', dest='do_transitive_reduction', default=False,
+                        help='Perform transitive reduction of ASSIGN relation before CFL-r main loop.'
+                        )                                                
     parser.add_argument('--expected_path', dest='expected_path', default="",
                         help='If specified, it will be checked wether solver\'s result is overapproximation of represented in the file.'
                         )
@@ -124,7 +128,8 @@ def main(raw_args: List[str]):
         time_limit_sec=args.time_limit,
         out_path=args.out,
         max_num_of_contexts=args.max_num_of_contexts,
-        depth = args.depth,
+        depth=args.depth,
+        do_transitive_reduction=args.do_transitive_reduction,
         settings=settings_manager.read_args(args)
     )
     settings_manager.report_unused()
