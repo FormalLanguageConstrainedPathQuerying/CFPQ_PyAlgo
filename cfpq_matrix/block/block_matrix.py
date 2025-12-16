@@ -35,6 +35,16 @@ class CellBlockMatrix(BlockMatrix):
     def mxm(self, other: Matrix, op: Semiring, mask: Matrix, swap_operands: bool = False) -> Matrix:
         if self.block_matrix_space.is_single_cell(other.shape):
             return self.base.mxm(other, op, mask, swap_operands=swap_operands)        
+                
+        if not mask is None and self.block_matrix_space.is_single_cell(mask.shape):
+            mask = self.block_matrix_space.repeat_into_hyper_column(mask)
+            mask = self.block_matrix_space.hyper_rotate(
+                mask,
+                BlockMatrixOrientation.VERTICAL
+                if swap_operands
+                else BlockMatrixOrientation.HORIZONTAL
+            )        
+        
         return self.base.mxm(            
             self.block_matrix_space.hyper_rotate(
                 other,
@@ -43,7 +53,7 @@ class CellBlockMatrix(BlockMatrix):
                 else BlockMatrixOrientation.HORIZONTAL
             ),
             op=op,
-            mask=None,
+            mask=mask,
             swap_operands=swap_operands,
         )
 
