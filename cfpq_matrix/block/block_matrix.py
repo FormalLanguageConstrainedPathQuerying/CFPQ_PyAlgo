@@ -43,7 +43,14 @@ class CellBlockMatrix(BlockMatrix):
                 BlockMatrixOrientation.VERTICAL
                 if swap_operands
                 else BlockMatrixOrientation.HORIZONTAL
-            )        
+            )
+        elif not mask is None:
+            mask = self.block_matrix_space.hyper_rotate(
+                mask,
+                BlockMatrixOrientation.VERTICAL
+                if swap_operands
+                else BlockMatrixOrientation.HORIZONTAL
+                ) 
         
         return self.base.mxm(            
             self.block_matrix_space.hyper_rotate(
