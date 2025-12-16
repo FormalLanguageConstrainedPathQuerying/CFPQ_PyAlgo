@@ -39,14 +39,14 @@ class MatrixToOptimizedAdapter(OptimizedMatrix):
     def mxm(self, other: Matrix, op: Semiring, mask: Matrix, swap_operands: bool = False) -> Matrix:
         if swap_operands:
             if not mask is None:
-                print("Mask applied, swap operands.")
+                print("Mask applied, swap operands.\n-------\n")
                 result = Matrix(self.dtype,nrows=other.shape[0],ncols=self.shape[1])
                 result(~mask.S) << other.mxm(self.base, op).new(self.dtype)
                 return result
             else: return other.mxm(self.base, op).new(self.dtype)
         else:
             if not mask is None:
-                print("Mask applied.")
+                print("Mask applied.\n-------\n")
                 result = Matrix(self.dtype,nrows=self.shape[0],ncols=other.shape[1])
                 result(~mask.S) << self.base.mxm(other, op).new(self.dtype)
                 return result
